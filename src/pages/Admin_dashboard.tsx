@@ -202,7 +202,7 @@ useEffect(() => {
             {activeTab === "dashboard" && (
               <>
                 <div className="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
-                  <h1 className="h2 fw-bold text-dark">Dashboard Overview</h1>
+                  <h1 className="h2 fw-bold text-dark">Dashboard hai Overview</h1>
                 </div>
 
                 {/* STATISTICS CARDS */}
