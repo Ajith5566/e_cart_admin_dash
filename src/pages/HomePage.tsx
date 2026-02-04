@@ -27,13 +27,11 @@ function HomePage() {
       
       if (result.status === 200) {
         // Store user data & token
-        sessionStorage.setItem(
-          "existingAdmin",
-          JSON.stringify(result.data.admin)
-        );
-        sessionStorage.setItem("token", result.data.token);
-
-        toast.success("Login successful 🎉");
+        if (result.status === 200) {
+          toast.success("Login successful 🎉");
+          setAdminData({ email: "", password: "" });
+          navigate("/admin-dash");
+        }
         
         // Reset form
         setAdminData({ email: "", password: "" });

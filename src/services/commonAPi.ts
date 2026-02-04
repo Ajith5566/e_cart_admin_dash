@@ -1,6 +1,5 @@
 import axios, { type AxiosRequestConfig, type AxiosResponse } from "axios";
 
-// Allow only valid HTTP methods
 type HttpMethod = "GET" | "POST" | "PUT" | "DELETE" | "PATCH";
 
 export const commonApi = async <T = unknown>(
@@ -9,14 +8,18 @@ export const commonApi = async <T = unknown>(
   reqBody?: unknown,
   reqHeader?: Record<string, string>
 ): Promise<AxiosResponse<T>> => {
-  
+
+  const isFormData = reqBody instanceof FormData;
+
   const reqConfig: AxiosRequestConfig = {
     method: httpRequest,
     url,
     data: reqBody,
-    headers: reqHeader ?? { "Content-Type": "application/json" },
+    withCredentials: true, // 🍪 send cookie
+    headers: isFormData
+      ? reqHeader // ❌ DO NOT set Content-Type for FormData
+      : reqHeader ?? { "Content-Type": "application/json" },
   };
 
-  // eslint wants this — return promise directly (no try/catch)
   return axios.request<T>(reqConfig);
 };

@@ -2,151 +2,134 @@ import type { fetchedProducts, GetPagesResponse } from "../types/types";
 import { BASE_URL } from "./baseURL";
 import { commonApi } from "./commonAPi";
 
-
-
 export type PagePayload = {
   title: string;
   shortDescription: string;
   description: string;
 };
 
+/* ================= AUTH ================= */
 
-//admin login
-export const adminloginAPi=async(reqBody:unknown)=>{
-    return await commonApi('POST',`${BASE_URL}/admin/login`,reqBody)
-}
-
-//add product
-
-export const AddproductApi = async <T = unknown>(reqBody: unknown,reqHeader?: Record<string, string>) => {
-  return await commonApi<T>("POST", `${BASE_URL}/add-product`, reqBody, reqHeader);
+// admin login (sets cookie)
+export const adminloginAPi = (reqBody: unknown) => {
+  return commonApi("POST", `${BASE_URL}/admin/login`, reqBody);
 };
 
-//product list admin
-
-export const getAllProductsApi = async () => {
-  return await commonApi<fetchedProducts[]>("GET",`${BASE_URL}/admin/products`);
+// verify cookie
+export const checkAdminAuthApi = () => {
+  return commonApi("GET", `${BASE_URL}/admin/me`);
 };
 
-//product delete
-
-export const deleteProductApi = (id: string, token: string) => {
-  return commonApi("DELETE",`${BASE_URL}/admin/product/${id}`,"",
-    {
-      Authorization: `Bearer ${token}`,
-    }
-  );
+// logout (clears cookie)
+export const adminLogoutApi = () => {
+  return commonApi("POST", `${BASE_URL}/admin/logout`);
 };
 
-//product update api
-export const updateProductApi=(id: string, data: FormData, token:string)=>{
-  return commonApi("PUT",`${BASE_URL}/admin/productUpdate/${id}`,data,
-    {
-    Authorization: `Bearer ${token}`,
-  }
-  );
-}
+/* ================= USERS ================= */
 
-//get user list for admin dashboard
-
-export const getAllusersApi = async ( token: string,
+export const getAllusersApi = (
   page = 1,
-  limit = 5) => {
-  return await commonApi<GetPagesResponse>("GET",`${BASE_URL}/admin/dash/users?page=${page}&limit=${limit}`);
-
-};
-
-//block user
-export const blockUserApi=(id:string,token:string)=>{
-  return commonApi("PUT",`${BASE_URL}/admin/dash/blockUser/${id}`,{},
-    {
-      Authorization: `Bearer ${token}`,
-    }
-  )
-}
-
-
-//get product by id
-export const getProductByIdApi = (id: string) => {
-  return commonApi<fetchedProducts>("GET", `${BASE_URL}/productsByid/${id}`);
-};
-
-
-
-// ➕ Add new page
-export const addPageApi = (
-  data: PagePayload,
-  token: string
+  limit = 5
 ) => {
+  return commonApi<GetPagesResponse>(
+    "GET",
+    `${BASE_URL}/admin/dash/users?page=${page}&limit=${limit}`
+  );
+};
+
+export const blockUserApi = (id: string) => {
+  return commonApi(
+    "PUT",
+    `${BASE_URL}/admin/dash/blockUser/${id}`
+  );
+};
+
+/* ================= PRODUCTS ================= */
+
+export const AddproductApi = <T = unknown>(reqBody: unknown) => {
+  return commonApi<T>(
+    "POST",
+    `${BASE_URL}/add-product`,
+    reqBody
+  );
+};
+
+export const getAllProductsApi = () => {
+  return commonApi<fetchedProducts[]>(
+    "GET",
+    `${BASE_URL}/admin/products`
+  );
+};
+
+export const deleteProductApi = (id: string) => {
+  return commonApi(
+    "DELETE",
+    `${BASE_URL}/admin/product/${id}`
+  );
+};
+
+export const updateProductApi = (
+  id: string,
+  data: FormData
+) => {
+  return commonApi(
+    "PUT",
+    `${BASE_URL}/admin/productUpdate/${id}`,
+    data
+  );
+};
+
+export const getProductByIdApi = (id: string) => {
+  return commonApi<fetchedProducts>(
+    "GET",
+    `${BASE_URL}/productsByid/${id}`
+  );
+};
+
+/* ================= PAGES ================= */
+
+export const addPageApi = (data: PagePayload) => {
   return commonApi(
     "POST",
     `${BASE_URL}/admin/pages`,
-    data,
-    {
-      Authorization: `Bearer ${token}`,
-    }
+    data
   );
 };
 
-// 📄 Get all pages (admin list)
 export const getAllPagesApi = (
-  token: string,
   page = 1,
   limit = 5
 ) => {
   return commonApi(
     "GET",
-    `${BASE_URL}/admin/pages?page=${page}&limit=${limit}`,
-    "",
-    {
-      Authorization: `Bearer ${token}`,
-    }
+    `${BASE_URL}/admin/pages?page=${page}&limit=${limit}`
   );
 };
 
-
-// ✏️ Update page
 export const updatePageApi = (
   id: string,
-  data: PagePayload,
-  token: string
+  data: PagePayload
 ) => {
   return commonApi(
     "PUT",
     `${BASE_URL}/admin/pages/${id}`,
-    data,
-    {
-      Authorization: `Bearer ${token}`,
-    }
+    data
   );
 };
 
-// 🗑️ Delete page
-export const deletePageApi = (
-  id: string,
-  token: string
-) => {
+export const deletePageApi = (id: string) => {
   return commonApi(
     "DELETE",
-    `${BASE_URL}/admin/pages/${id}`,
-    "",
-    {
-      Authorization: `Bearer ${token}`,
-    }
+    `${BASE_URL}/admin/pages/${id}`
   );
 };
 
-// 🔄 Toggle publish / unpublish
-export const togglePageApi = (
-  id: string,
-  token: string
-) => {
+export const togglePageApi = (id: string) => {
   return commonApi(
     "PUT",
-    `${BASE_URL}/admin/pages/${id}/toggle`,
-    "",
-    {
-      Authorization: `Bearer ${token}`,
-    }
+    `${BASE_URL}/admin/pages/${id}/toggle`
   );
 };
+
+
+

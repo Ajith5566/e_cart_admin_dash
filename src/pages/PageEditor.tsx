@@ -3,10 +3,10 @@ import { useCallback, useEffect, useState } from "react";
 import { toast } from "react-toastify";
 import { type AxiosResponse } from "axios";
 import "react-quill-new/dist/quill.snow.css";
-import { lazy, Suspense } from "react";
-import { Modules } from "./quillmodule";
-import { addPageApi, deletePageApi, getAllPagesApi, togglePageApi, updatePageApi } from "../services/allAPi";
-
+/* import { lazy, Suspense } from "react";
+import { Modules } from "./quillmodule"; */
+import { /* addPageApi */ deletePageApi, getAllPagesApi, togglePageApi, /* updatePageApi */ } from "../services/allAPi";
+import { useNavigate } from "react-router-dom";
 /* -------------------- TYPES -------------------- */
 
 type PageType = {
@@ -25,51 +25,42 @@ type GetPagesResponse = {
   page: number;
   limit: number;
   hasNextPage: boolean;
-  hasPrevPage: boolean;
+  hasPrevPage: boolean; 
 };
 
 /* -------------------- QUILL -------------------- */
 
-
-const ReactQuill = lazy(() => import("react-quill-new"));
+/* 
+const ReactQuill = lazy(() => import("react-quill-new")); */
 
 /* -------------------- COMPONENT -------------------- */
 
 export default function PageEditor() {
+   const navigate = useNavigate();
   /* ---------- STATE ---------- */
 
   const [pages, setPages] = useState<PageType[]>([]);
-  const [title, setTitle] = useState("");
+/*   const [title, setTitle] = useState("");
   const [shortDesc, setShortDesc] = useState("");
   const [description, setDescription] = useState("");
-  const [editingPage, setEditingPage] = useState<PageType | null>(null);
+  const [editingPage, setEditingPage] = useState<PageType | null>(null); */
 
 
-  const [token, setToken] = useState("");
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [loading, setLoading] = useState(false);
 
   // Pagination
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
 
-  /* ---------- GET TOKEN ---------- */
-
-  useEffect(() => {
-    const storedToken = sessionStorage.getItem("token");
-    setToken(storedToken ?? "");
-  }, []);
-
   /* ---------- FETCH PAGES ---------- */
 
   const fetchPages = useCallback(async () => {
-  if (!token) return;
-
   try {
     setLoading(true);
 
     const res = (await getAllPagesApi(
-      token,
-      page,                         
+      page
     )) as AxiosResponse<GetPagesResponse>;
 
     setPages(res.data.docs);
@@ -79,7 +70,7 @@ export default function PageEditor() {
   } finally {
     setLoading(false);
   }
-}, [token, page]);
+}, [page]);
 
 useEffect(() => {
   fetchPages();
@@ -87,7 +78,7 @@ useEffect(() => {
 
   /* ---------- ADD / UPDATE ---------- */
 
-  const handleSubmit = async () => {
+  /* const handleSubmit = async () => {
     if (!title.trim() || !shortDesc.trim() || !description.trim()) {
       toast.error("All fields are required");
       return;
@@ -97,30 +88,20 @@ useEffect(() => {
       setLoading(true);
 
       if (editingPage) {
-        // UPDATE
-        await updatePageApi(
-          editingPage._id,
-          {
-            title: title.trim(),
-            shortDescription: shortDesc.trim(),
-            description,
-          },
-          token
-        );
-        toast.success("Page updated");
-      } else {
-        // ADD
-      await addPageApi(
-          {
-            title: title.trim(),
-            shortDescription: shortDesc.trim(),
-            description,
-          },
-          token
-        );
-    
-        
-        toast.success("Page added");
+  await updatePageApi(editingPage._id, {
+    title: title.trim(),
+    shortDescription: shortDesc.trim(),
+    description,
+  });
+  toast.success("Page updated");
+} else {
+  await addPageApi({
+    title: title.trim(),
+    shortDescription: shortDesc.trim(),
+    description,
+  });
+  toast.success("Page added");
+
         fetchPages();
       }
 
@@ -130,85 +111,40 @@ useEffect(() => {
     } finally {
       setLoading(false);
     }
-  };
+  }; */
 
   /* ---------- EDIT ---------- */
 
-  const handleEdit = (p: PageType) => {
+/*   const handleEdit = (p: PageType) => {
     setEditingPage(p);
     setTitle(p.title);
     setShortDesc(p.shortDescription);
     setDescription(p.description);
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
-
+ */
   /* ---------- CANCEL EDIT ---------- */
 
-  const cancelEdit = () => {
+  /* const cancelEdit = () => {
     setEditingPage(null);
     setTitle("");
     setShortDesc("");
     setDescription("");
-  };
+  }; */
 
   /* -------------------- UI -------------------- */
 
   return (
     <div className="container p-4">
-      <h2 className="mb-4 fw-bold">Manage Pages</h2>
+      <div className="d-flex justify-content-between mb-3">
+        <h2>Manage Pages</h2>
+        <button
+          className="btn btn-primary"
+          onClick={() => navigate("/admin-dash/pages/add")}
 
-      {/* ---------- FORM ---------- */}
-      <div className="card p-4 mb-4">
-        {editingPage && (
-          <div className="alert alert-warning py-2">
-            Editing page: <strong>{editingPage.title}</strong>
-          </div>
-        )}
-
-        <input
-          className="form-control mb-3"
-          placeholder="Page title"
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-        />
-
-        <textarea
-          className="form-control mb-3"
-          placeholder="Short description"
-          value={shortDesc}
-          onChange={(e) => setShortDesc(e.target.value)}
-        />
-
-        <Suspense fallback={<div>Loading editor...</div>}>
-            <ReactQuill
-                value={description}
-                onChange={setDescription}
-                modules={Modules}
-                theme="snow"
-                />
-         </Suspense>
-
-
-        <div className="mt-3 d-flex gap-2">
-          <button
-            className="btn btn-primary"
-            onClick={handleSubmit}
-            disabled={loading}
-          >
-            {editingPage ? "Update Page" : "Add Page"}
-          </button>
-
-          {editingPage && (
-            <button
-              className="btn btn-secondary"
-              type="button"
-              onClick={cancelEdit}
-              disabled={loading}
-            >
-              Cancel Edit
-            </button>
-          )}
-        </div>
+        >
+          + Add Page
+        </button>
       </div>
 
       {/* ---------- PAGE LIST ---------- */}
@@ -233,21 +169,25 @@ useEffect(() => {
                     type="checkbox"
                     checked={p.isActive}
                     onChange={() =>
-                      togglePageApi(p._id, token).then(fetchPages)
+                      togglePageApi(p._id).then(fetchPages)
                     }
                   />
                 </td>
                 <td className="d-flex gap-2">
                   <button
                     className="btn btn-warning btn-sm"
-                    onClick={() => handleEdit(p)}
+                   onClick={() =>
+    navigate("/admin-dash/pages/add", {
+      state: { page: p },
+    })
+  }
                   >
                     Edit
                   </button>
                   <button
                     className="btn btn-danger btn-sm"
                     onClick={() =>
-                      deletePageApi(p._id, token).then(fetchPages)
+                      deletePageApi(p._id).then(fetchPages)
                     }
                   >
                     Delete

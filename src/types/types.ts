@@ -70,3 +70,10 @@ export type GetPagesResponse = {
   hasNextPage: boolean;
   hasPrevPage: boolean;
 };
+
+export type PageType = {
+  _id: string;
+  title: string;
+  shortDescription: string;
+  description: string;
+};

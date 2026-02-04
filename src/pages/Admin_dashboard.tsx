@@ -1,28 +1,28 @@
 /* eslint-disable react-hooks/set-state-in-effect */
 import  { useCallback, useEffect, useState } from 'react'
 import type { fetchedProducts, User } from '../types/types';
-import { blockUserApi, getAllProductsApi, getAllusersApi } from '../services/allAPi';
+import { adminLogoutApi, blockUserApi, checkAdminAuthApi, getAllProductsApi, getAllusersApi } from '../services/allAPi';
 import { toast } from 'react-toastify';
-import type { AxiosResponse } from 'axios';
+/* import type { AxiosResponse } from 'axios'; */
 import './admin_dash.css'
-import PageEditor from '../components/PageEditor';
+/* import PageEditor from '../components/PageEditor'; */
 import Products from '../components/Products';
 import { useNavigate } from 'react-router-dom';
+import { Outlet } from "react-router";
 
-
-type BlockUserResponse = {
+/* type BlockUserResponse = {
   message: string;
   isBlocked: boolean;
-};
+}; */
 function Admin_dashboard() {
      const navigate = useNavigate();
   /* ================= STATE ================= */
   const [users, setUsers] = useState<User[]>([]);
-  const [token, setToken] = useState<string>("");
+  /* const [token, setToken] = useState<string>(""); */
   const [products, setProducts] = useState<fetchedProducts[]>([]);
   const [isLogin, setIsLogin] = useState<boolean>(false);
   // Pagination
-  const [page, setPage] = useState(1);
+  const [page, setPage] = useState<number>(1);
   const [totalPages, setTotalPages] = useState(1);
   const [activeTab, setActiveTab] = useState<
     "dashboard" | "products" | "pages"
@@ -32,87 +32,102 @@ function Admin_dashboard() {
   const product_count=products.length;
 
   /* ================= EFFECTS ================= */
-  useEffect(() => {
-    const stored = sessionStorage.getItem("token");
-    setToken(stored ?? "");
-
-    if (stored) {
+ useEffect(() => {
+  const verifyAuth = async () => {
+    try {
+      await checkAdminAuthApi(); // calls /admin/me
       setIsLogin(true);
+    } catch {
+      setIsLogin(false);
+      navigate("/"); // login page
     }
-  }, []);
+  };
+
+  verifyAuth();
+}, [navigate]);
+
 
 const fetchUsers = useCallback(async () => {
-  if (!token) return;
-
   try {
-    const result = await getAllusersApi(token, page, 5);
-
+    const result = await getAllusersApi(page, 5);
     setUsers(result.data.docs);
     setTotalPages(result.data.totalPages);
-  } catch (err) {
-    console.error("FRONTEND ERROR:", err);
+  } catch {
+    toast.error("Session expired");
+    navigate("/");
   }
-}, [token, page]);
-
+}, [page, navigate]);
 
 useEffect(() => {
-  fetchUsers();
-}, [fetchUsers]);
-
-
+  if (isLogin) {
+    fetchUsers();
+  }
+}, [isLogin, page, fetchUsers]);
 
   //get all products
-const fetchProducts = async () => {
+const fetchProducts = useCallback(async () => {
   try {
     const result = await getAllProductsApi();
     setProducts(result.data);
   } catch (err) {
     console.error("FRONTEND ERROR:", err);
   }
-};
-useEffect(() => {
-  fetchProducts();
 }, []);
+
+  /* ================= EFFECTS ================= */
+ useEffect(() => {
+  const verifyAuth = async () => {
+    try {
+      await checkAdminAuthApi(); // calls /admin/me
+      setIsLogin(true);
+    } catch {
+      setIsLogin(false);
+      navigate("/"); // login page
+    }
+  };
+
+  verifyAuth();
+}, [navigate]);
+
+useEffect(() => {
+  if (isLogin) {
+    fetchProducts();
+  }
+}, [fetchProducts, isLogin]);
+
+
+
+
 
 
 
 
 
   /* ================= ACTIONS ================= */
-  const handleBlock = async (id: string) => {
-    const confirmBlock = window.confirm("Are you sure?");
-    if (!confirmBlock) return;
+ const handleBlock = async (id: string) => {
+  if (!window.confirm("Are you sure?")) return;
 
-    if (!token) {
-      toast.error("Unauthorized");
-      return;
-    }
+  try {
+    await blockUserApi(id);
+    toast.success("User updated");
+    fetchUsers();
+  } catch {
+    toast.error("Unauthorized");
+    navigate("/");
+  }
+};
 
-    try {
-      const res = (await blockUserApi(
-        id,
-        token
-      )) as AxiosResponse<BlockUserResponse>;
 
-      if (res.status === 200) {
-        toast.success(res.data.message);
-        fetchUsers();
-      }
-    } catch {
-      toast.error("Failed to block user");
-    }
-  };
+  const logout = async () => {
+  try {
+    await adminLogoutApi();
+    toast.success("Logged out");
 
-      const logout = () => {
-    // Clear session storage
-        sessionStorage.clear();
-
-    // Update UI state
-    //setIsLogin(false);
-
-    // Redirect to login page
-     navigate("/");
-   }; 
+    navigate("/"); // login page
+  } catch {
+    toast.error("Logout failed");
+  }
+};
   return (
     <>
          <div className="min-vh-100 bg-light">
@@ -186,7 +201,10 @@ useEffect(() => {
                         ? "bg-primary text-white shadow-sm"
                         : "text-muted hover-bg-light"
                     }`}
-                    onClick={() => setActiveTab("pages")}
+                   onClick={() => {
+                      setActiveTab("pages");
+                      navigate("/admin-dash/pages");
+                    }}
                   >
                     <i className="bi bi-cart-check me-2"></i>
                     Pages
@@ -394,15 +412,16 @@ useEffect(() => {
 
             {/* ===== ORDERS ===== */}
             {activeTab === "pages" && (
-              <div className="card shadow-sm border-0">
-                <div className="card-header bg-white border-0 pb-0">
-                  <h1 className="h2 mb-3 fw-bold text-dark">Orders Management</h1>
+                <div className="card shadow-sm border-0">
+                  <div className="card-header bg-white border-0 pb-0">
+                    <h1 className="h2 mb-3 fw-bold text-dark">Pages Management</h1>
+                  </div>
+                  <div className="card-body">
+                    <Outlet /> {/* 👈 Page list OR Add page loads here */}
+                  </div>
                 </div>
-                <div className="card-body">
-                  {<PageEditor/>}
-                </div>
-              </div>
-            )}
+              )}
+
           </main>
         </div>
       </div>)}
