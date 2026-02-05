@@ -49,11 +49,13 @@ export default function Add_product() {
         await updateProductApi(product._id, fd);
         toast.success("Product updated");
       } else {
-        await AddproductApi(fd);
+        const result=await AddproductApi(fd);
+        console.log(result);
+        
         toast.success("Product added");
       }
 
-      navigate("/admin-dash/product");
+      navigate("/admin-dash/products");
     } catch {
       toast.error("Action failed");
     }
@@ -63,9 +65,9 @@ export default function Add_product() {
     <div className="container py-4">
       <div className="d-flex justify-content-between mb-3">
         <h4>{product ? "Edit Product" : "Add Product"}</h4>
-        <button
+         <button
           className="btn btn-secondary"
-          onClick={() => navigate("/admin-dash/product")}
+          onClick={() => navigate("/admin-dash/products")}
         >
           ← Back
         </button>

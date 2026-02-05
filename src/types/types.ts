@@ -59,6 +59,14 @@ export type fetchedProducts={
   image: string; // image URL
 
 }
+//paginate
+export type ProductResponse = {
+  docs: fetchedProducts[];
+  totalDocs: number;
+  totalPages: number;
+  page: number;
+  limit: number;
+};
 
 //user pgination
 export type GetPagesResponse = {

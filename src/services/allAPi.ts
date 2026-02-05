@@ -1,4 +1,4 @@
-import type { fetchedProducts, GetPagesResponse } from "../types/types";
+import type { fetchedProducts, GetPagesResponse, ProductResponse } from "../types/types";
 import { BASE_URL } from "./baseURL";
 import { commonApi } from "./commonAPi";
 
@@ -54,10 +54,11 @@ export const AddproductApi = <T = unknown>(reqBody: unknown) => {
   );
 };
 
-export const getAllProductsApi = () => {
-  return commonApi<fetchedProducts[]>(
+export const getAllProductsApi = (page = 1,
+  limit = 5,search = "") => {
+  return commonApi<ProductResponse>(
     "GET",
-    `${BASE_URL}/admin/products`
+    `${BASE_URL}/admin/products?page=${page}&limit=${limit}&search=${search}`
   );
 };
 
@@ -98,11 +99,12 @@ export const addPageApi = (data: PagePayload) => {
 
 export const getAllPagesApi = (
   page = 1,
-  limit = 5
+  limit = 5,
+  search=""
 ) => {
   return commonApi(
     "GET",
-    `${BASE_URL}/admin/pages?page=${page}&limit=${limit}`
+    `${BASE_URL}/admin/pages?page=${page}&limit=${limit}&search=${search}`
   );
 };
 
