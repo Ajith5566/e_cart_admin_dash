@@ -100,11 +100,12 @@ export const addPageApi = (data: PagePayload) => {
 export const getAllPagesApi = (
   page = 1,
   limit = 5,
-  search=""
+  search="",
+   inactive = false
 ) => {
   return commonApi(
     "GET",
-    `${BASE_URL}/admin/pages?page=${page}&limit=${limit}&search=${search}`
+    `${BASE_URL}/admin/pages?page=${page}&limit=${limit}&search=${search}&inactive=${inactive}`
   );
 };
 

@@ -39,6 +39,8 @@ export default function PageEditor() {
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
     const [search, setSearch] = useState("");
+    const [showInactive, setShowInactive] = useState(false);
+
 
   /* ---------- FETCH PAGES ---------- */
 
@@ -47,7 +49,7 @@ export default function PageEditor() {
       setLoading(true);
 
       const res = (await getAllPagesApi(
-        page,5,search
+        page,5,search, showInactive
       )) as AxiosResponse<GetPagesResponse>;
 
       setPages(res.data.docs);
@@ -57,7 +59,7 @@ export default function PageEditor() {
     } finally {
       setLoading(false);
     }
-  }, [page,search]);
+  }, [page,search,showInactive]);
 
 
   useEffect(() => {
@@ -82,6 +84,17 @@ export default function PageEditor() {
       </div>
       <div className="d-flex justify-content-between mb-3">
         <h2>Manage Pages</h2>
+        <div className="d-flex gap-2">
+
+<button
+  className={`btn ${showInactive ? "btn-danger" : "btn-outline-danger"}`}
+  onClick={() => setShowInactive(prev => !prev)}
+>
+  {showInactive ? "Showing Inactive" : "Show Inactive"}
+</button>
+
+</div>
+
          <ProductSearch value={search} onChange={setSearch} />
       </div>
 
