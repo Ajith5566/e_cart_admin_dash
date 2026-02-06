@@ -67,7 +67,6 @@ export default function PageEditor() {
   }, [fetchPages]);
 
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
     setPage(1);
   }, [search]);
   /* -------------------- UI -------------------- */

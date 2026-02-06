@@ -1,4 +1,5 @@
-import React, { useEffect, useState } from "react";
+/* eslint-disable react-hooks/exhaustive-deps */
+import  { useEffect, useState } from "react";
 import styles from "./adminProduct.module.css";
 import { toast } from "react-toastify";
 import type { fetchedProducts } from "../types/types";
@@ -38,12 +39,10 @@ export default function Products() {
   };
 
 useEffect(() => {
-  // eslint-disable-next-line react-hooks/set-state-in-effect
   setPage(1);
 }, [search]);
 
 useEffect(() => {
-  // eslint-disable-next-line react-hooks/set-state-in-effect
   fetchProducts();
 }, [page, search]);
 
