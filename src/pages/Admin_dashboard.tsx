@@ -11,6 +11,7 @@ import { useNavigate } from 'react-router-dom';
 import { Outlet } from "react-router";
 import Pagination from '../components/Pagination';
 
+
 /* type BlockUserResponse = {
   message: string;
   isBlocked: boolean;
@@ -22,6 +23,8 @@ function Admin_dashboard() {
   /* const [token, setToken] = useState<string>(""); */
   const [products, setProducts] = useState<fetchedProducts[]>([]);
   const [isLogin, setIsLogin] = useState<boolean>(false);
+  const [authChecked, setAuthChecked] = useState(false);
+
   // Pagination
   const [page, setPage] = useState<number>(1);
   const [totalPages, setTotalPages] = useState(1);
@@ -34,18 +37,21 @@ function Admin_dashboard() {
 
   /* ================= EFFECTS ================= */
   useEffect(() => {
+
     const verifyAuth = async () => {
       try {
-        await checkAdminAuthApi(); // calls /admin/me
+        await checkAdminAuthApi();
         setIsLogin(true);
       } catch {
         setIsLogin(false);
-        navigate("/"); // login page
+      } finally {
+        setAuthChecked(true);
       }
     };
 
     verifyAuth();
-  }, [navigate]);
+
+  }, []);
 
 
   const fetchUsers = useCallback(async () => {
@@ -150,7 +156,10 @@ function Admin_dashboard() {
           )}
         </nav>
         {/* If NOT logged in */}
-        {!isLogin ? (
+        {!authChecked ? (
+          <h3>Loading...</h3>   // or spinner
+        ) :
+        !isLogin ? (
           <div className="unauth-box w-100 d-flex justify-content-center align-items-center min-vh-100 flex-column">
             <h3>Unauthorized ❌</h3>
             <p>You need to login to Access the <b>Admin</b> panel</p>
