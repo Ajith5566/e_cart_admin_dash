@@ -1,1 +1,1 @@
-export const BASE_URL="https://ecommerce-website-c0sq.onrender.com"
+export const BASE_URL="https://mern-admin-express-api.onrender.com/"
