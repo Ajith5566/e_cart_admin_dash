@@ -1,4 +1,4 @@
-import type { fetchedProducts, GetPagesResponse, ProductResponse } from "../types/types";
+import type { AdminUserPayload,  fetchedProducts, GetPagesResponse, ProductResponse } from "../types/types";
 import { BASE_URL } from "./baseURL";
 import { commonApi } from "./commonAPi";
 
@@ -135,4 +135,44 @@ export const togglePageApi = (id: string) => {
 };
 
 
+//add admin user
+export const register_AdminUser_Api =async (reqBody:unknown)=>{
+    return await commonApi('POST',`${BASE_URL}/admin_users/register`,reqBody)
+}
 
+//fetch all admin users
+export const getAdmin_UserApi = async (
+  page = 1,
+  limit = 5,
+  search="",
+) => {
+  return await commonApi("GET",`${BASE_URL}/admin_user/list?page=${page}&limit=${limit}&search=${search}`);
+};
+
+//delete admin user
+export const deleteAdmin_userApi = (id: string) => {
+  return commonApi(
+    "DELETE",
+    `${BASE_URL}/admin/user/delete/${id}`
+  );
+};
+
+//toggle active or inactive user
+export const Admin_user_isActiveApi = (id: string) => {
+  return commonApi(
+    "PUT",
+    `${BASE_URL}/admin/users/${id}/toggle`
+  );
+};
+
+//update admin user details
+export const updateAdmin_user_Api = (
+  id: string,
+  data: AdminUserPayload
+) => {
+  return commonApi(
+    "PUT",
+    `${BASE_URL}/admin/user/update/${id}`,
+    data
+  );
+};

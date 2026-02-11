@@ -9,7 +9,7 @@ import {
 import { useNavigate } from "react-router-dom";
 import ProductSearch from "../components/Search_bar";
 import Pagination from "../components/Pagination";
-
+import '../components/common_toggle.css'
 /* -------------------- TYPES -------------------- */
 
 type PageType = {
@@ -38,8 +38,8 @@ export default function PageEditor() {
   // Pagination
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
-    const [search, setSearch] = useState("");
-    const [showInactive, setShowInactive] = useState(false);
+  const [search, setSearch] = useState("");
+  const [showInactive, setShowInactive] = useState(false);
 
 
   /* ---------- FETCH PAGES ---------- */
@@ -49,7 +49,7 @@ export default function PageEditor() {
       setLoading(true);
 
       const res = (await getAllPagesApi(
-        page,5,search, showInactive
+        page, 5, search, showInactive
       )) as AxiosResponse<GetPagesResponse>;
 
       setPages(res.data.docs);
@@ -59,7 +59,7 @@ export default function PageEditor() {
     } finally {
       setLoading(false);
     }
-  }, [page,search,showInactive]);
+  }, [page, search, showInactive]);
 
 
   useEffect(() => {
@@ -68,13 +68,13 @@ export default function PageEditor() {
 
   useEffect(() => {
     setPage(1);
-  }, [search]);
+  }, [search,showInactive]);
   /* -------------------- UI -------------------- */
 
   return (
     <div className="container p-4" >
       <div className="d-flex justify-content-end p-3 " >
-          <button
+        <button
           className="btn btn-primary"
           onClick={() => navigate("/admin-dash/pages/add")}
         >
@@ -85,20 +85,20 @@ export default function PageEditor() {
         <h2>Manage Pages</h2>
         <div className="d-flex gap-2">
 
-<button
-  className={`btn ${showInactive ? "btn-danger" : "btn-outline-danger"}`}
-  onClick={() => setShowInactive(prev => !prev)}
->
-  {showInactive ? "Showing Inactive" : "Show Inactive"}
-</button>
+          <button
+            className={`btn ${showInactive ? "btn-danger" : "btn-outline-danger"}`}
+            onClick={() => setShowInactive(prev => !prev)}
+          >
+            {showInactive ? "Showing Inactive" : "Show Inactive"}
+          </button>
 
-</div>
+        </div>
 
-         <ProductSearch value={search} onChange={setSearch} />
+        <ProductSearch value={search} onChange={setSearch} />
       </div>
 
       {/* ---------- PAGE LIST ---------- */}
-      <div style={{minHeight:"420px"}}>
+      <div style={{ minHeight: "420px" }}>
         <table className="table table-bordered align-middle"  >
           <thead>
             <tr>
@@ -108,7 +108,7 @@ export default function PageEditor() {
               <th style={{ width: 200 }}>Action</th>
             </tr>
           </thead>
-  
+
           <tbody>
             {pages.length ? (
               pages.map((p) => (
@@ -116,19 +116,24 @@ export default function PageEditor() {
                   <td>{p.title}</td>
                   <td>{p.slug}</td>
                   <td>
-                    <input
-                      type="checkbox"
-                      checked={!!p.isActive}
-                      onChange={async () => {
-                        try {
-                          await togglePageApi(p._id);
-                          fetchPages();
-                        } catch {
-                          toast.error("Status update failed");
-                        }
-                      }}
-                    />
+                    <label className="toggle-switch">
+                      <input
+                        type="checkbox"
+                        className="toggle-input"
+                        checked={!!p.isActive}
+                        onChange={async () => {
+                          try {
+                            await togglePageApi(p._id);
+                            fetchPages();
+                          } catch {
+                            toast.error("Status update failed");
+                          }
+                        }}
+                      />
+                      <span className="toggle-slider"></span>
+                    </label>
                   </td>
+
                   <td className="d-flex gap-2">
                     <button
                       className="btn btn-warning btn-sm"
@@ -140,7 +145,7 @@ export default function PageEditor() {
                     >
                       Edit
                     </button>
-  
+
                     <button
                       className="btn btn-danger btn-sm"
                       onClick={async () => {
@@ -167,7 +172,7 @@ export default function PageEditor() {
 
       {/* ---------- PAGINATION ---------- */}
       <div className="d-flex justify-content-center align-items-center mt-3">
-         <Pagination
+        <Pagination
           currentPage={page}
           totalPages={totalPages}
           onChange={(newPage) => setPage(newPage)}

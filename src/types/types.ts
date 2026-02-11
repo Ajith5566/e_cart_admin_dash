@@ -85,3 +85,36 @@ export type PageType = {
   shortDescription: string;
   description: string;
 };
+
+//types for adding admin
+export type AdminUser={
+  name: string,
+    email: string,
+    password: string,
+    confirmPassword: string,
+    role:string
+}
+
+
+
+//type for fetching all admin users
+export type FetchedAdminUser={
+   _id: string;
+  name: string,
+    email: string,
+    password: string,
+    confirmPassword: string,
+    isActive:boolean,
+    role:string
+}
+export type GetUserResponse = {
+  docs: FetchedAdminUser[];
+  totalDocs: number;
+  totalPages: number;
+};
+export type AdminUserPayload = {
+  name: string;
+  email: string;
+  password?: string;
+  role: string;
+};

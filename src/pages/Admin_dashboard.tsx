@@ -1,15 +1,14 @@
 /* eslint-disable react-hooks/set-state-in-effect */
-import { useCallback, useEffect, useState } from 'react'
-import type { fetchedProducts, User } from '../types/types';
-import { adminLogoutApi, blockUserApi, checkAdminAuthApi, getAllProductsApi, getAllusersApi } from '../services/allAPi';
+import {  useEffect, useState } from 'react'
+/* import type { fetchedProducts,  User } from '../types/types'; */
+import { adminLogoutApi, checkAdminAuthApi,/*  getAllProductsApi */ } from '../services/allAPi';
 import { toast } from 'react-toastify';
 /* import type { AxiosResponse } from 'axios'; */
 import './admin_dash.css'
 /* import PageEditor from '../components/PageEditor'; */
 /* import Products from '../components/Products'; */
-import { useNavigate } from 'react-router-dom';
-import { Outlet } from "react-router";
-import Pagination from '../components/Pagination';
+import { Outlet, useNavigate } from "react-router";
+
 
 
 /* type BlockUserResponse = {
@@ -17,23 +16,19 @@ import Pagination from '../components/Pagination';
   isBlocked: boolean;
 }; */
 function Admin_dashboard() {
-  const navigate = useNavigate();
-  /* ================= STATE ================= */
-  const [users, setUsers] = useState<User[]>([]);
+   const navigate = useNavigate();
   /* const [token, setToken] = useState<string>(""); */
-  const [products, setProducts] = useState<fetchedProducts[]>([]);
+  /* const [products, setProducts] = useState<fetchedProducts[]>([]); */
   const [isLogin, setIsLogin] = useState<boolean>(false);
   const [authChecked, setAuthChecked] = useState(false);
 
-  // Pagination
-  const [page, setPage] = useState<number>(1);
-  const [totalPages, setTotalPages] = useState(1);
+ 
   const [activeTab, setActiveTab] = useState<
-    "dashboard" | "products" | "pages"
+    "dashboard" |"User"| "products" | "pages"|"Customer_list"
   >("dashboard");
 
-  const user_count = users.length;
-  const product_count = products.length;
+/*   const user_count = users.length;
+  const product_count = products.length; */
 
   /* ================= EFFECTS ================= */
   useEffect(() => {
@@ -53,24 +48,7 @@ function Admin_dashboard() {
 
   }, []);
 
-
-  const fetchUsers = useCallback(async () => {
-    try {
-      const result = await getAllusersApi(page, 5);
-      setUsers(result.data.docs);
-      setTotalPages(result.data.totalPages);
-    } catch {
-      toast.error("Session expired");
-      navigate("/");
-    }
-  }, [page, navigate]);
-
-  useEffect(() => {
-    if (isLogin) {
-      fetchUsers();
-    }
-  }, [isLogin, page, fetchUsers]);
-
+/* 
   //get all products
   const fetchProducts = useCallback(async () => {
     try {
@@ -79,7 +57,7 @@ function Admin_dashboard() {
     } catch (err) {
       console.error("FRONTEND ERROR:", err);
     }
-  }, []);
+  }, []); */
 
   /* ================= EFFECTS ================= */
   useEffect(() => {
@@ -96,11 +74,6 @@ function Admin_dashboard() {
     verifyAuth();
   }, [navigate]);
 
-  useEffect(() => {
-    if (isLogin) {
-      fetchProducts();
-    }
-  }, [fetchProducts, isLogin]);
 
 
 
@@ -110,19 +83,6 @@ function Admin_dashboard() {
 
 
 
-  /* ================= ACTIONS ================= */
-  const handleBlock = async (id: string) => {
-    if (!window.confirm("Are you sure?")) return;
-
-    try {
-      await blockUserApi(id);
-      toast.success("User updated");
-      fetchUsers();
-    } catch {
-      toast.error("Unauthorized");
-      navigate("/");
-    }
-  };
 
 
   const logout = async () => {
@@ -188,6 +148,8 @@ function Admin_dashboard() {
                         Dashboard
                       </button>
                     </li>
+
+                    {/* products */}
                     <li className="nav-item">
 
                       <button
@@ -205,6 +167,27 @@ function Admin_dashboard() {
                         Products
                       </button>
                     </li>
+                    {/* users */}
+
+                     <li className="nav-item">
+
+                      <button
+                        type="button"
+                        className={`nav-link text-start border-0 w-100 px-3 py-2 mb-2 rounded-3 ${activeTab === "User"
+                            ? "bg-primary text-white shadow-sm"
+                            : "text-muted hover-bg-light"
+                          }`}
+                        onClick={() => {
+                          setActiveTab("User");
+                          navigate("/admin-dash/user");
+                        }}
+                      >
+                        <i className="bi bi-box-seam me-2"></i>
+                        Users
+                      </button>
+                    </li>
+
+
                     <li className="nav-item">
                       <button
                         type="button"
@@ -221,6 +204,25 @@ function Admin_dashboard() {
                         Pages
                       </button>
                     </li>
+
+                    {/* customer list */}
+                    <li className="nav-item">
+
+                      <button
+                        type="button"
+                        className={`nav-link text-start border-0 w-100 px-3 py-2 mb-2 rounded-3 ${activeTab === "Customer_list"
+                            ? "bg-primary text-white shadow-sm"
+                            : "text-muted hover-bg-light"
+                          }`}
+                        onClick={() => {
+                          setActiveTab("Customer_list");
+                          navigate("/admin-dash/Customer_list");
+                        }}
+                      >
+                        <i className="bi bi-box-seam me-2"></i>
+                        Customer_list
+                      </button>
+                    </li>
                   </ul>
                 </div>
               </nav>
@@ -231,7 +233,7 @@ function Admin_dashboard() {
                 {activeTab === "dashboard" && (
                   <>
                     <div className="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
-                      <h1 className="h2 fw-bold text-dark">Dashboard hai Overview</h1>
+                      <h1 className="h2 fw-bold text-dark">Dashboard Overview</h1>
                     </div>
 
                     {/* STATISTICS CARDS */}
@@ -244,7 +246,7 @@ function Admin_dashboard() {
                                 <i className="bi bi-people-fill text-white fs-5"></i>
                               </div>
                               <div>
-                                <h4 className="mb-0 fw-bold text-primary">{user_count}</h4>
+                                <h4 className="mb-0 fw-bold text-primary">10</h4>
                                 <p className="mb-0 text-muted small">Total Users</p>
                               </div>
                             </div>
@@ -260,7 +262,7 @@ function Admin_dashboard() {
                                 <i className="bi bi-boxes text-white fs-5"></i>
                               </div>
                               <div>
-                                <h4 className="mb-0 fw-bold text-success">{product_count}</h4>
+                                <h4 className="mb-0 fw-bold text-success">10</h4>
                                 <p className="mb-0 text-muted small">Products</p>
                               </div>
                             </div>
@@ -301,98 +303,9 @@ function Admin_dashboard() {
                       </div>
                     </div>
 
-                    {/* USERS TABLE */}
-                    <div className="card shadow-sm border-0">
-                      <div className="card-header bg-white border-0 pb-0">
-                        <h5 className="mb-3 fw-semibold text-dark">Users Management</h5>
-                      </div>
-                      <div className="card-body p-0">
-                        <div className="table-responsive">
-                          <table className="table table-hover mb-0 align-middle">
-                            <thead className="table-light">
-                              <tr>
-                                <th className="border-0 py-3">
-                                  <div className="d-flex align-items-center">
-                                    <span className="fw-semibold text-dark fs-6">Name</span>
-                                  </div>
-                                </th>
-                                <th className="border-0 py-3">
-                                  <span className="fw-semibold text-dark fs-6">Email</span>
-                                </th>
-                                <th className="border-0 py-3 text-center">
-                                  <span className="fw-semibold text-dark fs-6">Status</span>
-                                </th>
-                                <th className="border-0 py-3 text-center">
-                                  <span className="fw-semibold text-dark fs-6">Actions</span>
-                                </th>
-                              </tr>
-                            </thead>
-                            <tbody>
-                              {users.length > 0 ? (
-                                users.map((item) => (
-                                  <tr key={item._id} className="hover-row">
-                                    <td className="py-4">
-                                      <div className="d-flex align-items-center">
-                                        <div className="avatar-sm rounded-circle bg-light d-flex align-items-center justify-content-center me-3">
-                                          <i className="bi bi-person fs-6 text-muted"></i>
-                                        </div>
-                                        <div>
-                                          <div className="fw-semibold text-dark">{item.username}</div>
-                                        </div>
-                                      </div>
-                                    </td>
-                                    <td className="py-4">
-                                      <div className="fw-medium text-dark">{item.mailId}</div>
-                                    </td>
-                                    <td className="py-4 text-center">
-                                      <span
-                                        className={`badge fs-6 fw-semibold px-3 py-2 rounded-pill ${item.isBlocked
-                                            ? "bg-danger-subtle text-danger border border-danger-subtle"
-                                            : "bg-success-subtle text-success border border-success-subtle"
-                                          }`}
-                                      >
-                                        {item.isBlocked ? "Blocked" : "Active"}
-                                      </span>
-                                    </td>
-                                    <td className="py-4 text-center">
-                                      <button
-                                        type="button"
-                                        className={`btn btn-sm fw-semibold px-4 ${item.isBlocked
-                                            ? "btn-outline-success hover-shadow"
-                                            : "btn-outline-danger hover-shadow"
-                                          }`}
-                                        onClick={() => handleBlock(item._id)}
-                                      >
-                                        {item.isBlocked ? "Unblock" : "Block"}
-                                      </button>
-                                    </td>
-                                  </tr>
-                                ))
-                              ) : (
-                                <tr>
-                                  <td colSpan={4} className="text-center py-5 text-muted">
-                                    <i className="bi bi-people display-4 opacity-25 mb-3 d-block"></i>
-                                    <div className="fs-4">No users found</div>
-                                    <small>Users will appear here once registered.</small>
-                                  </td>
-                                </tr>
-                              )}
-                            </tbody>
-                          </table>
-                          {/* pagination */}
-                          <div className="d-flex justify-content-center align-items-center mb-2 mt-2">
-                            <Pagination
-                              currentPage={page}
-                              totalPages={totalPages}
-                              onChange={(newPage) => setPage(newPage)}
-                            />
-                          </div>
-                        </div>
-                      </div>
-                    </div>
+                    
                   </>
                 )}
-
                 {/* ===== PRODUCTS ===== */}
                 {activeTab === "products" && (
                   <div className="card shadow-sm border-0">
@@ -407,12 +320,38 @@ function Admin_dashboard() {
                   </div>
                 )}
 
+                {/* ===== PRODUCTS ===== */}
+                {activeTab === "User" && (
+                  <div className="card shadow-sm border-0">
+                    <div className="card-header bg-white border-0 pb-0">
+                      <h1 className="h2 mb-3 fw-bold text-dark">
+                        Users List
+                      </h1>
+                    </div>
+                    <div className="card-body">
+                      <Outlet />
+                    </div>
+                  </div>
+                )}
 
-                {/* ===== ORDERS ===== */}
+
+                {/* ===== Pages ===== */}
                 {activeTab === "pages" && (
                   <div className="card shadow-sm border-0">
                     <div className="card-header bg-white border-0 pb-0">
                       <h1 className="h2 mb-3 fw-bold text-dark">Pages Management</h1>
+                    </div>
+                    <div className="card-body">
+                      <Outlet /> {/* 👈 Page list OR Add page loads here */}
+                    </div>
+                  </div>
+                )}
+
+                 {/* ===== customer list ===== */}
+                {activeTab === "Customer_list" && (
+                  <div className="card shadow-sm border-0">
+                    <div className="card-header bg-white border-0 pb-0">
+                      <h1 className="h2 mb-3 fw-bold text-dark">Customers Management</h1>
                     </div>
                     <div className="card-body">
                       <Outlet /> {/* 👈 Page list OR Add page loads here */}

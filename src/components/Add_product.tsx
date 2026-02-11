@@ -75,47 +75,60 @@ export default function Add_product() {
 
       <div className="card shadow p-4">
         <form onSubmit={handleSubmit}>
-          <input
-            className="form-control mb-3"
-            placeholder="Product name"
-            value={formData.name}
-            onChange={(e) =>
-              setFormData({ ...formData, name: e.target.value })
-            }
-          />
+          
+         <div>
+          <label className="form-label">Product Name</label>
+            <input
+              className="form-control mb-3"
+              value={formData.name}
+              onChange={(e) =>
+                setFormData({ ...formData, name: e.target.value })
+              }
+            />
+         </div>
 
-          <input
-            type="number"
-            className="form-control mb-3"
-            placeholder="Price"
-            value={formData.price}
-            onChange={(e) =>
-              setFormData({ ...formData, price: e.target.value })
-            }
-          />
+          <div className="row">
+            <div className="col-md-6">
+              <label className="form-label">Price</label>
+              <input
+                type="text"
+                className="form-control mb-3"
+                value={formData.price}
+                onChange={(e) =>
+                  setFormData({ ...formData, price: e.target.value })
+                }
+              />
+            </div>
+  
+            <div className="col-md-6">
+              <label className="form-label">Quantity</label>
+              <input
+                type="text"
+                className="form-control mb-3"
+                value={formData.quantity}
+                onChange={(e) =>
+                  setFormData({ ...formData, quantity: e.target.value })
+                }
+              />
+            </div>
+  
+          </div>
 
-          <input
-            type="number"
-            className="form-control mb-3"
-            placeholder="Quantity"
-            value={formData.quantity}
-            onChange={(e) =>
-              setFormData({ ...formData, quantity: e.target.value })
-            }
-          />
+          <div>
+            <label className="form-label">Product Image</label>
+            <input
+              type="file"
+              className="form-control mb-3"
+              onChange={(e) =>
+                setFormData({
+                  ...formData,
+                  image: e.target.files?.[0] || null,
+                })
+              }
+            />
+          </div>
 
-          <input
-            type="file"
-            className="form-control mb-3"
-            onChange={(e) =>
-              setFormData({
-                ...formData,
-                image: e.target.files?.[0] || null,
-              })
-            }
-          />
-
-          <button className="btn btn-success w-100">
+          <button className="btn btn-success">
             {product ? "Update Product" : "Add Product"}
           </button>
         </form>

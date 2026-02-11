@@ -8,6 +8,9 @@ import PageEditor from "./pages/PageEditor";
 import Add_page from "./components/add_page";
 import Add_product from "./components/Add_product";
 import Products from "./components/Products";
+import User_page from "./components/User_page";
+import Customer_list from "./components/Customer_list";
+import Add_user from "./components/Add_user";
 
 function App() {
   return (
@@ -22,6 +25,11 @@ function App() {
 
           <Route path="products" element={<Products />} />
           <Route path="product/add" element={<Add_product/>} />
+
+          <Route path="user" element={<User_page/>}  />
+          <Route path="user/add" element={<Add_user/>}  />
+
+          <Route path="Customer_list" element={<Customer_list/>} />
         </Route>
       </Routes>
 
