@@ -47,7 +47,7 @@ export type AdminProduct = {
   name: string;
   price: number | string;
   quantity: number | string;
-  image: File | null;
+  images: File[]
 };
 
 //product types
@@ -56,7 +56,7 @@ export type fetchedProducts={
   productName: string;
   price: number | string;
   quantity: number | string;
-  image: string; // image URL
+  images:string[]; // image URL
 
 }
 //paginate

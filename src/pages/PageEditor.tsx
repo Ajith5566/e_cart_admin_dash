@@ -75,7 +75,7 @@ export default function PageEditor() {
     <div className="container p-4" >
       <div className="d-flex justify-content-end p-3 " >
         <button
-          className="btn btn-primary"
+          className="btn btn-success"
           onClick={() => navigate("/admin-dash/pages/add")}
         >
           + Add Page
@@ -93,8 +93,10 @@ export default function PageEditor() {
           </button>
 
         </div>
-
-        <ProductSearch value={search} onChange={setSearch} />
+         <div className="d-flex gap-2 justify-content-center align-items-center">
+             <h6>Search:</h6>
+          <ProductSearch value={search} onChange={setSearch} />
+         </div>
       </div>
 
       {/* ---------- PAGE LIST ---------- */}

@@ -113,7 +113,9 @@ useEffect(() => {
                     <tr key={item._id}>
                       <td>
                         <img
-                          src={`${BASE_URL}/uploads/${item.image}`}
+                          src={item.images?.length
+                            ? `${BASE_URL}/uploads/${item.images[0]}`
+                            : "/no-image.png"}
                           className={styles.tableImg}
                           alt=""
                         />
