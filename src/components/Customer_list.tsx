@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react'
+import  { useCallback, useEffect, useState } from 'react'
 import Pagination from './Pagination'
 import { blockUserApi, getAllusersApi } from '../services/allAPi';
 import { toast } from 'react-toastify';
