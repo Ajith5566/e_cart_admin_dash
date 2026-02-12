@@ -33,46 +33,28 @@ function Admin_dashboard() {
   /* ================= EFFECTS ================= */
   useEffect(() => {
 
-    const verifyAuth = async () => {
-      try {
-        await checkAdminAuthApi();
-        setIsLogin(true);
-      } catch {
-        setIsLogin(false);
-      } finally {
-        setAuthChecked(true);
-      }
-    };
-
-    verifyAuth();
-
-  }, []);
-
-/* 
-  //get all products
-  const fetchProducts = useCallback(async () => {
+  const verifyAuth = async () => {
     try {
-      const result = await getAllProductsApi();
-      setProducts(result.data.docs);
-    } catch (err) {
-      console.error("FRONTEND ERROR:", err);
+      await checkAdminAuthApi();
+
+      setIsLogin(true);
+
+    } catch {
+
+      setIsLogin(false);
+      navigate("/");   // redirect if not login
+
+    } finally {
+
+      setAuthChecked(true);   // loading finished
+
     }
-  }, []); */
+  };
 
-  /* ================= EFFECTS ================= */
-  useEffect(() => {
-    const verifyAuth = async () => {
-      try {
-        await checkAdminAuthApi(); // calls /admin/me
-        setIsLogin(true);
-      } catch {
-        setIsLogin(false);
-        navigate("/"); // login page
-      }
-    };
+  verifyAuth();
 
-    verifyAuth();
-  }, [navigate]);
+}, [navigate]);
+
 
 
 
