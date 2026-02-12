@@ -1,5 +1,5 @@
 /* eslint-disable react-hooks/exhaustive-deps */
-import  { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import styles from "./adminProduct.module.css";
 import { toast } from "react-toastify";
 import type { fetchedProducts } from "../types/types";
@@ -27,7 +27,7 @@ export default function Products() {
     try {
       const res = await getAllProductsApi(page, 5, search);
       console.log(res);
-      
+
 
       // 👇 IMPORTANT
       setProducts(res.data.docs);       // backend must send docs
@@ -38,13 +38,13 @@ export default function Products() {
     }
   };
 
-useEffect(() => {
-  setPage(1);
-}, [search]);
+  useEffect(() => {
+    setPage(1);
+  }, [search]);
 
-useEffect(() => {
-  fetchProducts();
-}, [page, search]);
+  useEffect(() => {
+    fetchProducts();
+  }, [page, search]);
 
 
 
@@ -63,38 +63,42 @@ useEffect(() => {
   };
 
   /* ---------- SEARCH FILTER ---------- */
- /*  const filteredProducts = products.filter((item) =>
-    item.productName
-      .toLowerCase()
-      .startsWith(search.toLowerCase())
-  );
- */
+  /*  const filteredProducts = products.filter((item) =>
+     item.productName
+       .toLowerCase()
+       .startsWith(search.toLowerCase())
+   );
+  */
   return (
     <div className={styles.classicPage}>
-      
-            <div className="d-flex justify-content-end p-3">
-              <button
-                className="btn btn-success"
-                onClick={() => navigate("/admin-dash/product/add")}
-              >
-                + Add Product
-              </button>
-            </div>
-      <div className="container py-4">
+      <div className="p-3">
+        <h4 className="  fw-bold text-dark">
+          Products
+        </h4>
+      </div>
 
-        {/* HEADER + SEARCH */}
-        <div className="d-flex justify-content-end align-items-center mb-3">
 
-          <div className="d-flex gap-2 justify-content-center align-items-center">
-            <h6>Search:</h6>
-            <ProductSearch value={search} onChange={setSearch} />
-
-          </div>
+      {/* PRODUCT LIST */}
+      <div className={`card shadow ${styles.listCard}`} >
+        <div className="d-flex justify-content-end p-3">
+          <button
+            className="btn btn-success"
+            onClick={() => navigate("/admin-dash/product/add")}
+          >
+            + Add Product
+          </button>
         </div>
+        <div className="container py-4">
+          {/* HEADER + SEARCH */}
+          <div className="d-flex justify-content-end align-items-center mb-3">
 
-        {/* PRODUCT LIST */}
-        <div className={`card shadow ${styles.listCard}`} style={{minHeight:"650px"}}>
-          <div className="card-body table-responsive" >
+            <div className="d-flex gap-2 justify-content-center align-items-center">
+              <h6>Search:</h6>
+              <ProductSearch value={search} onChange={setSearch} />
+
+            </div>
+          </div>
+          <div className="card-body table-responsive" style={{ minHeight: "520px" }}>
             <table className="table table-hover align-middle mb-0">
               <thead>
                 <tr>
@@ -124,25 +128,25 @@ useEffect(() => {
                       <td>₹{item.price}</td>
                       <td>{item.quantity}</td>
                       <td>
-                          <button
-                            className="btn btn-sm btn-warning"
-                            onClick={() =>
-                              navigate("/admin-dash/product/add", {
-                                state: { product: item },
-                              })
-                            }
-                          >
-                            Edit
-                          </button>
+                        <button
+                          className="btn btn-sm btn-warning"
+                          onClick={() =>
+                            navigate("/admin-dash/product/add", {
+                              state: { product: item },
+                            })
+                          }
+                        >
+                          Edit
+                        </button>
                       </td>
                       <td>
-                        
-                          <button
-                            className="btn btn-sm btn-danger"
-                            onClick={() => handleDelete(item._id)}
-                          >
-                            Delete
-                          </button>
+
+                        <button
+                          className="btn btn-sm btn-danger"
+                          onClick={() => handleDelete(item._id)}
+                        >
+                          Delete
+                        </button>
                       </td>
                     </tr>
                   ))
@@ -156,22 +160,24 @@ useEffect(() => {
               </tbody>
             </table>
 
-           
+
 
           </div>
-           {/* ✅ PAGINATION UI (same as PageEditor) */}
-            <div className="d-flex justify-content-center align-items-center mb-2 gap-2 flex-wrap">
-
-                <Pagination
-                  currentPage={page}
-                  totalPages={totalPages}
-                  onChange={(newPage) => setPage(newPage)}
-                />
-
-            </div>
+          
 
         </div>
+        {/* ✅ PAGINATION UI (same as PageEditor) */}
+          <div className="d-flex justify-content-center align-items-center mb-2 gap-2 flex-wrap">
+
+            <Pagination
+              currentPage={page}
+              totalPages={totalPages}
+              onChange={(newPage) => setPage(newPage)}
+            />
+
+          </div>
       </div>
+      
     </div>
   );
 }

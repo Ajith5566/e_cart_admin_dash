@@ -309,11 +309,6 @@ function Admin_dashboard() {
                 {/* ===== PRODUCTS ===== */}
                 {activeTab === "products" && (
                   <div className="card shadow-sm border-0">
-                    <div className="card-header bg-white border-0 pb-0">
-                      <h1 className="h2 mb-3 fw-bold text-dark">
-                        Products List
-                      </h1>
-                    </div>
                     <div className="card-body">
                       <Outlet />
                     </div>
@@ -323,11 +318,6 @@ function Admin_dashboard() {
                 {/* ===== PRODUCTS ===== */}
                 {activeTab === "User" && (
                   <div className="card shadow-sm border-0">
-                    <div className="card-header bg-white border-0 pb-0">
-                      <h1 className="h2 mb-3 fw-bold text-dark">
-                        Users List
-                      </h1>
-                    </div>
                     <div className="card-body">
                       <Outlet />
                     </div>
@@ -338,9 +328,6 @@ function Admin_dashboard() {
                 {/* ===== Pages ===== */}
                 {activeTab === "pages" && (
                   <div className="card shadow-sm border-0">
-                    <div className="card-header bg-white border-0 pb-0">
-                      <h1 className="h2 mb-3 fw-bold text-dark">Pages Management</h1>
-                    </div>
                     <div className="card-body">
                       <Outlet /> {/* 👈 Page list OR Add page loads here */}
                     </div>

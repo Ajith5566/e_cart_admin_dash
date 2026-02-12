@@ -131,7 +131,7 @@ function Add_user() {
             className="btn btn-secondary mb-3"
             onClick={() => navigate("/admin-dash/user")}
           >
-            ← Back
+            ← Back to users
           </button>
         </div>
 
@@ -140,8 +140,9 @@ function Add_user() {
           <div className="row">
 
             <div className="col-md-6 mb-3">
-              <label className="form-label">User Name</label>
+              <label htmlFor='userName' className="form-label">User Name</label>
               <input
+                name='userName'
                 type="text"
                 className="form-control"
                 required
@@ -153,8 +154,9 @@ function Add_user() {
             </div>
 
             <div className="col-md-6 mb-3">
-              <label className="form-label">Email</label>
+              <label htmlFor='email' className="form-label">Email</label>
               <input
+                name='email'
                 type="email"
                 className="form-control"
                 required
@@ -171,9 +173,10 @@ function Add_user() {
 
             {/* Password */}
             <div className="mb-3 col-md-6 position-relative px-2" >
-              <label className="form-label">Password</label>
+              <label htmlFor='password' className="form-label">Password</label>
 
               <input
+                name='password'
                 type={showPassword ? "text" : "password"}
                 className="form-control"
                 required={!isEditMode}
@@ -193,9 +196,10 @@ function Add_user() {
 
             {/* Confirm Password */}
             <div className="mb-3 col-md-6 position-relative px-2">
-              <label className="form-label">Confirm Password</label>
+              <label htmlFor='confirmPassword' className="form-label">Confirm Password</label>
 
               <input
+                name='confirmPassword'
                 type={showConfirmPassword ? "text" : "password"}
                 className="form-control"
                 required={!isEditMode}
@@ -217,9 +221,10 @@ function Add_user() {
 
           {/* Role */}
           <div className="mb-3 w-50">
-            <label className="form-label">User Type</label>
+            <label htmlFor='userType' className="form-label">User Type</label>
 
             <select
+            name='userType'
               className="form-select"
               value={formData.role}
               onChange={(e) =>
