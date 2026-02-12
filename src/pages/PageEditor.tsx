@@ -10,6 +10,8 @@ import { useNavigate } from "react-router-dom";
 import ProductSearch from "../components/Search_bar";
 import Pagination from "../components/Pagination";
 import '../components/common_toggle.css'
+import '../components/common_styels.css'
+
 /* -------------------- TYPES -------------------- */
 
 type PageType = {
@@ -73,6 +75,11 @@ export default function PageEditor() {
 
   return (
     <div className="container p-4" >
+      <div className="p-3">
+        <h4 className="  fw-bold text-dark">
+          Page
+        </h4>
+      </div>
       <div className="d-flex justify-content-end p-3 " >
         <button
           className="btn btn-success"
@@ -82,7 +89,6 @@ export default function PageEditor() {
         </button>
       </div>
       <div className="d-flex justify-content-between mb-3">
-        <h2>Manage Pages</h2>
         <div className="d-flex gap-2">
 
           <button
@@ -101,22 +107,33 @@ export default function PageEditor() {
 
       {/* ---------- PAGE LIST ---------- */}
       <div style={{ minHeight: "420px" }}>
-        <table className="table table-bordered align-middle"  >
+        <table className="table  table-hover  align-middle"  >
           <thead>
             <tr>
               <th>Title</th>
-              <th>Slug</th>
+              <th>Edit</th>
               <th>Status</th>
-              <th style={{ width: 200 }}>Action</th>
+              <th>Delete</th>
             </tr>
           </thead>
 
           <tbody>
             {pages.length ? (
               pages.map((p) => (
-                <tr key={p._id}>
+                <tr key={p._id}  className="tableRowHeight">
                   <td>{p.title}</td>
-                  <td>{p.slug}</td>
+                  <td>
+                      <button
+                      className="btn btn-warning btn-sm"
+                      onClick={() =>
+                        navigate("/admin-dash/pages/add", {
+                          state: { page: p },
+                        })
+                      }
+                    >
+                      Edit
+                    </button>
+                  </td>
                   <td>
                     <label className="toggle-switch">
                       <input
@@ -136,17 +153,7 @@ export default function PageEditor() {
                     </label>
                   </td>
 
-                  <td className="d-flex gap-2">
-                    <button
-                      className="btn btn-warning btn-sm"
-                      onClick={() =>
-                        navigate("/admin-dash/pages/add", {
-                          state: { page: p },
-                        })
-                      }
-                    >
-                      Edit
-                    </button>
+                  <td>
 
                     <button
                       className="btn btn-danger btn-sm"

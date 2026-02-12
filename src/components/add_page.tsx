@@ -21,6 +21,7 @@ function Add_page() {
 
     const location = useLocation();
 const page = location.state?.page;
+const isEditMode = !!page
 
     const navigate = useNavigate();
       const [title, setTitle] = useState("");
@@ -98,7 +99,9 @@ const page = location.state?.page;
         <div className='p-5'>
             
            <div className='d-flex justify-content-between'> 
-                <h2 className="mb-4 fw-bold">Add Pages</h2>
+                <h2 className="mb-4 fw-bold">
+            {isEditMode ? "Edit Page" : "Add Page"}
+          </h2>
                 <button
                     className="btn btn-secondary mb-3"
                     onClick={() => navigate("/admin-dash/pages")}
@@ -115,15 +118,17 @@ const page = location.state?.page;
                         Editing page: <strong>{editingPage.title}</strong>
                       </div>
                     )}
-            
+                    <label htmlFor="title"  className='form-label'>Title</label>
                     <input
+                    name='title'
                       className="form-control mb-3"
                       placeholder="Page title"
                       value={title}
                       onChange={(e) => setTitle(e.target.value)}
                     />
-            
+                    <label htmlFor="short_description"  className='form-label'>Short description</label>
                     <textarea
+                      name='short_description'
                       className="form-control mb-3"
                       placeholder="Short description"
                       value={shortDesc}

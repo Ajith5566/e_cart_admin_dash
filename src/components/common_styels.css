@@ -1,3 +1,7 @@
 .font_small{
     font-size: 12px;
 }
+
+.tableRowHeight {
+  height: 80px;
+}
