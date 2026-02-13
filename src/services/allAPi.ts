@@ -1,3 +1,4 @@
+import type { PageQueryParams, ProductQueryParams, UserQueryParams } from "../types/allAPi_types";
 import type { AdminUserPayload,  fetchedProducts, GetPagesResponse, ProductResponse } from "../types/types";
 import { BASE_URL } from "./baseURL";
 import { commonApi } from "./commonAPi";
@@ -54,8 +55,8 @@ export const AddproductApi = <T = unknown>(reqBody: unknown) => {
   );
 };
 
-export const getAllProductsApi = (page = 1,
-  limit = 5,search = "") => {
+export const getAllProductsApi = ({page = 1,
+  limit = 5,search = ""}:ProductQueryParams) => {
   return commonApi<ProductResponse>(
     "GET",
     `${BASE_URL}/admin/products?page=${page}&limit=${limit}&search=${search}`
@@ -97,11 +98,11 @@ export const addPageApi = (data: PagePayload) => {
   );
 };
 
-export const getAllPagesApi = (
+export const getAllPagesApi = ({
   page = 1,
   limit = 5,
   search="",
-   inactive = false
+   inactive = false}:PageQueryParams
 ) => {
   return commonApi(
     "GET",
@@ -141,10 +142,10 @@ export const register_AdminUser_Api =async (reqBody:unknown)=>{
 }
 
 //fetch all admin users
-export const getAdmin_UserApi = async (
+export const getAdmin_UserApi = async ({
   page = 1,
   limit = 5,
-  search="",
+  search=""}:UserQueryParams
 ) => {
   return await commonApi("GET",`${BASE_URL}/admin_user/list?page=${page}&limit=${limit}&search=${search}`);
 };

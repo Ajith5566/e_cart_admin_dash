@@ -28,6 +28,15 @@ function Add_user() {
     role: ""
   })
 
+  const [errors, setErrors] = useState({
+    name: "",
+    email: "",
+    password: "",
+    confirmPassword: "",
+    role: ""
+  });
+
+
   /* ---------- LOAD EDIT DATA ---------- */
 
   useEffect(() => {
@@ -44,74 +53,139 @@ function Add_user() {
 
   }, [edituser])
 
+
+
+  /* validation error */
+  const validateForm = () => {
+
+    const newErrors = {
+      name: "",
+      email: "",
+      password: "",
+      confirmPassword: "",
+      role: ""
+    };
+
+    let isValid = true;
+
+    if (!formData.name.trim()) {
+      newErrors.name = "Name is required";
+      isValid = false;
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+    if (!formData.email.trim()) {
+      newErrors.email = "Email is required";
+      isValid = false;
+    } else if (!emailRegex.test(formData.email)) {
+      newErrors.email = "Invalid email format";
+      isValid = false;
+    }
+
+    if (!formData.role) {
+      newErrors.role = "Role is required";
+      isValid = false;
+    }
+
+    // ADD MODE
+    if (!isEditMode) {
+
+      if (!formData.password.trim()) {
+        newErrors.password = "Password required";
+        isValid = false;
+      }
+
+      if (formData.password !== formData.confirmPassword) {
+        newErrors.confirmPassword = "Passwords do not match";
+        isValid = false;
+      }
+    }
+
+    // EDIT MODE
+    if (isEditMode && formData.password.trim()) {
+
+      if (formData.password !== formData.confirmPassword) {
+        newErrors.confirmPassword = "Passwords do not match";
+        isValid = false;
+      }
+    }
+
+    setErrors(newErrors);
+
+    return isValid;
+  };
+
   /* ---------- SUBMIT ---------- */
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
 
-  e.preventDefault();
+    e.preventDefault();
+    if (!validateForm()) return;
 
-  try {
 
-    if (!formData.name.trim() || !formData.email.trim()) {
-      toast.error("All fields required");
-      return;
-    }
+    try {
 
-    // ⭐ ADD MODE validation
-    if (!isEditMode) {
-
-      if (!formData.password.trim()) {
-        toast.error("Password required");
+      if (!formData.name.trim() || !formData.email.trim()) {
+        toast.error("All fields required");
         return;
       }
 
-      if (formData.password !== formData.confirmPassword) {
-        toast.error("Passwords do not match");
-        return;
+      // ⭐ ADD MODE validation
+      if (!isEditMode) {
+
+        if (!formData.password.trim()) {
+          toast.error("Password required");
+          return;
+        }
+
+        if (formData.password !== formData.confirmPassword) {
+          toast.error("Passwords do not match");
+          return;
+        }
       }
-    }
 
-    // ⭐ EDIT MODE validation
-    if (isEditMode && formData.password.trim()) {
+      // ⭐ EDIT MODE validation
+      if (isEditMode && formData.password.trim()) {
 
-      if (formData.password !== formData.confirmPassword) {
-        toast.error("Passwords do not match");
-        return;
+        if (formData.password !== formData.confirmPassword) {
+          toast.error("Passwords do not match");
+          return;
+        }
       }
+
+      setLoading(true);
+
+      if (isEditMode) {
+
+        await updateAdmin_user_Api(edituser._id, {
+          name: formData.name,
+          email: formData.email,
+          password: formData.password, // will update only if provided
+          role: formData.role
+        });
+
+        toast.success("User updated");
+
+      } else {
+
+        await register_AdminUser_Api(formData);
+
+        toast.success("User created successfully");
+      }
+
+      navigate("/admin-dash/user");
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (error: any) {
+
+      toast.error(error?.response?.data?.message || "Action failed");
+
+    } finally {
+
+      setLoading(false);
     }
-
-    setLoading(true);
-
-    if (isEditMode) {
-
-      await updateAdmin_user_Api(edituser._id, {
-        name: formData.name,
-        email: formData.email,
-        password: formData.password, // will update only if provided
-        role: formData.role
-      });
-
-      toast.success("User updated");
-
-    } else {
-
-      await register_AdminUser_Api(formData);
-
-      toast.success("User created successfully");
-    }
-
-    navigate("/admin-dash/user");
-
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  } catch (error: any) {
-
-    toast.error(error?.response?.data?.message || "Action failed");
-
-  } finally {
-
-    setLoading(false);
-  }
-};
+  };
 
 
   /* ---------- UI ---------- */
@@ -135,56 +209,58 @@ function Add_user() {
           </button>
         </div>
 
-        <form onSubmit={handleSubmit}>
+        <form onSubmit={handleSubmit} noValidate>
 
           <div className="row">
-
+              {/* user name */}
             <div className="col-md-6 mb-3">
               <label htmlFor='userName' className="form-label">User Name</label>
               <input
-                name='userName'
-                type="text"
-                className="form-control"
-                required
+                className={`form-control ${errors.name ? "is-invalid" : ""}`}
                 value={formData.name}
                 onChange={(e) =>
                   setFormData({ ...formData, name: e.target.value })
                 }
               />
+              {errors.name && (
+                <div className="invalid-feedback">{errors.name}</div>
+              )}
             </div>
 
+              {/* email */}
             <div className="col-md-6 mb-3">
               <label htmlFor='email' className="form-label">Email</label>
               <input
-                name='email'
-                type="email"
-                className="form-control"
-                required
+                className={`form-control ${errors.email ? "is-invalid" : ""}`}
                 value={formData.email}
                 onChange={(e) =>
                   setFormData({ ...formData, email: e.target.value })
                 }
               />
+              {errors.email && (
+                <div className="invalid-feedback">{errors.email}</div>
+              )}
             </div>
-
           </div>
 
           <div className='row '>
-
             {/* Password */}
             <div className="mb-3 col-md-6 position-relative px-2" >
               <label htmlFor='password' className="form-label">Password</label>
 
               <input
-                name='password'
+                name="password"
                 type={showPassword ? "text" : "password"}
-                className="form-control"
+                className={`form-control ${errors.password ? "is-invalid" : ""}`}
                 required={!isEditMode}
                 value={formData.password}
                 onChange={(e) =>
                   setFormData({ ...formData, password: e.target.value })
                 }
               />
+              {errors.password && (
+                <div className="invalid-feedback">{errors.password}</div>
+              )}
 
               <span
                 style={{ position: "absolute", right: "10px", top: "38px", cursor: "pointer" }}
@@ -199,15 +275,20 @@ function Add_user() {
               <label htmlFor='confirmPassword' className="form-label">Confirm Password</label>
 
               <input
-                name='confirmPassword'
+                name="confirmPassword"
                 type={showConfirmPassword ? "text" : "password"}
-                className="form-control"
+                className={`form-control ${errors.confirmPassword ? "is-invalid" : ""}`}
                 required={!isEditMode}
                 value={formData.confirmPassword}
                 onChange={(e) =>
                   setFormData({ ...formData, confirmPassword: e.target.value })
                 }
               />
+
+              {errors.confirmPassword && (
+                <div className="invalid-feedback">{errors.confirmPassword}</div>
+              )}
+
 
               <span
                 style={{ position: "absolute", right: "10px", top: "38px", cursor: "pointer" }}
@@ -224,8 +305,8 @@ function Add_user() {
             <label htmlFor='userType' className="form-label">User Type</label>
 
             <select
-            name='userType'
-              className="form-select"
+              name="role"
+              className={`form-select ${errors.role ? "is-invalid" : ""}`}
               value={formData.role}
               onChange={(e) =>
                 setFormData({ ...formData, role: e.target.value })
@@ -235,6 +316,11 @@ function Add_user() {
               <option value="super_admin">Super Admin</option>
               <option value="staff">Staff</option>
             </select>
+
+            {errors.role && (
+              <div className="invalid-feedback">{errors.role}</div>
+            )}
+
           </div>
 
           {/* Submit */}

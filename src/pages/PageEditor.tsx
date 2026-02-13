@@ -11,6 +11,7 @@ import ProductSearch from "../components/Search_bar";
 import Pagination from "../components/Pagination";
 import '../components/common_toggle.css'
 import '../components/common_styels.css'
+import PaginationLimit from "../components/PaginationLimit";
 
 /* -------------------- TYPES -------------------- */
 
@@ -40,8 +41,9 @@ export default function PageEditor() {
   // Pagination
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+  const [limit, setLimit]=useState(5)
+
   const [search, setSearch] = useState("");
-  const [showInactive, setShowInactive] = useState(false);
 
 
   /* ---------- FETCH PAGES ---------- */
@@ -50,8 +52,8 @@ export default function PageEditor() {
     try {
       setLoading(true);
 
-      const res = (await getAllPagesApi(
-        page, 5, search, showInactive
+      const res = (await getAllPagesApi({
+        page, limit, search}
       )) as AxiosResponse<GetPagesResponse>;
 
       setPages(res.data.docs);
@@ -61,7 +63,7 @@ export default function PageEditor() {
     } finally {
       setLoading(false);
     }
-  }, [page, search, showInactive]);
+  }, [page, search,limit]);
 
 
   useEffect(() => {
@@ -70,7 +72,7 @@ export default function PageEditor() {
 
   useEffect(() => {
     setPage(1);
-  }, [search,showInactive]);
+  }, [search]);
   /* -------------------- UI -------------------- */
 
   return (
@@ -81,6 +83,7 @@ export default function PageEditor() {
         </h4>
       </div>
       <div className="d-flex justify-content-end p-3 " >
+       
         <button
           className="btn btn-success"
           onClick={() => navigate("/admin-dash/pages/add")}
@@ -89,16 +92,7 @@ export default function PageEditor() {
         </button>
       </div>
       <div className="d-flex justify-content-between mb-3">
-        <div className="d-flex gap-2">
-
-          <button
-            className={`btn ${showInactive ? "btn-danger" : "btn-outline-danger"}`}
-            onClick={() => setShowInactive(prev => !prev)}
-          >
-            {showInactive ? "Showing Inactive" : "Show Inactive"}
-          </button>
-
-        </div>
+         <PaginationLimit limit={limit} onChange={(newLimit)=>{setLimit(newLimit); setPage(1); }}/>
          <div className="d-flex gap-2 justify-content-center align-items-center">
              <h6>Search:</h6>
           <ProductSearch value={search} onChange={setSearch} />

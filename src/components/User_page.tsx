@@ -11,6 +11,7 @@ import'./common_styels.css'
 import { toast } from "react-toastify";
 import Pagination from "./Pagination";
 import type { AxiosResponse } from "axios";
+import PaginationLimit from "./PaginationLimit";
 /* import Pagination from "./Pagination"; */
 
 export default function Products() {
@@ -22,6 +23,7 @@ export default function Products() {
   //pagination
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+  const [limit, setLimit]=useState(5)
 
   const [search, setSearch] = useState("");
 
@@ -31,7 +33,7 @@ export default function Products() {
 
     try {
 
-      const res = (await getAdmin_UserApi(page, 5, search)) as AxiosResponse<GetUserResponse>;
+      const res = (await getAdmin_UserApi({ page,limit, search})) as AxiosResponse<GetUserResponse>;
       console.log(res);
       setUsers(res.data.docs);
       setTotalPages(res.data.totalPages);
@@ -41,7 +43,7 @@ export default function Products() {
       console.error(error);
     }
 
-  }, [page, search]);
+  }, [page,limit, search]);
 
 
   useEffect(() => {
@@ -52,7 +54,7 @@ export default function Products() {
 
   useEffect(() => {
     setPage(1);
-  }, [search]);
+  }, [search,limit]);
 
 
 
@@ -75,7 +77,7 @@ export default function Products() {
       </div>
 
       
-      <div className="container py-4">
+      <div className="container">
 
         {/* PRODUCT LIST */}
         <div className={`card shadow ${styles.listCard}`} style={{ minHeight: "650px" }}>
@@ -88,7 +90,8 @@ export default function Products() {
         </button>
       </div>
           {/* HEADER + SEARCH */}
-        <div className="d-flex justify-content-end align-items-center mb-3">
+        <div className="d-flex justify-content-between align-items-center mb-3 p-3">
+          <PaginationLimit limit={limit} onChange={(newLimit)=>{setLimit(newLimit); setPage(1); }}/>
 
           <div className="d-flex gap-2 justify-content-center align-items-center p-2">
             <h6>Search:</h6>
@@ -157,7 +160,7 @@ export default function Products() {
                         <button
                           className="btn btn-sm btn-danger"
                           onClick={async () => {
-                            if (!window.confirm("Delete this page?")) return;
+                            if (!window.confirm("Are you sure you want to delete this user?")) return;
                             await deleteAdmin_userApi(user._id);
                             fetchUsers();
                           }}

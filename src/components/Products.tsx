@@ -11,6 +11,7 @@ import { BASE_URL } from "../services/baseURL";
 import { useNavigate } from "react-router-dom";
 import ProductSearch from "./Search_bar";
 import Pagination from "./Pagination";
+import PaginationLimit from "./PaginationLimit";
 
 export default function Products() {
   const navigate = useNavigate();
@@ -21,11 +22,12 @@ export default function Products() {
   /* ✅ PAGINATION STATE */
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+  const [limit, setLimit]=useState(5)
 
   /* ---------- FETCH PRODUCTS ---------- */
   const fetchProducts = async () => {
     try {
-      const res = await getAllProductsApi(page, 5, search);
+      const res = await getAllProductsApi({ page, limit, search });
       console.log(res);
 
 
@@ -44,7 +46,7 @@ export default function Products() {
 
   useEffect(() => {
     fetchProducts();
-  }, [page, search]);
+  }, [page, search,limit]);
 
 
 
@@ -81,6 +83,7 @@ export default function Products() {
       {/* PRODUCT LIST */}
       <div className={`card shadow ${styles.listCard}`} >
         <div className="d-flex justify-content-end p-3">
+         
           <button
             className="btn btn-success"
             onClick={() => navigate("/admin-dash/product/add")}
@@ -90,8 +93,8 @@ export default function Products() {
         </div>
         <div className="container py-4">
           {/* HEADER + SEARCH */}
-          <div className="d-flex justify-content-end align-items-center mb-3">
-
+          <div className="d-flex justify-content-between align-items-center mb-3">
+               <PaginationLimit limit={limit} onChange={(newLimit)=>{setLimit(newLimit); setPage(1); }}/>
             <div className="d-flex gap-2 justify-content-center align-items-center">
               <h6>Search:</h6>
               <ProductSearch value={search} onChange={setSearch} />
