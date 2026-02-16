@@ -22,3 +22,63 @@
   width: 40px;
   height: 40px;
 }
+.navbar{
+  height: 75px;
+
+}
+
+/* ===== FULL HEIGHT LAYOUT ===== */
+
+html,
+body,
+#root {
+  height: 100%;
+  overflow: hidden;   /* prevent full page scrolling */
+}
+
+
+/* ===== MAIN CONTAINER ===== */
+
+.dashboard-wrapper {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+
+/* ===== CONTENT AREA ===== */
+
+.dashboard-content {
+  flex: 1;
+  display: flex;
+  overflow: hidden;
+}
+
+
+/* ===== SIDEBAR (LEFT) ===== */
+
+.sidebar {
+  height: calc(100vh - 60px); /* minus navbar height */
+  position: sticky;
+  top: 60px;
+  overflow-y: auto;
+}
+
+
+/* ===== RIGHT SIDE SCROLLABLE ===== */
+
+.main-scroll-area {
+  height: calc(100vh - 60px);
+  overflow-y: auto;
+}
+
+#dropedit {
+  position: absolute !important;
+  right: 0 !important;   /* align with avatar */
+  left: auto !important;
+  height: 250px;
+  width: 320px;
+  min-width: 220px;   /* override bootstrap */
+
+  border-radius: 10px;
+}

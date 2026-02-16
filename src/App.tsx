@@ -3,6 +3,7 @@ import "./App.css";
 import HomePage from "./pages/HomePage";
 import Admin_dashboard from "./pages/Admin_dashboard";
 import "bootstrap/dist/css/bootstrap.min.css";
+import 'bootstrap/dist/js/bootstrap.bundle.min.js';
 import { ToastContainer } from "react-toastify";
 import PageEditor from "./pages/PageEditor";
 import Add_page from "./components/add_page";
