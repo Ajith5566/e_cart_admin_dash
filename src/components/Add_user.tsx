@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useEffect, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { toast } from "react-toastify"
@@ -157,13 +158,18 @@ function Add_user() {
       setLoading(true);
 
       if (isEditMode) {
-
-        await updateAdmin_user_Api(edituser._id, {
+        const payload: any = {
           name: formData.name,
           email: formData.email,
-          password: formData.password, // will update only if provided
           role: formData.role
-        });
+        };
+
+        // ONLY send password if user entered
+        if (formData.password.trim()) {
+          payload.password = formData.password;
+        }
+
+        await updateAdmin_user_Api(edituser._id, payload);
 
         toast.success("User updated");
 
@@ -212,9 +218,9 @@ function Add_user() {
         <form onSubmit={handleSubmit} noValidate>
 
           <div className="row">
-              {/* user name */}
+            {/* user name */}
             <div className="col-md-6 mb-3">
-              <label htmlFor='userName' className="form-label">User Name</label>
+              <label htmlFor='userName' className="form-label">User Name <span className="text-danger">*</span></label>
               <input
                 className={`form-control ${errors.name ? "is-invalid" : ""}`}
                 value={formData.name}
@@ -227,9 +233,9 @@ function Add_user() {
               )}
             </div>
 
-              {/* email */}
+            {/* email */}
             <div className="col-md-6 mb-3">
-              <label htmlFor='email' className="form-label">Email</label>
+              <label htmlFor='email' className="form-label">Email <span className="text-danger">*</span></label>
               <input
                 className={`form-control ${errors.email ? "is-invalid" : ""}`}
                 value={formData.email}
@@ -246,7 +252,7 @@ function Add_user() {
           <div className='row '>
             {/* Password */}
             <div className="mb-3 col-md-6 position-relative px-2" >
-              <label htmlFor='password' className="form-label">Password</label>
+              <label htmlFor='password' className="form-label">Password <span className="text-danger">*</span></label>
 
               <input
                 name="password"
@@ -302,7 +308,7 @@ function Add_user() {
 
           {/* Role */}
           <div className="mb-3 w-50">
-            <label htmlFor='userType' className="form-label">User Type</label>
+            <label htmlFor='userType' className="form-label">User Type <span className="text-danger">*</span></label>
 
             <select
               name="role"

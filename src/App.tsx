@@ -12,6 +12,7 @@ import Products from "./components/Products";
 import User_page from "./components/User_page";
 import Customer_list from "./components/Customer_list";
 import Add_user from "./components/Add_user";
+import Settings from "./components/Settings";
 
 function App() {
   return (
@@ -31,6 +32,8 @@ function App() {
           <Route path="user/add" element={<Add_user/>}  />
 
           <Route path="Customer_list" element={<Customer_list/>} />
+
+          <Route path="settings" element={<Settings/>} />
         </Route>
       </Routes>
 

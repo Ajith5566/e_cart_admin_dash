@@ -9,7 +9,7 @@ import './admin_dash.css'
 /* import Products from '../components/Products'; */
 import { Outlet, useNavigate } from "react-router";
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faAngleDown, faBox, faFileLines, faTableCellsLarge, faUserGroup, faUsers } from '@fortawesome/free-solid-svg-icons'
+import { faAngleDown, faBox, faFileLines, faGear, faTableCellsLarge, faUserGroup, faUsers } from '@fortawesome/free-solid-svg-icons'
 import AdminDropDown from '../components/AdminDropDown';
 
 
@@ -30,7 +30,7 @@ function Admin_dashboard() {
 
 
   const [activeTab, setActiveTab] = useState<
-    "dashboard" | "User" | "products" | "pages" | "Customer_list"
+    "dashboard" | "User" | "products" | "pages" | "Customer_list"|"settings"
   >("dashboard");
 
   /*   const user_count = users.length;
@@ -227,6 +227,25 @@ function Admin_dashboard() {
                           Customer_list
                         </button>
                       </li>
+
+                      {/* settings */}
+                      <li className="nav-item">
+                        <button
+                          type="button"
+                          className={`nav-link text-start border-0 w-100 px-3 py-2 rounded-3 ${activeTab === "settings"
+                            ? "bg-primary text-white shadow-sm"
+                            : "text-muted hover-bg-light"
+                            }`}
+                          onClick={() => {
+                            setActiveTab("settings");
+                            navigate("/admin-dash/settings");
+                          }}
+                        >
+                           <FontAwesomeIcon icon={faGear}  />
+                          <i className="bi bi-cart-check me-2"></i>
+                          Settings
+                        </button>
+                      </li>
                     </ul>
                   </div>
                 </nav>
@@ -344,6 +363,15 @@ function Admin_dashboard() {
                       <div className="card-header bg-white border-0 pb-0">
                         <h1 className="h2 mb-3 fw-bold text-dark">Customers Management</h1>
                       </div>
+                      <div className="card-body">
+                        <Outlet /> {/* 👈 Page list OR Add page loads here */}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* ===== Settings ===== */}
+                  {activeTab === "settings" && (
+                    <div className="card shadow-sm border-0">
                       <div className="card-body">
                         <Outlet /> {/* 👈 Page list OR Add page loads here */}
                       </div>

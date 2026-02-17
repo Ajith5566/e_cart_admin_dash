@@ -22,8 +22,9 @@ function Add_page() {
   const location = useLocation();
   const page = location.state?.page;
   const isEditMode = !!page
-
   const navigate = useNavigate();
+
+
   const [title, setTitle] = useState("");
   const [shortDesc, setShortDesc] = useState("");
   const [description, setDescription] = useState("");
@@ -93,35 +94,62 @@ function Add_page() {
 
   /* ---------- ADD / UPDATE ---------- */
 
-  const handleSubmit = async () => {
-    if (!validateForm()) return;
+ const handleSubmit = async () => {
 
-    try {
-      setLoading(true);
+  if (!validateForm()) return;
 
-      if (editingPage) {
-        await updatePageApi(editingPage._id, {
-          title: title.trim(),
-          shortDescription: shortDesc.trim(),
-          description,
-        });
-        toast.success("Page updated");
-      } else {
-        await addPageApi({
-          title: title.trim(),
-          shortDescription: shortDesc.trim(),
-          description,
-        });
-        toast.success("Page added");
-      }
+  try {
 
-      cancelEdit();
-    } catch {
-      toast.error("Action failed");
-    } finally {
-      setLoading(false);
+    setLoading(true);
+
+    if (editingPage) {
+
+      await updatePageApi(editingPage._id, {
+        title: title.trim(),
+        shortDescription: shortDesc.trim(),
+        description,
+      });
+
+      toast.success("Page updated");
+       navigate("/admin-dash/pages");
+
+    } else {
+
+      await addPageApi({
+        title: title.trim(),
+        shortDescription: shortDesc.trim(),
+        description,
+      });
+
+      toast.success("Page added");
+      // Redirect after success
+      navigate("/admin-dash/pages");
+
     }
-  };
+
+    cancelEdit();
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  } catch (err: any) {
+
+    // ⭐ Check backend status
+    if (err?.response?.status === 409) {
+
+      toast.error("Page title already exist");
+
+    } else {
+
+      toast.error("Action failed");
+
+    }
+
+  } finally {
+
+    setLoading(false);
+
+  }
+};
+
 
   /* ---------- EDIT ---------- */
 
@@ -165,7 +193,7 @@ function Add_page() {
               Editing page: <strong>{editingPage.title}</strong>
             </div>
           )}
-          <label htmlFor="title" className='form-label'>Title</label>
+          <label htmlFor="title" className='form-label'>Title <span className="text-danger">*</span></label>
           <input
             className={`form-control mb-1 ${errors.title ? "is-invalid" : ""}`}
             value={title}
@@ -176,7 +204,7 @@ function Add_page() {
             <div className="invalid-feedback">{errors.title}</div>
           )}
 
-          <label htmlFor="short_description" className='form-label'>Short description</label>
+          <label htmlFor="short_description" className='form-label mt-3'>Short description <span className="text-danger">*</span></label>
           <textarea
             className={`form-control mb-1 ${errors.shortDesc ? "is-invalid" : ""}`}
             value={shortDesc}
@@ -188,8 +216,8 @@ function Add_page() {
           )}
 
 
-          <div>
-            <h6>Description</h6>
+          <div className='mt-3'>
+            <h6>Description <span className="text-danger">*</span></h6>
             <Suspense fallback={<div>Loading editor...</div>}>
               <ReactQuill
                 value={description}

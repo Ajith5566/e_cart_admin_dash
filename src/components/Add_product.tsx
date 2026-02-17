@@ -11,7 +11,7 @@ export default function Add_product() {
   // Navigation hooks
   const navigate = useNavigate();
   const location = useLocation();
-  
+
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   // If editing product, data comes through route state
@@ -21,7 +21,7 @@ export default function Add_product() {
   const [previewImages, setPreviewImages] = useState<string[]>([]);
 
   //for edit-image preview
-  const [existingImages, setExistingImages] = useState<string[]>([]); 
+  const [existingImages, setExistingImages] = useState<string[]>([]);
 
   // Main form state
   const [formData, setFormData] = useState<AdminProduct>({
@@ -30,6 +30,54 @@ export default function Add_product() {
     quantity: "",
     images: [], // multiple image files
   });
+
+
+  /* error handling */
+  const [errors, setErrors] = useState({
+    name: "",
+    price: "",
+    quantity: "",
+    images: ""
+  });
+
+
+  const validateForm = () => {
+
+    const newErrors = {
+      name: "",
+      price: "",
+      quantity: "",
+      images: ""
+    };
+
+    let isValid = true;
+
+    if (!formData.name.trim()) {
+      newErrors.name = "Product name is required";
+      isValid = false;
+    }
+
+    if (!formData.price || isNaN(Number(formData.price))) {
+      newErrors.price = "Price must be valid number";
+      isValid = false;
+    }
+
+    if (!formData.quantity || isNaN(Number(formData.quantity))) {
+      newErrors.quantity = "Quantity must be valid number";
+      isValid = false;
+    }
+
+    if (!product && formData.images.length === 0) {
+      newErrors.images = "At least one image required";
+      isValid = false;
+    }
+
+    setErrors(newErrors);
+
+    return isValid;
+  };
+
+
 
   /**
    * Populate form when editing an existing product
@@ -46,8 +94,8 @@ export default function Add_product() {
       images: [], // existing images not added here (only new uploads)
     });
 
-     // ⭐ load existing images from DB
-  setExistingImages(product.images || []);
+    // ⭐ load existing images from DB
+    setExistingImages(product.images || []);
 
   }, [product]);
 
@@ -68,13 +116,13 @@ export default function Add_product() {
 
 
   /* remove edit- image */
-  const removeExistingImage = (index:number) => {
+  const removeExistingImage = (index: number) => {
 
-  setExistingImages(prev =>
-    prev.filter((_, i) => i !== index)
-  );
+    setExistingImages(prev =>
+      prev.filter((_, i) => i !== index)
+    );
 
-};
+  };
 
   /**
    * Handle form submit (Add / Update product)
@@ -85,10 +133,8 @@ export default function Add_product() {
     const { name, price, quantity, images } = formData;
 
     // Basic validation
-    if (!name || !price || !quantity) {
-      toast.error("Fill all fields");
-      return;
-    }
+    if (!validateForm()) return;
+
 
     // Prepare multipart/form-data
     const fd = new FormData();
@@ -107,11 +153,11 @@ export default function Add_product() {
 
       // Update existing product
       if (product) {
-         fd.append("existingImages", JSON.stringify(existingImages));
+        fd.append("existingImages", JSON.stringify(existingImages));
         await updateProductApi(product._id, fd);
         toast.success("Product updated");
 
-      // Add new product
+        // Add new product
       } else {
         const result = await AddproductApi(fd);
         console.log(result);
@@ -145,41 +191,54 @@ export default function Add_product() {
 
           {/* Product Name */}
           <div>
-            <label className="form-label">Product Name</label>
+            <label className="form-label">Product Name <span className="text-danger">*</span></label>
             <input
-              className="form-control mb-3"
+              className={`form-control mb-1 ${errors.name ? "is-invalid" : ""}`}
               value={formData.name}
               onChange={(e) =>
                 setFormData({ ...formData, name: e.target.value })
               }
             />
+
+            {errors.name && (
+              <div className="invalid-feedback">{errors.name}</div>
+            )}
+
           </div>
 
           {/* Price & Quantity */}
           <div className="row">
 
             <div className="col-md-6">
-              <label className="form-label">Price</label>
+              <label className="form-label">Price <span className="text-danger">*</span></label>
               <input
                 type="text"
-                className="form-control mb-3"
+                className={`form-control mb-1 ${errors.price ? "is-invalid" : ""}`}
                 value={formData.price}
                 onChange={(e) =>
                   setFormData({ ...formData, price: e.target.value })
                 }
               />
+
+              {errors.price && (
+                <div className="invalid-feedback">{errors.price}</div>
+              )}
+
             </div>
 
             <div className="col-md-6">
-              <label className="form-label">Quantity</label>
+              <label className="form-label">Quantity <span className="text-danger">*</span></label>
               <input
                 type="text"
-                className="form-control mb-3"
+                className={`form-control mb-1 ${errors.quantity ? "is-invalid" : ""}`}
                 value={formData.quantity}
                 onChange={(e) =>
                   setFormData({ ...formData, quantity: e.target.value })
                 }
               />
+              {errors.quantity && (
+                <div className="invalid-feedback">{errors.quantity}</div>
+              )}
             </div>
 
           </div>
@@ -188,7 +247,7 @@ export default function Add_product() {
           <div className="mt-5">
 
             <div>
-              <h6>Image</h6>
+              <h6>Image <span className="text-danger">*</span></h6>
               <p className="w-25 font_small text-justify">
                 Preferred dimension is 300px x 450px <br />
                 Allowed file types are jpg, jpeg, png, webp <br />
@@ -197,9 +256,10 @@ export default function Add_product() {
             </div>
 
             {/* Upload Box */}
-            <div className="upload-box text-center p-5 border">
+            <div className={`upload-box text-center p-5 border ${errors.images ? "border-danger" : ""
+              }`}>
               <input
-               ref={fileInputRef}
+                ref={fileInputRef}
                 type="file"
                 multiple
                 id="imageUpload"
@@ -222,13 +282,13 @@ export default function Add_product() {
 
                   setPreviewImages(prev => [...prev, ...previews]);
 
-                   // ⭐ IMPORTANT FIX
+                  // ⭐ IMPORTANT FIX
                   if (fileInputRef.current) {
                     fileInputRef.current.value = "";
                   }
 
                 }}
-                
+
               />
 
               <label htmlFor="imageUpload" style={{ cursor: "pointer" }}>
@@ -238,38 +298,44 @@ export default function Add_product() {
                 <h4>+</h4>
               </label>
             </div>
+            {/* Image Error Message */}
+            {errors.images && (
+              <div className="invalid-feedback d-block">
+                {errors.images}
+              </div>
+            )}
             {/* edit preview */}
             {/* Existing Images */}
-<div className="d-flex gap-3 mt-3 flex-wrap">
+            <div className="d-flex gap-3 mt-3 flex-wrap">
 
-  {existingImages.map((img, index) => (
+              {existingImages.map((img, index) => (
 
-    <div key={index} className="position-relative">
+                <div key={index} className="position-relative">
 
-      <img
-        src={`${BASE_URL}/uploads/${img}`}
-        className="img-thumbnail"
-        style={{
-          width: "150px",
-          height: "150px",
-          objectFit: "cover"
-        }}
-      />
+                  <img
+                    src={`${BASE_URL}/uploads/${img}`}
+                    className="img-thumbnail"
+                    style={{
+                      width: "150px",
+                      height: "150px",
+                      objectFit: "cover"
+                    }}
+                  />
 
-      <button
-        type="button"
-        className="btn btn-danger btn-sm position-absolute"
-        style={{ top: "5px", right: "5px" }}
-        onClick={() => removeExistingImage(index)}
-      >
-        X
-      </button>
+                  <button
+                    type="button"
+                    className="btn btn-danger btn-sm position-absolute"
+                    style={{ top: "5px", right: "5px" }}
+                    onClick={() => removeExistingImage(index)}
+                  >
+                    X
+                  </button>
 
-    </div>
+                </div>
 
-  ))}
+              ))}
 
-</div>
+            </div>
 
 
             {/* Preview Images */}

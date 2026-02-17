@@ -155,6 +155,7 @@ export default function PageEditor() {
                         if (!window.confirm("Delete this page?")) return;
                         await deletePageApi(p._id);
                         fetchPages();
+                        toast.success("Page deleted");
                       }}
                     >
                       Delete

@@ -177,3 +177,20 @@ export const updateAdmin_user_Api = (
     data
   );
 };
+
+/* ================= SETTINGS ================= */
+
+export const getSettingsApi = () => {
+  return commonApi(
+    "GET",
+    `${BASE_URL}/admin/settings`
+  );
+};
+
+export const saveSettingsApi = (data: unknown) => {
+  return commonApi(
+    "POST",
+    `${BASE_URL}/admin/settings`,
+    data
+  );
+};
