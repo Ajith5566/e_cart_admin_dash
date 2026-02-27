@@ -72,26 +72,22 @@ export default function Products() {
    );
   */
   return (
-    <div className={styles.classicPage}>
-      <div className="p-3">
+    <div className="container p-4">
+      <div className="p-3 d-flex justify-content-between">
         <h4 className="  fw-bold text-dark">
           Products
         </h4>
-      </div>
-
-
-      {/* PRODUCT LIST */}
-      <div className={`card shadow ${styles.listCard}`} >
-        <div className="d-flex justify-content-end p-3">
-         
-          <button
+         <button
             className="btn btn-success"
             onClick={() => navigate("/admin-dash/product/add")}
           >
             + Add Product
           </button>
-        </div>
-        <div className="container py-4">
+      </div>
+
+
+      {/* PRODUCT LIST */}
+        <div className="container py-4 mt-3">
           {/* HEADER + SEARCH */}
           <div className="d-flex justify-content-between align-items-center mb-3">
                <PaginationLimit limit={limit} onChange={(newLimit)=>{setLimit(newLimit); setPage(1); }}/>
@@ -179,7 +175,6 @@ export default function Products() {
             />
 
           </div>
-      </div>
       
     </div>
   );

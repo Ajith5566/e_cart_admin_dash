@@ -219,7 +219,7 @@ export default function Add_product() {
         </button>
       </div>
 
-      <div className="card shadow p-4">
+      <div className=" p-4">
         <form onSubmit={handleSubmit}>
 
           {/* Product Name */}

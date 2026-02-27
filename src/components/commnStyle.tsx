@@ -1,6 +1,5 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 import {  useState } from "react";
-import styles from "./adminProduct.module.css";
 /* import { BASE_URL } from "../services/baseURL"; */
 import { useNavigate } from "react-router-dom";
 import ProductSearch from "./Search_bar";
@@ -14,7 +13,7 @@ export default function Products() {
   const [search, setSearch] = useState("");
 
   return (
-    <div className={styles.classicPage}>
+    <div className="container p-4">
       <div className="p-3">
         <h4 className="  fw-bold text-dark">
           Products
@@ -23,7 +22,7 @@ export default function Products() {
 
 
       {/* PRODUCT LIST */}
-      <div className={`card shadow ${styles.listCard}`} >
+     
         <div className="d-flex justify-content-end p-3">
          
           <button
@@ -121,7 +120,6 @@ export default function Products() {
             /> */}
 
           </div>
-      </div>
       
     </div>
   );

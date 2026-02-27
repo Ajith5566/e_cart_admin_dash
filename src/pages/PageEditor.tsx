@@ -77,13 +77,10 @@ export default function PageEditor() {
 
   return (
     <div className="container p-4" >
-      <div className="p-3">
+      <div className="p-3 d-flex justify-content-between">
         <h4 className="  fw-bold text-dark">
           Page
         </h4>
-      </div>
-      <div className="d-flex justify-content-end p-3 " >
-       
         <button
           className="btn btn-success"
           onClick={() => navigate("/admin-dash/pages/add")}
@@ -91,7 +88,7 @@ export default function PageEditor() {
           + Add Page
         </button>
       </div>
-      <div className="d-flex justify-content-between mb-3">
+      <div className="d-flex justify-content-between mb-3 mt-5">
          <PaginationLimit limit={limit} onChange={(newLimit)=>{setLimit(newLimit); setPage(1); }}/>
          <div className="d-flex gap-2 justify-content-center align-items-center">
              <h6>Search:</h6>

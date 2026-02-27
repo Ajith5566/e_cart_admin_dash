@@ -1,6 +1,5 @@
 
 import { useEffect, useState } from "react";
-import styles from "./adminProduct.module.css";
 import { getSettingsApi, saveSettingsApi } from "../services/allAPi";
 import { toast } from "react-toastify";
 type SettingsData = {
@@ -146,13 +145,11 @@ export default function Settings() {
 
     return (
 
-        <div className={styles.classicPage}>
+        <div className="container p-4">
 
             <div className="p-3">
                 <h4 className="fw-bold text-dark">Settings</h4>
             </div>
-
-            <div className={`card shadow ${styles.listCard}`}>
 
                 <div className="container py-4">
 
@@ -278,8 +275,6 @@ export default function Settings() {
                     </div>
 
                 </div>
-
-            </div>
 
         </div>
     );

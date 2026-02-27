@@ -1,13 +1,12 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 import { useCallback, useEffect, useState } from "react";
-import styles from "./adminProduct.module.css";
 /* import { useNavigate } from "react-router-dom"; */
 import ProductSearch from "./Search_bar";
 import { useNavigate } from "react-router-dom";
 import { Admin_user_isActiveApi, deleteAdmin_userApi, getAdmin_UserApi } from "../services/allAPi";
 import type { FetchedAdminUser, GetUserResponse } from "../types/types";
 import './common_toggle.css'
-import'./common_styels.css'
+import './common_styels.css'
 import { toast } from "react-toastify";
 import Pagination from "./Pagination";
 import type { AxiosResponse } from "axios";
@@ -23,7 +22,7 @@ export default function Products() {
   //pagination
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
-  const [limit, setLimit]=useState(5)
+  const [limit, setLimit] = useState(5)
 
   const [search, setSearch] = useState("");
 
@@ -33,7 +32,7 @@ export default function Products() {
 
     try {
 
-      const res = (await getAdmin_UserApi({ page,limit, search})) as AxiosResponse<GetUserResponse>;
+      const res = (await getAdmin_UserApi({ page, limit, search })) as AxiosResponse<GetUserResponse>;
       console.log(res);
       setUsers(res.data.docs);
       setTotalPages(res.data.totalPages);
@@ -43,7 +42,7 @@ export default function Products() {
       console.error(error);
     }
 
-  }, [page,limit, search]);
+  }, [page, limit, search]);
 
 
   useEffect(() => {
@@ -54,7 +53,7 @@ export default function Products() {
 
   useEffect(() => {
     setPage(1);
-  }, [search,limit]);
+  }, [search, limit]);
 
 
 
@@ -69,29 +68,26 @@ export default function Products() {
    );
   */
   return (
-    <div className={styles.classicPage}>
-      <div className="p-3">
+    <div className="container p-4 ">
+      <div className="p-3 d-flex justify-content-between">
         <h4 className="  fw-bold text-dark">
           User
         </h4>
+        <button
+            className="btn btn-success"
+            onClick={() => navigate("/admin-dash/user/add")}
+          >
+            + Add User
+          </button>
       </div>
 
-      
+
       <div className="container">
 
         {/* PRODUCT LIST */}
-        <div className={`card shadow ${styles.listCard}`} style={{ minHeight: "650px" }}>
-          <div className="d-flex justify-content-end p-3">
-        <button
-          className="btn btn-success"
-          onClick={() => navigate("/admin-dash/user/add")}
-        >
-          + Add User
-        </button>
-      </div>
-          {/* HEADER + SEARCH */}
-        <div className="d-flex justify-content-between align-items-center mb-3 p-3">
-          <PaginationLimit limit={limit} onChange={(newLimit)=>{setLimit(newLimit); setPage(1); }}/>
+        {/* HEADER + SEARCH */}
+        <div className="d-flex justify-content-between align-items-center mb-3 mt-3 p-3">
+          <PaginationLimit limit={limit} onChange={(newLimit) => { setLimit(newLimit); setPage(1); }} />
 
           <div className="d-flex gap-2 justify-content-center align-items-center p-2">
             <h6>Search:</h6>
@@ -99,109 +95,108 @@ export default function Products() {
 
           </div>
         </div>
-          <div className="card-body table-responsive" >
-            <table className="table table-hover align-middle mb-0">
-              <thead>
-                <tr>
-                  <th>Name</th>
-                  <th>Edit</th>
-                  <th>Status</th>
-                  <th>Delete</th>
-                </tr>
-              </thead>
+        <div className="card-body table-responsive" >
+          <table className="table table-hover align-middle mb-0">
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Edit</th>
+                <th>Status</th>
+                <th>Delete</th>
+              </tr>
+            </thead>
 
-              <tbody>
+            <tbody>
 
-                {users.length > 0 ? (
+              {users.length > 0 ? (
 
-                  users.map((user) => (
+                users.map((user) => (
 
-                    <tr key={user._id} className="tableRowHeight">
+                  <tr key={user._id} className="tableRowHeight">
 
-                      {/* Name */}
-                      <td>{user.name}</td>
+                    {/* Name */}
+                    <td>{user.name}</td>
 
-                      {/* Edit */}
-                      <td>
-                        <button
-                          className="btn btn-sm btn-warning"
-                          onClick={() =>
-                            navigate("/admin-dash/user/add", {
-                              state: { user },
-                            })
-                          }
-                        >
-                          Edit
-                        </button>
-                      </td>
-
-                      {/* Status Toggle */}
-                      <td>
-                        <label className="toggle-switch">
-                          <input
-                            className="toggle-input"
-                            type="checkbox"
-                            checked={!!user.isActive}
-                            onChange={async () => {
-                              try {
-                                await Admin_user_isActiveApi(user._id);
-                                fetchUsers()
-                              } catch {
-                                toast.error("Status update failed");
-                              }
-                            }}
-                          />
-                          <span className="toggle-slider"></span>
-                        </label>
-                      </td>
-
-                      {/* Delete */}
-                      <td>
-                        <button
-                          className="btn btn-sm btn-danger"
-                          onClick={async () => {
-                            if (!window.confirm("Are you sure you want to delete this user?")) return;
-                            await deleteAdmin_userApi(user._id);
-                            fetchUsers();
-                          }}
-                        >
-                          Delete
-                        </button>
-                      </td>
-
-                    </tr>
-
-                  ))
-
-                ) : (
-
-                  <tr>
-                    <td colSpan={4} className="text-center text-muted">
-                      No users found
+                    {/* Edit */}
+                    <td>
+                      <button
+                        className="btn btn-sm btn-warning"
+                        onClick={() =>
+                          navigate("/admin-dash/user/add", {
+                            state: { user },
+                          })
+                        }
+                      >
+                        Edit
+                      </button>
                     </td>
+
+                    {/* Status Toggle */}
+                    <td>
+                      <label className="toggle-switch">
+                        <input
+                          className="toggle-input"
+                          type="checkbox"
+                          checked={!!user.isActive}
+                          onChange={async () => {
+                            try {
+                              await Admin_user_isActiveApi(user._id);
+                              fetchUsers()
+                            } catch {
+                              toast.error("Status update failed");
+                            }
+                          }}
+                        />
+                        <span className="toggle-slider"></span>
+                      </label>
+                    </td>
+
+                    {/* Delete */}
+                    <td>
+                      <button
+                        className="btn btn-sm btn-danger"
+                        onClick={async () => {
+                          if (!window.confirm("Are you sure you want to delete this user?")) return;
+                          await deleteAdmin_userApi(user._id);
+                          fetchUsers();
+                        }}
+                      >
+                        Delete
+                      </button>
+                    </td>
+
                   </tr>
 
-                )}
+                ))
 
-              </tbody>
+              ) : (
 
-            </table>
+                <tr>
+                  <td colSpan={4} className="text-center text-muted">
+                    No users found
+                  </td>
+                </tr>
+
+              )}
+
+            </tbody>
+
+          </table>
 
 
-
-          </div>
-          {/* ✅ PAGINATION UI (same as PageEditor) */}
-          <div className="d-flex justify-content-center align-items-center mb-2 gap-2 flex-wrap">
-
-            <Pagination
-              currentPage={page}
-              totalPages={totalPages}
-              onChange={(newPage) => setPage(newPage)}
-            />
-
-          </div>
 
         </div>
+        {/* ✅ PAGINATION UI (same as PageEditor) */}
+        <div className="d-flex justify-content-center align-items-center mb-2 gap-2 flex-wrap">
+
+          <Pagination
+            currentPage={page}
+            totalPages={totalPages}
+            onChange={(newPage) => setPage(newPage)}
+          />
+
+        </div>
+
       </div>
     </div>
   );

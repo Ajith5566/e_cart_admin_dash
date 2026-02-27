@@ -187,7 +187,7 @@ function Add_page() {
 
 
         {/* ---------- FORM ---------- */}
-        <div className="card p-4 mb-4">
+        <div className=" p-4 mb-4">
           {editingPage && (
             <div className="alert alert-warning py-2">
               Editing page: <strong>{editingPage.title}</strong>
