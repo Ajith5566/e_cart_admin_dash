@@ -47,6 +47,8 @@ export type AdminProduct = {
   name: string;
   price: number | string;
   quantity: number | string;
+  shortDescription:string;
+  description:string;
   images: File[]
 };
 
@@ -56,6 +58,8 @@ export type fetchedProducts={
   productName: string;
   price: number | string;
   quantity: number | string;
+  description:string;
+  shortDescription:string;
   images:string[]; // image URL
 
 }
