@@ -73,7 +73,7 @@ export default function Products() {
   */
   return (
     <div className="container p-4">
-      <div className="p-3 d-flex justify-content-between">
+      <div className="d-flex justify-content-between">
         <h4 className="  fw-bold text-dark">
           Products
         </h4>

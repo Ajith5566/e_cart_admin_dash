@@ -147,7 +147,7 @@ export default function Settings() {
 
         <div className="container p-4">
 
-            <div className="p-3">
+            <div>
                 <h4 className="fw-bold text-dark">Settings</h4>
             </div>
 

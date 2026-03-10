@@ -200,7 +200,7 @@ function Add_user() {
 
     <div className="container py-4">
 
-      <div className="p-4">
+      <div className="card shadow p-4">
 
         <div className='d-flex justify-content-between'>
           <h2 className="mb-4 fw-bold">
