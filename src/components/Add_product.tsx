@@ -13,6 +13,7 @@ export default function Add_product() {
   // Navigation hooks
   const navigate = useNavigate();
   const location = useLocation();
+  const nameRef = useRef<HTMLInputElement | null>(null);
 
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
@@ -30,8 +31,8 @@ export default function Add_product() {
     name: "",
     price: "",
     quantity: "",
-    shortDescription:"",
-    description:"",
+    shortDescription: "",
+    description: "",
     images: [], // multiple image files
   });
 
@@ -41,12 +42,12 @@ export default function Add_product() {
     name: "",
     price: "",
     quantity: "",
-    shortDescription:"",
-    description:"",
+    shortDescription: "",
+    description: "",
     images: ""
   });
-  
-    const isEditorEmpty = (html: string) => {
+
+  const isEditorEmpty = (html: string) => {
     const text = html.replace(/<[^>]+>/g, "").trim();
     return text.length === 0;
   };
@@ -58,25 +59,37 @@ export default function Add_product() {
       name: "",
       price: "",
       quantity: "",
-      shortDescription:"",
-       description:"",
+      shortDescription: "",
+      description: "",
       images: ""
     };
+    const qty = Number(formData.quantity);
+    const price = Number(formData.price);
 
     let isValid = true;
 
-    if (!formData.name.trim()) {
+    if (!formData.name.trim()|| "") {
       newErrors.name = "Product name is required";
+      nameRef.current?.focus();
       isValid = false;
     }
 
-    if (!formData.price || isNaN(Number(formData.price))) {
-      newErrors.price = "Price must be valid number";
+    if (
+      formData.price === "" ||
+      isNaN(price) ||
+      price <= 0
+    ) {
+      newErrors.price = "Price must be a valid positive number";
       isValid = false;
     }
 
-    if (!formData.quantity || isNaN(Number(formData.quantity))) {
-      newErrors.quantity = "Quantity must be valid number";
+    if (
+      formData.quantity === "" ||
+      isNaN(qty) ||
+      !Number.isInteger(qty) ||
+      qty <= 0
+    ) {
+      newErrors.quantity = "Quantity must be a positive whole number";
       isValid = false;
     }
     if (!formData.shortDescription.trim()) {
@@ -92,7 +105,10 @@ export default function Add_product() {
       isValid = false;
     }
 
-    if (!product && formData.images.length === 0) {
+    if (
+  formData.images.length === 0 &&
+  existingImages.length === 0
+) {
       newErrors.images = "At least one image required";
       isValid = false;
     }
@@ -117,7 +133,7 @@ export default function Add_product() {
       price: product.price,
       quantity: product.quantity,
       shortDescription: product.shortDescription,
-  description: product.description,
+      description: product.description,
       images: [], // existing images not added here (only new uploads)
     });
 
@@ -157,7 +173,7 @@ export default function Add_product() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    const { name, price,description,shortDescription, quantity, images } = formData;
+    const { name, price, description, shortDescription, quantity, images } = formData;
 
     // Basic validation
     if (!validateForm()) return;
@@ -168,8 +184,8 @@ export default function Add_product() {
     fd.append("name", name);
     fd.append("price", price.toString());
     fd.append("quantity", quantity.toString());
-    fd.append("description",description);
-    fd.append("shortDescription",shortDescription);
+    fd.append("description", description);
+    fd.append("shortDescription", shortDescription);
 
     // Append multiple image files
     images.forEach((file) => {
@@ -179,6 +195,7 @@ export default function Add_product() {
     console.log(formData.images);
 
     try {
+    
 
       // Update existing product
       if (product) {
@@ -196,13 +213,13 @@ export default function Add_product() {
       // Redirect after success
       navigate("/admin-dash/products");
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
-  const message =
-    error?.response?.data?.message || "Action failed";
+      const message =
+        error?.response?.data?.message || "Action failed";
 
-  toast.error(message);
-}
+      toast.error(message);
+    }
   };
 
   return (
@@ -231,6 +248,7 @@ export default function Add_product() {
               onChange={(e) =>
                 setFormData({ ...formData, name: e.target.value })
               }
+               ref={nameRef}
             />
 
             {errors.name && (
@@ -276,33 +294,33 @@ export default function Add_product() {
 
           </div>
           <label htmlFor="short_description" className='form-label mt-3'>Short description <span className="text-danger">*</span></label>
-                    <textarea
-                      className={`form-control mb-1 ${errors.shortDescription ? "is-invalid" : ""}`}
-                      value={formData.shortDescription}
-                      onChange={(e) => setFormData({...formData,shortDescription:e.target.value})}
-                    />
-          
-                    {errors.shortDescription && (
-                      <div className="invalid-feedback">{errors.shortDescription}</div>
-                    )}
-          
-          
-                    <div className='mt-3'>
-                      <h6>Description <span className="text-danger">*</span></h6>
-                      <Suspense fallback={<div>Loading editor...</div>}>
-                        <ReactQuill
-                          value={formData.description}
-                          onChange={(value)=>setFormData({...formData,description:value})}
-                          modules={Modules}
-                          theme="snow"
-                        />
-          
-                      </Suspense>
-                      {errors.description && (
-                        <div className="text-danger mt-1">{errors.description}</div>
-                      )}
-                      </div>
-          
+          <textarea
+            className={`form-control mb-1 ${errors.shortDescription ? "is-invalid" : ""}`}
+            value={formData.shortDescription}
+            onChange={(e) => setFormData({ ...formData, shortDescription: e.target.value })}
+          />
+
+          {errors.shortDescription && (
+            <div className="invalid-feedback">{errors.shortDescription}</div>
+          )}
+
+
+          <div className='mt-3'>
+            <h6>Description <span className="text-danger">*</span></h6>
+            <Suspense fallback={<div>Loading editor...</div>}>
+              <ReactQuill
+                value={formData.description}
+                onChange={(value) => setFormData({ ...formData, description: value })}
+                modules={Modules}
+                theme="snow"
+              />
+
+            </Suspense>
+            {errors.description && (
+              <div className="text-danger mt-1">{errors.description}</div>
+            )}
+          </div>
+
 
           {/* Image Upload Section */}
           <div className="mt-5">

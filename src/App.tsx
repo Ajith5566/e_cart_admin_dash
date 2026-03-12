@@ -13,12 +13,16 @@ import User_page from "./components/User_page";
 import Customer_list from "./components/Customer_list";
 import Add_user from "./components/Add_user";
 import Settings from "./components/Settings";
+import ForgotPassword from "./forgot_password/Forgotpassword";
+import ResetPassword from "./forgot_password/Reset_password";
 
 function App() {
   return (
     <>
       <Routes>
         <Route path="/" element={<HomePage />} />
+         <Route path="/forgot-password" element={<ForgotPassword />} />
+         <Route path="/reset-password/:token" element={<ResetPassword />} />
 
         {/* ADMIN LAYOUT */}
         <Route path="/admin-dash" element={<Admin_dashboard />}>

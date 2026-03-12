@@ -74,7 +74,10 @@ function Add_page() {
     if (!shortDesc.trim()) {
       newErrors.shortDesc = "Short description is required";
       isValid = false;
-    }
+    }else if (shortDesc.length > 150) {
+    newErrors.shortDesc = "Short description cannot exceed 150 characters";
+    isValid = false;
+  }
 
     if (!description.trim() || description === "<p><br></p>") {
       newErrors.description = "Description is required";
@@ -164,10 +167,7 @@ function Add_page() {
   /* ---------- CANCEL EDIT ---------- */
 
   const cancelEdit = () => {
-    setEditingPage(null);
-    setTitle("");
-    setShortDesc("");
-    setDescription("");
+    navigate('/admin-dash/pages')
   };
   return (
     <>
@@ -208,6 +208,7 @@ function Add_page() {
           <textarea
             className={`form-control mb-1 ${errors.shortDesc ? "is-invalid" : ""}`}
             value={shortDesc}
+             maxLength={150}
             onChange={(e) => setShortDesc(e.target.value)}
           />
 

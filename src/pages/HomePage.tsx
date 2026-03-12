@@ -163,8 +163,8 @@ function HomePage() {
             {/* Footer Links */}
             <div className="text-center mt-4">
               <div className="d-flex justify-content-center align-items-center gap-3">
-                 <Link to={'/'} className="btn btn-link btn-sm text-decoration-none text-muted hover-text-primary">
-                  ← Back to Home
+                 <Link to={'/forgot-password'} className="btn btn-link btn-sm text-decoration-none text-muted hover-text-primary">
+                  forget password
                 </Link> 
                 <span className="text-muted">|</span>
                 <a href="#" className="btn btn-link btn-sm text-decoration-none text-muted hover-text-primary">

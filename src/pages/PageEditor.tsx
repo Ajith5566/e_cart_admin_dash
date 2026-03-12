@@ -102,9 +102,12 @@ export default function PageEditor() {
           <thead>
             <tr>
               <th>Title</th>
+              <th>slug</th>
               <th>Edit</th>
               <th>Status</th>
+              
               <th>Delete</th>
+
             </tr>
           </thead>
 
@@ -113,6 +116,7 @@ export default function PageEditor() {
               pages.map((p) => (
                 <tr key={p._id}  className="tableRowHeight">
                   <td>{p.title}</td>
+                  <td>{p.slug}</td>
                   <td>
                       <button
                       className="btn btn-warning btn-sm"

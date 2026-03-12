@@ -194,3 +194,25 @@ export const saveSettingsApi = (data: unknown) => {
     data
   );
 };
+
+
+//forget password
+export const forgotPasswordApi = (email: string) => {
+  return commonApi(
+    "POST",
+    `${BASE_URL}/forgot-password`,
+    { email }
+  );
+};
+
+// reset admin password
+export const resetPasswordApi = (
+  token: string,
+  password: string
+) => {
+  return commonApi(
+    "POST",
+    `${BASE_URL}/admin/reset-password/${token}`,
+    { password }
+  );
+};
