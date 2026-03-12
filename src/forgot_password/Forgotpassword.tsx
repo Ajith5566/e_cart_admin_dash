@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { forgotPasswordApi } from "../services/allAPi";
 import "./ForgotPassword.css";
+import axios from "axios";
 
 type ForgotPasswordResponse = {
   message?: string;
@@ -19,18 +20,24 @@ function ForgotPassword() {
 
       const response = await forgotPasswordApi(email);
       console.log(response);
-      
+
 
       const data = response.data as ForgotPasswordResponse;
 
       setMessage(data.message || "Reset link sent to email");
 
     } catch (error: unknown) {
-      if (error instanceof Error) {
-        setMessage(error.message);
+      if (axios.isAxiosError(error)) {
+        const message =
+          error.response?.data?.message ||
+          "Request failed";
+
+        setMessage(message);
+
       } else {
         setMessage("Something went wrong. Please try again.");
       }
+
     } finally {
       setLoading(false);
     }
