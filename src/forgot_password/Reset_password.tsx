@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useParams } from "react-router-dom";
 import { resetPasswordApi } from "../services/allAPi";
 import "./ResetPassword.css";
+import axios from "axios";
 
 type ResetPasswordResponse = {
   message?: string;
@@ -15,23 +16,38 @@ function ResetPassword() {
   const [showPassword, setShowPassword] = useState(false);
   const [message, setMessage] = useState("");
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+const handleSubmit = async (e: React.FormEvent) => {
+  e.preventDefault();
 
-    if (password !== confirmPassword) {
-      setMessage("Passwords do not match");
-      return;
+  if (password !== confirmPassword) {
+    setMessage("Passwords do not match");
+    return;
+  }
+
+  try {
+
+    const res = await resetPasswordApi(token!, password);
+
+    const data = res.data as ResetPasswordResponse;
+
+    setMessage(data.message || "Password updated successfully");
+
+  } catch (error: unknown) {
+
+    if (axios.isAxiosError(error)) {
+
+      const message =
+        (error.response?.data as { message?: string })?.message ||
+        "Failed to reset password";
+
+      setMessage(message);
+
+    } else {
+      setMessage("Something went wrong. Please try again.");
     }
 
-    try {
-      const res = await resetPasswordApi(token!, password);
-      const data = res.data as ResetPasswordResponse;
-
-      setMessage(data.message || "Password updated successfully");
-    } catch {
-      setMessage("Failed to reset password");
-    }
-  };
+  }
+};
 
   return (
     <div className="reset-wrapper">
