@@ -2,8 +2,8 @@ import { useEffect, useState } from 'react'
 import "react-quill-new/dist/quill.snow.css";
 import { lazy, Suspense } from "react";
 import { toast } from 'react-toastify';
-import { addPageApi, updatePageApi } from '../services/allAPi';
-import { Modules } from './quillmodule';
+import { addPageApi, updatePageApi } from '../../services/allAPi';
+import { Modules } from '../quillmodule';
 import { useLocation, useNavigate } from "react-router-dom";
 /* -------------------- QUILL -------------------- */
 

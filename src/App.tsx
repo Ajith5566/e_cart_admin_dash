@@ -6,15 +6,17 @@ import "bootstrap/dist/css/bootstrap.min.css";
 import 'bootstrap/dist/js/bootstrap.bundle.min.js';
 import { ToastContainer } from "react-toastify";
 import PageEditor from "./pages/PageEditor";
-import Add_page from "./components/add_page";
-import Add_product from "./components/Add_product";
-import Products from "./components/Products";
-import User_page from "./components/User_page";
+import Add_page from "./components/admin_pages/add_page";
+import Add_product from "./components/products/Add_product";
+import Products from "./components/products/Products";
+import User_page from "./components/users/User_page";
 import Customer_list from "./components/Customer_list";
-import Add_user from "./components/Add_user";
-import Settings from "./components/Settings";
+import Add_user from "./components/users/Add_user";
+import Settings from "./components/settings/Settings";
+import Product_category from "./components/category/Product_category"
 import ForgotPassword from "./forgot_password/Forgotpassword";
 import ResetPassword from "./forgot_password/Reset_password";
+import Add_category from "./components/category/Add_category";
 
 function App() {
   return (
@@ -34,6 +36,9 @@ function App() {
 
           <Route path="user" element={<User_page/>}  />
           <Route path="user/add" element={<Add_user/>}  />
+
+          <Route path="category" element={<Product_category/>} />
+          <Route path="category/add" element={<Add_category/>} />
 
           <Route path="Customer_list" element={<Customer_list/>} />
 

@@ -1,6 +1,6 @@
 
 import { useEffect, useState } from "react";
-import { getSettingsApi, saveSettingsApi } from "../services/allAPi";
+import { getSettingsApi, saveSettingsApi } from "../../services/allAPi";
 import { toast } from "react-toastify";
 type SettingsData = {
     email: string;

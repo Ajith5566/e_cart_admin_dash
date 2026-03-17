@@ -2,11 +2,12 @@
 import React, { useEffect, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { toast } from "react-toastify"
-import type { AdminUser } from '../types/types'
-import {
-  register_AdminUser_Api,
-  updateAdmin_user_Api
-} from '../services/allAPi'
+
+
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faEye, faEyeSlash } from '@fortawesome/free-solid-svg-icons'
+import { register_AdminUser_Api, updateAdmin_user_Api } from '../../services/allAPi'
+import type { AdminUser } from '../../types/types'
 
 function Add_user() {
 
@@ -272,7 +273,7 @@ function Add_user() {
                 style={{ position: "absolute", right: "10px", top: "38px", cursor: "pointer" }}
                 onClick={() => setShowPassword(!showPassword)}
               >
-                👁️
+                 {showPassword ?<FontAwesomeIcon icon={faEye} /> : <FontAwesomeIcon icon={faEyeSlash} />}
               </span>
             </div>
 
@@ -300,7 +301,7 @@ function Add_user() {
                 style={{ position: "absolute", right: "10px", top: "38px", cursor: "pointer" }}
                 onClick={() => setShowConfirmPassword(!showConfirmPassword)}
               >
-                👁️
+                {showConfirmPassword ?<FontAwesomeIcon icon={faEye} /> : <FontAwesomeIcon icon={faEyeSlash} />}
               </span>
             </div>
 

@@ -2,7 +2,7 @@
 import {  useState } from "react";
 /* import { BASE_URL } from "../services/baseURL"; */
 import { useNavigate } from "react-router-dom";
-import ProductSearch from "./Search_bar";
+import ProductSearch from "../Search_bar";
 /* import Pagination from "./Pagination";
 import PaginationLimit from "./PaginationLimit"; */
 

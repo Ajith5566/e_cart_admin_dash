@@ -50,20 +50,20 @@ export default function Pagination({
 
       {/* PAGE BUTTONS */}
       {getVisiblePages().map((p, index) =>
-        p === "..." ? (
-          <span key={index} className="px-2">...</span>
-        ) : (
-          <button
-            key={p}
-            className={`btn ${
-              p === currentPage ? "btn-primary" : "btn-outline-secondary"
-            }`}
-            onClick={() => onChange(Number(p))}
-          >
-            {p}
-          </button>
-        )
-      )}
+  p === "..." ? (
+    <span key={`${p}-${index}`} className="px-2">...</span>
+  ) : (
+    <button
+      key={`${p}-${index}`}
+      className={`btn ${
+        p === currentPage ? "btn-primary" : "btn-outline-secondary"
+      }`}
+      onClick={() => onChange(Number(p))}
+    >
+      {p}
+    </button>
+  )
+)}
 
       {/* NEXT */}
       <button

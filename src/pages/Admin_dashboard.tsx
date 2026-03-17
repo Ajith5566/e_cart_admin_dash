@@ -13,6 +13,7 @@ import {
   faFileLines,
   faGear,
   faTableCellsLarge,
+  faTags,
   faUserGroup,
   faUsers,
 } from "@fortawesome/free-solid-svg-icons";
@@ -177,6 +178,20 @@ function Admin_dashboard() {
                         <FontAwesomeIcon icon={faBox} /> Products
                       </button>
                     </li>
+                    {/* product category */}
+                     <li className="nav-item">
+                      <button
+                        className={`nav-link text-start border-0 w-100 px-3 py-2 mb-2 rounded-3 ${
+                          activeTab === "category"
+                            ? "bg-primary text-white"
+                            : "text-muted"
+                        }`}
+                        onClick={() => navigate("/admin-dash/category")}
+                      >
+                       <FontAwesomeIcon icon={faTags} /> category
+                      </button>
+                    </li>
+
 
                     {/* Customers */}
 

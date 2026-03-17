@@ -3,6 +3,8 @@ import { useParams } from "react-router-dom";
 import { resetPasswordApi } from "../services/allAPi";
 import "./ResetPassword.css";
 import axios from "axios";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faEye, faEyeSlash } from "@fortawesome/free-solid-svg-icons";
 
 type ResetPasswordResponse = {
   message?: string;
@@ -68,7 +70,7 @@ const handleSubmit = async (e: React.FormEvent) => {
               className="eye"
               onClick={() => setShowPassword(!showPassword)}
             >
-              {showPassword ? "👁️" : "◡"}
+              {showPassword ?<FontAwesomeIcon icon={faEye} /> : <FontAwesomeIcon icon={faEyeSlash} />}
             </span>
           </div>
 

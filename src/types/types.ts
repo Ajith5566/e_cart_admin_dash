@@ -122,3 +122,27 @@ export type AdminUserPayload = {
   password?: string;
   role: string;
 };
+
+
+/* category type */
+export type CategoryTypes = {
+
+  name: string;
+  description: string;
+   shortDescription:string;
+  parentCategory: string;
+  status: boolean;
+   image: File | null;
+};
+
+//response
+export type CategoryResponse = {
+  _id: string;
+  name: string;
+  description: string;
+   shortDescription:string;
+  
+parent_category: string;
+  isActive: boolean;
+   image: File | null;
+};

@@ -1,5 +1,5 @@
 import type { PageQueryParams, ProductQueryParams, UserQueryParams } from "../types/allAPi_types";
-import type { AdminUserPayload,  fetchedProducts, GetPagesResponse, ProductResponse } from "../types/types";
+import type { AdminUserPayload,  CategoryResponse,  fetchedProducts, GetPagesResponse, ProductResponse } from "../types/types";
 import { BASE_URL } from "./baseURL";
 import { commonApi } from "./commonAPi";
 
@@ -214,5 +214,37 @@ export const resetPasswordApi = (
     "POST",
     `${BASE_URL}/admin/reset-password/${token}`,
     { password }
+  );
+};
+
+
+//category
+//add 
+export const add_category_Api =async (reqBody:unknown)=>{
+    return await commonApi('POST',`${BASE_URL}/product/category`,reqBody)
+}
+
+//get all category
+export const getAllCategoriesApi = () => {
+  return commonApi<CategoryResponse[]>("GET", `${BASE_URL}/get/categories`);
+};
+
+//category status
+export const toggleCategoryApi = (id: string) => {
+  return commonApi(
+    "PUT",
+    `${BASE_URL}/admin/category/${id}/toggle`
+  );
+};
+
+//update
+export const updateCategoryApi = (
+  id: string,
+  data: FormData
+) => {
+  return commonApi(
+    "PUT",
+    `${BASE_URL}/admin/CategoryUpdate/${id}`,
+    data
   );
 };

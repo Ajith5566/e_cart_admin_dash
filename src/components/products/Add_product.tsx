@@ -1,12 +1,12 @@
 import React, { Suspense, useEffect, useRef, useState } from "react";
 import { toast } from "react-toastify";
-import type { AdminProduct, fetchedProducts } from "../types/types";
-import { AddproductApi, updateProductApi } from "../services/allAPi";
+import type { AdminProduct, fetchedProducts } from "../../types/types";
+import { AddproductApi, updateProductApi } from "../../services/allAPi";
 import { useLocation, useNavigate } from "react-router-dom";
-import './common_styels.css'
-import { BASE_URL } from "../services/baseURL";
+import '../common/common_styels.css'
+import { BASE_URL } from "../../services/baseURL";
 import ReactQuill from "react-quill-new";
-import { Modules } from "./quillmodule";
+import { Modules } from "../quillmodule";
 
 export default function Add_product() {
 

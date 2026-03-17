@@ -9,8 +9,8 @@ import {
 import { useNavigate } from "react-router-dom";
 import ProductSearch from "../components/Search_bar";
 import Pagination from "../components/Pagination";
-import '../components/common_toggle.css'
-import '../components/common_styels.css'
+import '../components/common/common_toggle.css'
+import '../components/common/common_styels.css'
 import PaginationLimit from "../components/PaginationLimit";
 
 /* -------------------- TYPES -------------------- */

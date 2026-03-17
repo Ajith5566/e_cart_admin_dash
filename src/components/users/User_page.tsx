@@ -1,16 +1,16 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 import { useCallback, useEffect, useState } from "react";
 /* import { useNavigate } from "react-router-dom"; */
-import ProductSearch from "./Search_bar";
 import { useNavigate } from "react-router-dom";
-import { Admin_user_isActiveApi, deleteAdmin_userApi, getAdmin_UserApi } from "../services/allAPi";
-import type { FetchedAdminUser, GetUserResponse } from "../types/types";
-import './common_toggle.css'
-import './common_styels.css'
+import '../common/common_toggle.css';
+import '../common/common_styels.css';
 import { toast } from "react-toastify";
-import Pagination from "./Pagination";
 import type { AxiosResponse } from "axios";
-import PaginationLimit from "./PaginationLimit";
+import type { FetchedAdminUser, GetUserResponse } from "../../types/types";
+import { Admin_user_isActiveApi, deleteAdmin_userApi, getAdmin_UserApi } from "../../services/allAPi";
+import PaginationLimit from "../PaginationLimit";
+import ProductSearch from "../Search_bar";
+import Pagination from "../Pagination";
 /* import Pagination from "./Pagination"; */
 
 export default function Products() {

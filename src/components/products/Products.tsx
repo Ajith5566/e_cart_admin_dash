@@ -2,16 +2,14 @@
 import { useEffect, useState } from "react";
 import styles from "./adminProduct.module.css";
 import { toast } from "react-toastify";
-import type { fetchedProducts } from "../types/types";
-import {
-  deleteProductApi,
-  getAllProductsApi,
-} from "../services/allAPi";
-import { BASE_URL } from "../services/baseURL";
 import { useNavigate } from "react-router-dom";
-import ProductSearch from "./Search_bar";
-import Pagination from "./Pagination";
-import PaginationLimit from "./PaginationLimit";
+import type { fetchedProducts } from "../../types/types";
+import { deleteProductApi, getAllProductsApi } from "../../services/allAPi";
+import PaginationLimit from "../PaginationLimit";
+import ProductSearch from "../Search_bar";
+import { BASE_URL } from "../../services/baseURL";
+import Pagination from "../Pagination";
+
 
 export default function Products() {
   const navigate = useNavigate();
