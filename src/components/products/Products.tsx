@@ -149,7 +149,7 @@ export default function Products() {
                   ))
                 ) : (
                   <tr>
-                    <td colSpan={5} className="text-center text-muted">
+                    <td colSpan={6} className="text-center text-muted">
                       No matching products found
                     </td>
                   </tr>
