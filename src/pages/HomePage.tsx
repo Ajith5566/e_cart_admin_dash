@@ -6,15 +6,18 @@ import type { AdminResponse, LoginFormData } from "../types/types";
 import { adminloginAPi } from "../services/allAPi";
 import './home_page.css'
 import { Link, useNavigate } from "react-router-dom";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faEye, faEyeSlash } from "@fortawesome/free-solid-svg-icons";
 
 function HomePage() {
- const navigate = useNavigate();
+  const navigate = useNavigate();
+  const [showPassword, setShowPassword] = useState(false);
   const [admindata, setAdminData] = useState<LoginFormData>({
     email: "",
     password: "",
   });
   console.log(admindata);
-  
+
   const [isLoading, setIsLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -24,7 +27,7 @@ function HomePage() {
     try {
       const result = (await adminloginAPi(admindata)) as AxiosResponse<AdminResponse>;
       console.log(result);
-      
+
       if (result.status === 200) {
         // Store user data & token
         if (result.status === 200) {
@@ -32,11 +35,11 @@ function HomePage() {
           setAdminData({ email: "", password: "" });
           navigate("/admin-dash");
         }
-        
+
         // Reset form
         setAdminData({ email: "", password: "" });
         // Navigate to dashboard
-         navigate('/admin-dash')
+        navigate('/admin-dash')
       }
     } catch (error: unknown) {
       if (error instanceof AxiosError) {
@@ -84,7 +87,7 @@ function HomePage() {
                       </span>
                       <input
                         type="email"
-                        className="form-control form-control-lg border-start-0 shadow-sm focus-ring"
+                        className="form-control form-control-lg "
                         id="email"
                         value={admindata.email}
                         onChange={(e) =>
@@ -100,19 +103,23 @@ function HomePage() {
                     </div>
                   </div>
 
-                  {/* Password Field */}
                   <div className="mb-4">
                     <label htmlFor="password" className="form-label fw-semibold text-dark mb-2">
                       <i className="bi bi-lock me-2 text-muted"></i>
                       Password
                     </label>
+
                     <div className="input-group input-group-lg">
+
+                      {/* Left icon */}
                       <span className="input-group-text bg-white border-end-0">
                         <i className="bi bi-lock text-muted"></i>
                       </span>
+
+                      {/* Input */}
                       <input
-                        type="password"
-                        className="form-control form-control-lg border-start-0 shadow-sm focus-ring"
+                        type={showPassword ? "text" : "password"}
+                        className="form-control shadow-sm"
                         id="password"
                         value={admindata.password}
                         onChange={(e) =>
@@ -125,9 +132,22 @@ function HomePage() {
                         required
                         disabled={isLoading}
                       />
+
+                      {/* Eye icon (FIXED) */}
+                      <span
+                        className="input-group-text bg-white"
+                        style={{ cursor: "pointer" }}
+                        onClick={() => setShowPassword((prev) => !prev)}
+                      >
+                        {showPassword ? (
+                          <FontAwesomeIcon icon={faEye} />
+                        ) : (
+                          <FontAwesomeIcon icon={faEyeSlash} />
+                        )}
+                      </span>
+
                     </div>
                   </div>
-
                   {/* Submit Button */}
                   <button
                     type="submit"
@@ -163,9 +183,9 @@ function HomePage() {
             {/* Footer Links */}
             <div className="text-center mt-4">
               <div className="d-flex justify-content-center align-items-center gap-3">
-                 <Link to={'/forgot-password'} className="btn btn-link btn-sm text-decoration-none text-muted hover-text-primary">
+                <Link to={'/forgot-password'} className="btn btn-link btn-sm text-decoration-none text-muted hover-text-primary">
                   forgot password
-                </Link> 
+                </Link>
                 <span className="text-muted">|</span>
                 <a href="#" className="btn btn-link btn-sm text-decoration-none text-muted hover-text-primary">
                   Need Help?
