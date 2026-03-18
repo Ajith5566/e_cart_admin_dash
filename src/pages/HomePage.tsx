@@ -82,12 +82,9 @@ function HomePage() {
                       Email Address
                     </label>
                     <div className="input-group input-group-lg">
-                      <span className="input-group-text bg-white border-end-0">
-                        <i className="bi bi-envelope text-muted"></i>
-                      </span>
                       <input
                         type="email"
-                        className="form-control form-control-lg "
+                        className="form-control shadow-sm "
                         id="email"
                         value={admindata.email}
                         onChange={(e) =>
@@ -111,10 +108,6 @@ function HomePage() {
 
                     <div className="input-group input-group-lg">
 
-                      {/* Left icon */}
-                      <span className="input-group-text bg-white border-end-0">
-                        <i className="bi bi-lock text-muted"></i>
-                      </span>
 
                       {/* Input */}
                       <input
