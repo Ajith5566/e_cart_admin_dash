@@ -1,13 +1,14 @@
 /* eslint-disable react-hooks/exhaustive-deps */
-import {  useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 /* import { useNavigate } from "react-router-dom"; */
 import ProductSearch from "../Search_bar";
 import { useNavigate } from "react-router-dom";
-import {  getAllCategoriesApi, toggleCategoryApi } from "../../services/allAPi";
-import type { CategoryResponse} from "../../types/types";
+import { getAllCategoriesApi, toggleCategoryApi } from "../../services/allAPi";
+import type { CategoryResponse } from "../../types/types";
 import '../common/common_toggle.css'
 import '../common/common_styels.css'
 import { toast } from "react-toastify";
+import CategoryTable from "./CategoryTable";
 /* import Pagination from "../Pagination"; */
 /* import PaginationLimit from "../PaginationLimit"; */
 /* import Pagination from "./Pagination"; */
@@ -15,32 +16,33 @@ import { toast } from "react-toastify";
 export default function Product_category() {
 
   const navigate = useNavigate();
+  const [limit, setLimit]=useState(5)
 
-   const [categories, setCategories] = useState<CategoryResponse[]>([]);
+  const [categories, setCategories] = useState<CategoryResponse[]>([]);
 
   //pagination
   /* const [page, setPage] = useState(1); */
-/*   const [totalPages, setTotalPages] = useState(1); */
- /*  const [limit, setLimit] = useState(5) */
+  /*   const [totalPages, setTotalPages] = useState(1); */
+  /*  const [limit, setLimit] = useState(5) */
 
   const [search, setSearch] = useState("");
 
 
-        const fetchCategories = async () => {
-            try {
-                const res = await getAllCategoriesApi();
-                console.log(res);
+  const fetchCategories = async () => {
+    try {
+      const res = await getAllCategoriesApi();
+      console.log(res);
 
-                setCategories(res.data);
-            } catch (err) {
-                console.error(err);
-                toast.error("Failed to load categories");
-            }
-        };
+      setCategories(res.data);
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to load categories");
+    }
+  };
 
-    useEffect(() => {
-        fetchCategories();
-    }, []);
+  useEffect(() => {
+    fetchCategories();
+  }, []);
 
 
 
@@ -60,11 +62,11 @@ export default function Product_category() {
           Category
         </h4>
         <button
-            className="btn btn-success"
-            onClick={() => navigate("/admin-dash/category/add")}
-          >
-            + Add Category
-          </button>
+          className="btn btn-success"
+          onClick={() => navigate("/admin-dash/category/add")}
+        >
+          + Add Category
+        </button>
       </div>
 
 
@@ -73,7 +75,25 @@ export default function Product_category() {
         {/* PRODUCT LIST */}
         {/* HEADER + SEARCH */}
         <div className="d-flex justify-content-between align-items-center mb-3 mt-3 p-3">
-         {/*  <PaginationLimit limit={limit} onChange={(newLimit) => { setLimit(newLimit); setPage(1); }} /> */}
+          {/*  <PaginationLimit limit={limit} onChange={(newLimit) => { setLimit(newLimit); setPage(1); }} /> */}
+           <div className="d-flex align-items-center gap-2">
+
+      <select
+        className="form-select"
+        style={{ width: "100px" }}
+        value={limit}
+        onChange={(e) => setLimit(Number(e.target.value))}
+      >
+        <option value={5}>5</option>
+        <option value={10}>10</option>
+        <option value={25}>25</option>
+        <option value={50}>50</option>
+        <option value={100}>100</option>
+      </select>
+
+      <span>entries per page</span>
+
+    </div>
 
           <div className="d-flex gap-2 justify-content-center align-items-center p-2">
             <h6>Search:</h6>
@@ -81,7 +101,16 @@ export default function Product_category() {
 
           </div>
         </div>
-        <div className="card-body table-responsive" >
+          <CategoryTable data={categories} onEdit={(category) =>  navigate("/admin-dash/category/add", {  state: { category }, }) }
+        onToggle={async (id) => {
+          try {
+            await toggleCategoryApi(id);
+            fetchCategories();
+          } catch {
+            toast.error("Status update failed");
+          }
+        }}  limit={limit} />
+        {/* <div className="card-body table-responsive" >
           <table className="table table-hover align-middle mb-0">
             <thead>
               <tr>
@@ -100,11 +129,11 @@ export default function Product_category() {
 
                   <tr key={category._id} className="tableRowHeight">
 
-                    {/* Name */}
+                  
                     <td>{category.name}</td>
                     <td>{category.parent_category}</td>
 
-                    {/* Edit */}
+                    
                     <td>
                       <button
                         className="btn btn-sm btn-warning"
@@ -118,7 +147,6 @@ export default function Product_category() {
                       </button>
                     </td>
 
-                    {/* Status Toggle */}
                     <td>
                       <label className="toggle-switch">
                         <input
@@ -126,13 +154,13 @@ export default function Product_category() {
                           type="checkbox"
                           checked={!!category.isActive}
                           onChange={async () => {
-                                                    try {
-                                                      await toggleCategoryApi(category._id);
-                                                      fetchCategories();
-                                                    } catch {
-                                                      toast.error("Status update failed");
-                                                    }
-                                                  }}
+                            try {
+                              await toggleCategoryApi(category._id);
+                              fetchCategories();
+                            } catch {
+                              toast.error("Status update failed");
+                            }
+                          }}
                         />
                         <span className="toggle-slider"></span>
                       </label>
@@ -158,7 +186,7 @@ export default function Product_category() {
 
 
 
-        </div>
+        </div> */}
         {/* ✅ PAGINATION UI (same as PageEditor) */}
         <div className="d-flex justify-content-center align-items-center mb-2 gap-2 flex-wrap">
 
@@ -171,6 +199,8 @@ export default function Product_category() {
         </div>
 
       </div>
+    
     </div>
+
   );
 }
