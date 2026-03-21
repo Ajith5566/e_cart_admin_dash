@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-import { useReactTable, getCoreRowModel, flexRender, getPaginationRowModel } from '@tanstack/react-table'
-import type { ColumnDef } from "@tanstack/react-table";
+import { useReactTable, getCoreRowModel, flexRender, getPaginationRowModel, getSortedRowModel } from '@tanstack/react-table'
+import type { ColumnDef, SortingState } from "@tanstack/react-table";
 import type { CategoryResponse } from '../../types/types';
 import '../common/common_toggle.css'
 import '../common/common_styels.css'
@@ -19,6 +19,8 @@ function CategoryTable({ data, onEdit, onToggle, limit }: Props) {
         pageSize: limit
     })
 
+    const [sorting, setSorting] = useState<SortingState>([]);
+
     //rendering table
     useEffect(() => {
         setPagination((prev) => ({
@@ -31,11 +33,13 @@ function CategoryTable({ data, onEdit, onToggle, limit }: Props) {
     const columns = useMemo<ColumnDef<CategoryResponse>[]>(() => [
         {
             header: 'Category',
-            accessorKey: 'name'
+            accessorKey: 'name',
+            enableSorting: true,   // ✅ only this column sortable
         },
         {
             header: 'Parent Category',
-            accessorKey: "parent_category"
+            accessorKey: "parent_category",
+            enableSorting: false,   // ✅ only this column sortable
         },
         {
             header: "Edit",
@@ -47,6 +51,7 @@ function CategoryTable({ data, onEdit, onToggle, limit }: Props) {
                     Edit
                 </button>
             ),
+            enableSorting: false,
         }, {
             header: "Status",
             cell: ({ row }) => (
@@ -60,6 +65,7 @@ function CategoryTable({ data, onEdit, onToggle, limit }: Props) {
                     <span className="toggle-slider"></span>
                 </label>
             ),
+            enableSorting: false,
         },
     ], [onEdit, onToggle])
     /*     [
@@ -82,24 +88,39 @@ function CategoryTable({ data, onEdit, onToggle, limit }: Props) {
         columns,
         getCoreRowModel: getCoreRowModel(),
         getPaginationRowModel: getPaginationRowModel(),
-        state: { pagination },
+        state: { pagination, sorting },
         onPaginationChange: setPagination,
-        pageCount: Math.ceil(data.length / pagination.pageSize)
+        pageCount: Math.ceil(data.length / pagination.pageSize),
+        getSortedRowModel: getSortedRowModel(),
+        onSortingChange: setSorting
     })
     return (
         <div className='container w-100'>
-            <div className="card-body table-responsive" >
+            <div className="card-body table-responsive" style={{ minHeight: "520px" }} >
                 <table className="table table-hover align-middle mb-0">
                     <thead>
                         {
                             table.getHeaderGroups().map(headerGroup => (
-                                <tr key={headerGroup.id}>
+                                <tr key={headerGroup.id} >
                                     {
                                         headerGroup.headers.map(header => (
-                                            <th key={header.id}>
+                                            <th key={header.id} className={header.column.getCanSort() ? "cursor-pointer" : ""}
+                                                onClick={
+                                                    header.column.getCanSort()
+                                                        ? header.column.getToggleSortingHandler()
+                                                        : undefined
+                                                }>
                                                 {
                                                     flexRender(header.column.columnDef.header, header.getContext())
                                                 }
+                                                {header.column.getCanSort() && (
+                                                    <span className="ms-1 fw-bold">
+                                                        {{
+                                                            asc: "▲",
+                                                            desc: "▼",
+                                                        }[header.column.getIsSorted() as string] ?? "⇅"}
+                                                    </span>
+                                                )}
                                             </th>
                                         ))
                                     }
@@ -125,7 +146,7 @@ function CategoryTable({ data, onEdit, onToggle, limit }: Props) {
                 </table>
             </div>
             <div className="d-flex justify-content-center align-items-center mb-2 gap-2 flex-wrap">
-                <button
+                <button className='btn btn-outline-secondary'
                     onClick={() => table.previousPage()}
                     disabled={!table.getCanPreviousPage()}
                 >
@@ -134,7 +155,7 @@ function CategoryTable({ data, onEdit, onToggle, limit }: Props) {
                 <span>
                     page{table.getState().pagination.pageIndex + 1} of {table.getPageCount()}
                 </span>
-                <button
+                <button className='btn btn-outline-secondary'
                     onClick={() => table.nextPage()}
                     disabled={!table.getCanNextPage()}
                 >
