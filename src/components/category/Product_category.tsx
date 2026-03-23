@@ -1,7 +1,6 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 import { useEffect, useState } from "react";
 /* import { useNavigate } from "react-router-dom"; */
-import ProductSearch from "../Search_bar";
 import { useNavigate } from "react-router-dom";
 import { getAllCategoriesApi, toggleCategoryApi } from "../../services/allAPi";
 import type { CategoryResponse } from "../../types/types";
@@ -16,7 +15,6 @@ import CategoryTable from "./CategoryTable";
 export default function Product_category() {
 
   const navigate = useNavigate();
-  const [limit, setLimit]=useState(5)
 
   const [categories, setCategories] = useState<CategoryResponse[]>([]);
 
@@ -24,8 +22,6 @@ export default function Product_category() {
   /* const [page, setPage] = useState(1); */
   /*   const [totalPages, setTotalPages] = useState(1); */
   /*  const [limit, setLimit] = useState(5) */
-
-  const [search, setSearch] = useState("");
 
 
   const fetchCategories = async () => {
@@ -74,33 +70,7 @@ export default function Product_category() {
 
         {/* PRODUCT LIST */}
         {/* HEADER + SEARCH */}
-        <div className="d-flex justify-content-between align-items-center mb-3 mt-3 p-3">
-          {/*  <PaginationLimit limit={limit} onChange={(newLimit) => { setLimit(newLimit); setPage(1); }} /> */}
-           <div className="d-flex align-items-center gap-2">
-
-      <select
-        className="form-select"
-        style={{ width: "100px" }}
-        value={limit}
-        onChange={(e) => setLimit(Number(e.target.value))}
-      >
-        <option value={5}>5</option>
-        <option value={10}>10</option>
-        <option value={25}>25</option>
-        <option value={50}>50</option>
-        <option value={100}>100</option>
-      </select>
-
-      <span>entries per page</span>
-
-    </div>
-
-          <div className="d-flex gap-2 justify-content-center align-items-center p-2">
-            <h6>Search:</h6>
-            <ProductSearch value={search} onChange={setSearch} />
-
-          </div>
-        </div>
+        
           <CategoryTable data={categories} onEdit={(category) =>  navigate("/admin-dash/category/add", {  state: { category }, }) }
         onToggle={async (id) => {
           try {
@@ -109,7 +79,7 @@ export default function Product_category() {
           } catch {
             toast.error("Status update failed");
           }
-        }}  limit={limit} />
+        }}  />
         {/* <div className="card-body table-responsive" >
           <table className="table table-hover align-middle mb-0">
             <thead>

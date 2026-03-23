@@ -1,18 +1,23 @@
 import { useEffect, useMemo, useState } from 'react'
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-import { useReactTable, getCoreRowModel, flexRender, getPaginationRowModel, getSortedRowModel } from '@tanstack/react-table'
+import { useReactTable, getCoreRowModel, flexRender, getPaginationRowModel, getSortedRowModel, getFilteredRowModel } from '@tanstack/react-table'
 import type { ColumnDef, SortingState } from "@tanstack/react-table";
 import type { CategoryResponse } from '../../types/types';
 import '../common/common_toggle.css'
 import '../common/common_styels.css'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faAngleLeft, faAngleRight, faAnglesLeft, faAnglesRight } from '@fortawesome/free-solid-svg-icons';
 
 type Props = {
     data: CategoryResponse[];
     onEdit: (category: CategoryResponse) => void;
     onToggle: (id: string) => void;
-    limit: number;
 };
-function CategoryTable({ data, onEdit, onToggle, limit }: Props) {
+function CategoryTable({ data, onEdit, onToggle }: Props) {
+
+
+    const [limit, setLimit] = useState(5)
+
 
     const [pagination, setPagination] = useState({
         pageIndex: 0,
@@ -20,6 +25,7 @@ function CategoryTable({ data, onEdit, onToggle, limit }: Props) {
     })
 
     const [sorting, setSorting] = useState<SortingState>([]);
+    const [filtering, setFiltering] = useState('');
 
     //rendering table
     useEffect(() => {
@@ -88,14 +94,64 @@ function CategoryTable({ data, onEdit, onToggle, limit }: Props) {
         columns,
         getCoreRowModel: getCoreRowModel(),
         getPaginationRowModel: getPaginationRowModel(),
-        state: { pagination, sorting },
+        state: { pagination, sorting, globalFilter: filtering },
         onPaginationChange: setPagination,
         pageCount: Math.ceil(data.length / pagination.pageSize),
         getSortedRowModel: getSortedRowModel(),
-        onSortingChange: setSorting
+        onSortingChange: setSorting,
+        getFilteredRowModel: getFilteredRowModel(),
+        onGlobalFilterChange: setFiltering
     })
+
+    //showing part
+    const { pageIndex, pageSize } = table.getState().pagination;
+
+    const totalRows = table.getFilteredRowModel().rows.length;
+
+    const startRow = totalRows === 0
+        ? 0
+        : pageIndex * pageSize + 1;
+
+    const endRow = Math.min(
+        (pageIndex + 1) * pageSize,
+        totalRows
+    );
     return (
         <div className='container w-100'>
+
+            <div className="d-flex justify-content-between align-items-center mb-3 mt-3 p-3">
+                {/*  <PaginationLimit limit={limit} onChange={(newLimit) => { setLimit(newLimit); setPage(1); }} /> */}
+                <div className="d-flex align-items-center gap-2">
+
+                    <select
+                        className="form-select"
+                        style={{ width: "100px" }}
+                        value={limit}
+                        onChange={(e) => setLimit(Number(e.target.value))}
+                    >
+                        <option value={5}>5</option>
+                        <option value={10}>10</option>
+                        <option value={25}>25</option>
+                        <option value={50}>50</option>
+                        <option value={100}>100</option>
+                    </select>
+
+                    <span>entries per page</span>
+
+                </div>
+
+                <div className="d-flex gap-2 justify-content-center align-items-center p-2">
+                    <h6>Search:</h6>
+
+                    <input type="text"
+                        className="form-control"
+                        style={{ maxWidth: 250 }}
+                        value={filtering}
+                        onChange={(e) => setFiltering(e.target.value)}
+                        placeholder='searching...'
+                    />
+                </div>
+            </div>
             <div className="card-body table-responsive" style={{ minHeight: "520px" }} >
                 <table className="table table-hover align-middle mb-0">
                     <thead>
@@ -145,22 +201,50 @@ function CategoryTable({ data, onEdit, onToggle, limit }: Props) {
                     </tbody>
                 </table>
             </div>
-            <div className="d-flex justify-content-center align-items-center mb-2 gap-2 flex-wrap">
-                <button className='btn btn-outline-secondary'
-                    onClick={() => table.previousPage()}
-                    disabled={!table.getCanPreviousPage()}
-                >
-                    ◀
-                </button>
+            <div className='d-flex justify-content-between'>
                 <span>
-                    page{table.getState().pagination.pageIndex + 1} of {table.getPageCount()}
+                    Showing {startRow} to {endRow} of {totalRows} entries
                 </span>
-                <button className='btn btn-outline-secondary'
-                    onClick={() => table.nextPage()}
-                    disabled={!table.getCanNextPage()}
-                >
-                    ▶
-                </button>
+                <div className="d-flex justify-content-center align-items-center mb-2 gap-2 flex-wrap">
+                    {/* First */}
+                    <button
+                        className="btn btn-outline-secondary btn-sm"
+                        onClick={() => table.setPageIndex(0)}
+                        disabled={!table.getCanPreviousPage()}
+                    >
+                        <FontAwesomeIcon icon={faAnglesLeft} />
+                    </button>
+                    <button className='btn btn-outline-secondary btn-sm'
+                        onClick={() => table.previousPage()}
+                        disabled={!table.getCanPreviousPage()}
+                    >
+                         <FontAwesomeIcon icon={faAngleLeft} />
+                    </button>
+
+                    {/* Page Numbers */}
+                    <button className="btn btn-secondary btn-sm">
+                        {table.getState().pagination.pageIndex + 1}
+                    </button>
+
+
+                    <button className='btn btn-outline-secondary btn-sm'
+                        onClick={() => table.nextPage()}
+                        disabled={!table.getCanNextPage()}
+                    >
+                         <FontAwesomeIcon icon={faAngleRight} />
+                    </button>
+                    {/* Last */}
+                    <button
+                        className="btn btn-outline-secondary btn-sm"
+                        onClick={() =>
+                            table.setPageIndex(table.getPageCount() - 1)
+                        }
+                        disabled={!table.getCanNextPage()}
+                    >
+                         <FontAwesomeIcon icon={faAnglesRight} />
+                    </button>
+
+                </div>
             </div>
         </div>
     )
