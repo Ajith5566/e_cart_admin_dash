@@ -186,19 +186,26 @@ function CategoryTable({ data, onEdit, onToggle }: Props) {
                         }
                     </thead>
                     <tbody>
-                        {
-                            table.getRowModel().rows.map(row => (
+                        {table.getRowModel().rows.length > 0 ? (
+                            table.getRowModel().rows.map((row) => (
                                 <tr key={row.id} className="tableRowHeight">
-                                    {
-                                        row.getVisibleCells().map(cell => (
-                                            <td key={cell.id}>
-                                                {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                                            </td>
-                                        ))
-                                    }
+                                    {row.getVisibleCells().map((cell) => (
+                                        <td key={cell.id}>
+                                            {flexRender(
+                                                cell.column.columnDef.cell,
+                                                cell.getContext()
+                                            )}
+                                        </td>
+                                    ))}
                                 </tr>
                             ))
-                        }
+                        ) : (
+                            <tr>
+                                <td colSpan={columns.length} className="text-center text-muted">
+                                    No users found
+                                </td>
+                            </tr>
+                        )}
                     </tbody>
                 </table>
             </div>
@@ -219,7 +226,7 @@ function CategoryTable({ data, onEdit, onToggle }: Props) {
                         onClick={() => table.previousPage()}
                         disabled={!table.getCanPreviousPage()}
                     >
-                         <FontAwesomeIcon icon={faAngleLeft} />
+                        <FontAwesomeIcon icon={faAngleLeft} />
                     </button>
 
                     {/* Page Numbers */}
@@ -232,7 +239,7 @@ function CategoryTable({ data, onEdit, onToggle }: Props) {
                         onClick={() => table.nextPage()}
                         disabled={!table.getCanNextPage()}
                     >
-                         <FontAwesomeIcon icon={faAngleRight} />
+                        <FontAwesomeIcon icon={faAngleRight} />
                     </button>
                     {/* Last */}
                     <button
@@ -242,7 +249,7 @@ function CategoryTable({ data, onEdit, onToggle }: Props) {
                         }
                         disabled={!table.getCanNextPage()}
                     >
-                         <FontAwesomeIcon icon={faAnglesRight} />
+                        <FontAwesomeIcon icon={faAnglesRight} />
                     </button>
 
                 </div>
