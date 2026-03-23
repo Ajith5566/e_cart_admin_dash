@@ -100,7 +100,8 @@ function CategoryTable({ data, onEdit, onToggle }: Props) {
         getSortedRowModel: getSortedRowModel(),
         onSortingChange: setSorting,
         getFilteredRowModel: getFilteredRowModel(),
-        onGlobalFilterChange: setFiltering
+        onGlobalFilterChange: setFiltering,
+        autoResetPageIndex: false,   // ⭐ THIS FIXES IT
     })
 
     //showing part
