@@ -202,7 +202,7 @@ function CategoryTable({ data, onEdit, onToggle }: Props) {
                         ) : (
                             <tr>
                                 <td colSpan={columns.length} className="text-center text-muted">
-                                    No users found
+                                    No Category found
                                 </td>
                             </tr>
                         )}
