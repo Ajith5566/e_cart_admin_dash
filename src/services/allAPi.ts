@@ -1,5 +1,5 @@
-import type { PageQueryParams, ProductQueryParams, UserQueryParams } from "../types/allAPi_types";
-import type { AdminUserPayload,  CategoryResponse,  fetchedProducts, GetPagesResponse, ProductResponse } from "../types/types";
+import type { ProductQueryParams, UserQueryParams } from "../types/allAPi_types";
+import type { AdminUserPayload,  CategoryResponse,  fetchedProducts, GetPagesResponse, PageType, ProductResponse } from "../types/types";
 import { BASE_URL } from "./baseURL";
 import { commonApi } from "./commonAPi";
 
@@ -98,15 +98,11 @@ export const addPageApi = (data: PagePayload) => {
   );
 };
 
-export const getAllPagesApi = ({
-  page = 1,
-  limit = 5,
-  search="",
-   inactive = false}:PageQueryParams
+export const getAllPagesApi = (
 ) => {
-  return commonApi(
+  return commonApi<PageType[]>(
     "GET",
-    `${BASE_URL}/admin/pages?page=${page}&limit=${limit}&search=${search}&inactive=${inactive}`
+    `${BASE_URL}/admin/pages`
   );
 };
 

@@ -86,8 +86,10 @@ export type GetPagesResponse = {
 export type PageType = {
   _id: string;
   title: string;
+  slug: string;
   shortDescription: string;
   description: string;
+  isActive: boolean;
 };
 
 //types for adding admin

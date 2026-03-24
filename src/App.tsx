@@ -5,7 +5,7 @@ import Admin_dashboard from "./pages/Admin_dashboard";
 import "bootstrap/dist/css/bootstrap.min.css";
 import 'bootstrap/dist/js/bootstrap.bundle.min.js';
 import { ToastContainer } from "react-toastify";
-import PageEditor from "./pages/PageEditor";
+import PageEditor from "./components/admin_pages/PageEditor";
 import Add_page from "./components/admin_pages/add_page";
 import Add_product from "./components/products/Add_product";
 import Products from "./components/products/Products";
