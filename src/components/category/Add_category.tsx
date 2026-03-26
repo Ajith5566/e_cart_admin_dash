@@ -3,7 +3,6 @@ import "react-quill-new/dist/quill.snow.css";
 import { toast } from "react-toastify";
 import { useLocation, useNavigate } from "react-router-dom";
 import { Modules } from "../quillmodule";
-import { BASE_URL } from "../../services/baseURL";
 import type { CategoryResponse, CategoryTypes } from "../../types/types";
 import {
   add_category_Api,
@@ -302,7 +301,7 @@ function Add_category() {
             {existingImages.map((img) => (
               <div key={img} className="mt-3">
                 <img
-                  src={`${BASE_URL}/uploads/${img}`}
+                  src={img}
                   className="img-thumbnail"
                 />
                 <button

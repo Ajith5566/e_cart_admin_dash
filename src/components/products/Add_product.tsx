@@ -4,7 +4,6 @@ import type { AdminProduct, fetchedProducts } from "../../types/types";
 import { AddproductApi, updateProductApi } from "../../services/allAPi";
 import { useLocation, useNavigate } from "react-router-dom";
 import '../common/common_styels.css'
-import { BASE_URL } from "../../services/baseURL";
 import ReactQuill from "react-quill-new";
 import { Modules } from "../quillmodule";
 
@@ -392,7 +391,7 @@ export default function Add_product() {
                 <div key={index} className="position-relative">
 
                   <img
-                    src={`${BASE_URL}/uploads/${img}`}
+                    src={img}
                     className="img-thumbnail"
                     style={{
                       width: "150px",

@@ -8,7 +8,6 @@ import '../common/common_styels.css';
 import styles from "./adminProduct.module.css";
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faAngleLeft, faAngleRight, faAnglesLeft, faAnglesRight } from '@fortawesome/free-solid-svg-icons';
-import { BASE_URL } from '../../services/baseURL';
 
 type Props = {
     data: fetchedProducts[];
@@ -48,7 +47,7 @@ function ProductTable({ data, onEdit ,onDelete}: Props) {
         <img
           src={
             item.images?.length
-              ? `${BASE_URL}/uploads/${item.images[0]}`
+              ? item.images[0]
               : "/no-image.png"
           }
           className={styles.tableImg}
