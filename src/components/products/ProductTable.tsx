@@ -69,11 +69,6 @@ function ProductTable({ data, onEdit ,onDelete}: Props) {
             enableSorting: false,   // ✅ only this column sortable
         },
         {
-            header: 'Quantity',
-            accessorKey: "quantity",
-            enableSorting: false,   // ✅ only this column sortable
-        },
-        {
             header: 'Price',
             accessorKey: "price",
             enableSorting: false,   // ✅ only this column sortable
