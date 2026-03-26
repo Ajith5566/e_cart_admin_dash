@@ -61,16 +61,8 @@ export type fetchedProducts={
   description:string;
   shortDescription:string;
   images:string[]; // image URL
-
 }
-//paginate
-export type ProductResponse = {
-  docs: fetchedProducts[];
-  totalDocs: number;
-  totalPages: number;
-  page: number;
-  limit: number;
-};
+
 
 //user pgination
 export type GetPagesResponse = {
@@ -113,11 +105,6 @@ export type FetchedAdminUser={
     isActive:boolean,
     role:string
 }
-export type GetUserResponse = {
-  docs: FetchedAdminUser[];
-  totalDocs: number;
-  totalPages: number;
-};
 export type AdminUserPayload = {
   name: string;
   email: string;

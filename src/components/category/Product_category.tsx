@@ -66,7 +66,6 @@ export default function Product_category() {
       </div>
 
 
-      <div className="container">
 
         {/* PRODUCT LIST */}
         {/* HEADER + SEARCH */}
@@ -167,8 +166,6 @@ export default function Product_category() {
           /> */}
 
         </div>
-
-      </div>
     
     </div>
 
