@@ -1,9 +1,10 @@
 import React, { Suspense, useEffect, useRef, useState } from "react";
 import { toast } from "react-toastify";
-import type { AdminProduct, fetchedProducts } from "../../types/types";
-import { AddproductApi, updateProductApi } from "../../services/allAPi";
+import type { AdminProduct, CategoryResponse, fetchedProducts } from "../../types/types";
+import { AddproductApi, getAllCategoriesApi, updateProductApi } from "../../services/allAPi";
 import { useLocation, useNavigate } from "react-router-dom";
-import '../common/common_styels.css'
+import '../common/common_styels.css';
+import '../products/add_products.css'
 import ReactQuill from "react-quill-new";
 import { Modules } from "../quillmodule";
 
@@ -13,6 +14,7 @@ export default function Add_product() {
   const navigate = useNavigate();
   const location = useLocation();
   const nameRef = useRef<HTMLInputElement | null>(null);
+  const category = location.state?.category;
 
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
@@ -25,6 +27,9 @@ export default function Add_product() {
   //for edit-image preview
   const [existingImages, setExistingImages] = useState<string[]>([]);
 
+  //category
+   const [categories, setCategories] = useState<CategoryResponse[]>([]);
+
   // Main form state
   const [formData, setFormData] = useState<AdminProduct>({
     name: "",
@@ -32,8 +37,11 @@ export default function Add_product() {
     quantity: "",
     shortDescription: "",
     description: "",
+    status:true,
+    category:"",
     images: [], // multiple image files
   });
+console.log(formData);
 
 
   /* error handling */
@@ -67,7 +75,7 @@ export default function Add_product() {
 
     let isValid = true;
 
-    if (!formData.name.trim()|| "") {
+    if (!formData.name.trim() || "") {
       newErrors.name = "Product name is required";
       nameRef.current?.focus();
       isValid = false;
@@ -105,9 +113,9 @@ export default function Add_product() {
     }
 
     if (
-  formData.images.length === 0 &&
-  existingImages.length === 0
-) {
+      formData.images.length === 0 &&
+      existingImages.length === 0
+    ) {
       newErrors.images = "At least one image required";
       isValid = false;
     }
@@ -133,6 +141,8 @@ export default function Add_product() {
       quantity: product.quantity,
       shortDescription: product.shortDescription,
       description: product.description,
+      category:product.category,
+      status:product.isActive,
       images: [], // existing images not added here (only new uploads)
     });
 
@@ -172,7 +182,7 @@ export default function Add_product() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    const { name, price, description, shortDescription, quantity, images } = formData;
+    const { name, price, description, shortDescription, quantity, images,status,category } = formData;
 
     // Basic validation
     if (!validateForm()) return;
@@ -185,6 +195,8 @@ export default function Add_product() {
     fd.append("quantity", quantity.toString());
     fd.append("description", description);
     fd.append("shortDescription", shortDescription);
+    fd.append("status", String(status));
+    fd.append("category",category);
 
     // Append multiple image files
     images.forEach((file) => {
@@ -194,7 +206,7 @@ export default function Add_product() {
     console.log(formData.images);
 
     try {
-    
+
 
       // Update existing product
       if (product) {
@@ -220,6 +232,22 @@ export default function Add_product() {
       toast.error(message);
     }
   };
+  const fetchCategories = async () => {
+      try {
+        const res = await getAllCategoriesApi();
+        console.log(res);
+  
+        setCategories(res.data);
+      } catch (err) {
+        console.error(err);
+        toast.error("Failed to load categories");
+      }
+    };
+  
+    useEffect(() => {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      fetchCategories();
+    }, []);
 
   return (
     <div className="container py-4">
@@ -237,88 +265,146 @@ export default function Add_product() {
 
       <div className=" p-4">
         <form onSubmit={handleSubmit}>
-
-          {/* Product Name */}
-          <div>
-            <label className="form-label">Product Name <span className="text-danger">*</span></label>
-            <input
-              className={`form-control mb-1 ${errors.name ? "is-invalid" : ""}`}
-              value={formData.name}
-              onChange={(e) =>
-                setFormData({ ...formData, name: e.target.value })
-              }
-               ref={nameRef}
-            />
-
-            {errors.name && (
-              <div className="invalid-feedback">{errors.name}</div>
-            )}
-
-          </div>
-
-          {/* Price & Quantity */}
           <div className="row">
 
-            <div className="col-md-6">
-              <label className="form-label">Price <span className="text-danger">*</span></label>
-              <input
-                type="text"
-                className={`form-control mb-1 ${errors.price ? "is-invalid" : ""}`}
-                value={formData.price}
-                onChange={(e) =>
-                  setFormData({ ...formData, price: e.target.value })
-                }
-              />
+            <div className="col-9">
+              {/* Product Name */}
+              <div>
+                <label className="form-label w-100">Product Name <span className="text-danger">*</span></label>
+                <input
+                  className={`form-control mb-1 ${errors.name ? "is-invalid" : ""}`}
+                  value={formData.name}
+                  onChange={(e) =>
+                    setFormData({ ...formData, name: e.target.value })
+                  }
+                  ref={nameRef}
+                />
 
-              {errors.price && (
-                <div className="invalid-feedback">{errors.price}</div>
-              )}
+                {errors.name && (
+                  <div className="invalid-feedback">{errors.name}</div>
+                )}
+
+              </div>
+
+              {/* Price & Quantity */}
+              <div className="row mt-1">
+
+                <div className="col-md-6">
+                  <label className="form-label">Price <span className="text-danger">*</span></label>
+                  <input
+                    type="text"
+                    className={`form-control mb-1 ${errors.price ? "is-invalid" : ""}`}
+                    value={formData.price}
+                    onChange={(e) =>
+                      setFormData({ ...formData, price: e.target.value })
+                    }
+                  />
+
+                  {errors.price && (
+                    <div className="invalid-feedback">{errors.price}</div>
+                  )}
+
+                </div>
+
+                <div className="col-md-6">
+                  <label className="form-label">Quantity <span className="text-danger">*</span></label>
+                  <input
+                    type="text"
+                    className={`form-control mb-1 ${errors.quantity ? "is-invalid" : ""}`}
+                    value={formData.quantity}
+                    onChange={(e) =>
+                      setFormData({ ...formData, quantity: e.target.value })
+                    }
+                  />
+                  {errors.quantity && (
+                    <div className="invalid-feedback">{errors.quantity}</div>
+                  )}
+                </div>
+
+
+              </div>
+              <div>
+                <label htmlFor="short_description" className='form-label mt-3'>Short description <span className="text-danger">*</span></label>
+                <textarea
+                  id="short_description"
+                  className={`form-control ${errors.shortDescription ? "is-invalid" : ""}`}
+                  value={formData.shortDescription}
+                  name="short_description"
+                  rows={5}
+                  onChange={(e) => setFormData({ ...formData, shortDescription: e.target.value })}
+                />
+
+                {errors.shortDescription && (
+                  <div className="invalid-feedback">{errors.shortDescription}</div>
+                )}
+
+
+                <div className='mt-3' >
+                  <h6>Description <span className="text-danger">*</span></h6>
+                  <Suspense fallback={<div>Loading editor...</div>}>
+                    <ReactQuill
+                       className="custom-quill"
+                      value={formData.description}
+                      onChange={(value) => setFormData({ ...formData, description: value })}
+                      modules={Modules}
+                      theme="snow"
+                    />
+
+                  </Suspense>
+                  {errors.description && (
+                    <div className="text-danger mt-1">{errors.description}</div>
+                  )}
+                </div>
+              </div>
 
             </div>
+            {/* RIGHT */}
+            <div className="col-3">
 
-            <div className="col-md-6">
-              <label className="form-label">Quantity <span className="text-danger">*</span></label>
-              <input
-                type="text"
-                className={`form-control mb-1 ${errors.quantity ? "is-invalid" : ""}`}
-                value={formData.quantity}
+              <div>
+                {/* STATUS */}
+                <label className="form-label">Status</label>
+  
+                <select
+                  className="form-control"
+                value={formData.status ? "true" : "false"}
                 onChange={(e) =>
-                  setFormData({ ...formData, quantity: e.target.value })
-                }
-              />
-              {errors.quantity && (
-                <div className="invalid-feedback">{errors.quantity}</div>
-              )}
+                  setFormData({
+                    ...formData,
+                    status: e.target.value === "true",
+                  })
+                } 
+                >
+                  <option value="true">Active</option>
+                  <option value="false">Draft</option>
+                </select>
+              </div>
+              <div>
+                <label htmlFor="category" className="form-label mt-3">Category</label>
+
+          <select
+            id="category"
+            className="form-control"
+             value={formData.category} 
+             onChange={(e) =>
+              setFormData({ ...formData, category: e.target.value })
+            } 
+          >
+            <option value="">Choose Category</option>
+
+             {categories
+              .filter(cat => cat._id !== category?._id)
+              .map((cat) => (
+                <option key={cat._id} value={cat.name}>
+                  {cat.name}
+                </option>
+              ))}
+          </select>
+              </div>
+
             </div>
-
           </div>
-          <label htmlFor="short_description" className='form-label mt-3'>Short description <span className="text-danger">*</span></label>
-          <textarea
-            className={`form-control mb-1 ${errors.shortDescription ? "is-invalid" : ""}`}
-            value={formData.shortDescription}
-            onChange={(e) => setFormData({ ...formData, shortDescription: e.target.value })}
-          />
 
-          {errors.shortDescription && (
-            <div className="invalid-feedback">{errors.shortDescription}</div>
-          )}
-
-
-          <div className='mt-3'>
-            <h6>Description <span className="text-danger">*</span></h6>
-            <Suspense fallback={<div>Loading editor...</div>}>
-              <ReactQuill
-                value={formData.description}
-                onChange={(value) => setFormData({ ...formData, description: value })}
-                modules={Modules}
-                theme="snow"
-              />
-
-            </Suspense>
-            {errors.description && (
-              <div className="text-danger mt-1">{errors.description}</div>
-            )}
-          </div>
 
 
           {/* Image Upload Section */}

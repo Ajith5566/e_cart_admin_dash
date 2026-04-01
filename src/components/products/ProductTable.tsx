@@ -13,8 +13,9 @@ type Props = {
     data: fetchedProducts[];
     onEdit: (product: fetchedProducts) => void;
     onDelete:(id:string)=>void;
+    onToggle: (id: string) => void;
 };
-function ProductTable({ data, onEdit ,onDelete}: Props) {
+function ProductTable({ data, onEdit ,onDelete,onToggle}: Props) {
 
 
     const [limit, setLimit] = useState(5)
@@ -71,6 +72,20 @@ function ProductTable({ data, onEdit ,onDelete}: Props) {
             header: 'Price',
             accessorKey: "price",
             enableSorting: false,   // ✅ only this column sortable
+        },{
+            header: "Status",
+            cell: ({ row }) => (
+                <label className="toggle-switch">
+                    <input
+                        className="toggle-input"
+                        type="checkbox"
+                        checked={!!row.original.isActive}
+                        onChange={() => onToggle(row.original._id)}
+                    />
+                    <span className="toggle-slider"></span>
+                </label>
+            ),
+            enableSorting: false,
         },
         {
             header: "Edit",

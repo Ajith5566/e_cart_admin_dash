@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
 import { useNavigate } from "react-router-dom";
 import type { fetchedProducts } from "../../types/types";
-import { deleteProductApi, getAllProductsApi } from "../../services/allAPi";
+import { deleteProductApi, getAllProductsApi, toggleProductApi } from "../../services/allAPi";
 import ProductTable from "./ProductTable";
 
 
@@ -69,7 +69,16 @@ export default function Products() {
               } catch {
                 toast.error("Delete failed");
               }
-            }} />
+            }} 
+             onToggle={async (id) => {
+                      try {
+                        await toggleProductApi(id);
+                        fetchProducts();
+                      } catch {
+                        toast.error("Status update failed");
+                      }
+                    }} 
+            />
 
 
 

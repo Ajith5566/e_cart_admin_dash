@@ -55,6 +55,14 @@ export const AddproductApi = <T = unknown>(reqBody: unknown) => {
   );
 };
 
+//product status
+export const toggleProductApi = (id: string) => {
+  return commonApi(
+    "PUT",
+    `${BASE_URL}/admin/product/${id}/toggle`
+  );
+};
+
 export const getAllProductsApi = () => {
   return commonApi<fetchedProducts[]>(
     "GET",

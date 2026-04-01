@@ -49,6 +49,8 @@ export type AdminProduct = {
   quantity: number | string;
   shortDescription:string;
   description:string;
+  status: boolean;
+  category:string;
   images: File[]
 };
 
@@ -60,6 +62,8 @@ export type fetchedProducts={
   quantity: number | string;
   description:string;
   shortDescription:string;
+  category: string;
+  isActive: boolean;
   images:string[]; // image URL
 }
 

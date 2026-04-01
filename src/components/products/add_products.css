@@ -1,0 +1,9 @@
+.custom-quill .ql-container {
+  min-height: 10rem;
+  border-radius: 10px;
+}
+
+.custom-quill .ql-editor {
+  min-height: 10rem;
+  
+}

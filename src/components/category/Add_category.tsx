@@ -185,9 +185,10 @@ function Add_category() {
           )}
 
           {/* PARENT CATEGORY */}
-          <label className="form-label mt-3">Parent Category</label>
+          <label htmlFor="parent_category" className="form-label mt-3">Parent Category</label>
 
           <select
+            id="parent_category"
             className="form-control w-50"
             value={formData.parentCategory}
             onChange={(e) =>
