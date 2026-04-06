@@ -62,7 +62,10 @@ export type fetchedProducts={
   quantity: number | string;
   description:string;
   shortDescription:string;
-  category: string;
+  category?: {
+    _id: string;
+    name: string;
+  } | null;
   isActive: boolean;
   images:string[]; // image URL
 }
@@ -131,17 +134,13 @@ export type CategoryTypes = {
 export type CategoryResponse = {
   _id: string;
   name: string;
-
   description: string;
   shortDescription: string;
-
   parent_category?: {
     _id: string;
     name: string;
   } | null;
-
   isActive: boolean;
-
   image: string; // URL from Cloudinary / server
 };
 

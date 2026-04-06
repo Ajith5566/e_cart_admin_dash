@@ -28,7 +28,9 @@ export default function Add_product() {
   const [existingImages, setExistingImages] = useState<string[]>([]);
 
   //category
-   const [categories, setCategories] = useState<CategoryResponse[]>([]);
+  const [categories, setCategories] = useState<CategoryResponse[]>([]);
+  console.log(categories);
+
 
   // Main form state
   const [formData, setFormData] = useState<AdminProduct>({
@@ -37,11 +39,11 @@ export default function Add_product() {
     quantity: "",
     shortDescription: "",
     description: "",
-    status:true,
-    category:"",
+    status: true,
+    category: "",
     images: [], // multiple image files
   });
-console.log(formData);
+  /* console.log(formData); */
 
 
   /* error handling */
@@ -51,7 +53,8 @@ console.log(formData);
     quantity: "",
     shortDescription: "",
     description: "",
-    images: ""
+    images: "",
+    category:""
   });
 
   const isEditorEmpty = (html: string) => {
@@ -68,7 +71,8 @@ console.log(formData);
       quantity: "",
       shortDescription: "",
       description: "",
-      images: ""
+      images: "",
+      category: ""
     };
     const qty = Number(formData.quantity);
     const price = Number(formData.price);
@@ -119,6 +123,10 @@ console.log(formData);
       newErrors.images = "At least one image required";
       isValid = false;
     }
+    if (!formData.category) {
+      newErrors.category = "category is required";
+      isValid = false;
+    }
 
     setErrors(newErrors);
 
@@ -141,8 +149,8 @@ console.log(formData);
       quantity: product.quantity,
       shortDescription: product.shortDescription,
       description: product.description,
-      category:product.category,
-      status:product.isActive,
+      category: product.category?._id || "",
+      status: product.isActive,
       images: [], // existing images not added here (only new uploads)
     });
 
@@ -182,7 +190,7 @@ console.log(formData);
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    const { name, price, description, shortDescription, quantity, images,status,category } = formData;
+    const { name, price, description, shortDescription, quantity, images, status, category } = formData;
 
     // Basic validation
     if (!validateForm()) return;
@@ -196,7 +204,7 @@ console.log(formData);
     fd.append("description", description);
     fd.append("shortDescription", shortDescription);
     fd.append("status", String(status));
-    fd.append("category",category);
+    fd.append("category", category);
 
     // Append multiple image files
     images.forEach((file) => {
@@ -233,21 +241,21 @@ console.log(formData);
     }
   };
   const fetchCategories = async () => {
-      try {
-        const res = await getAllCategoriesApi();
-        console.log(res);
-  
-        setCategories(res.data.data);
-      } catch (err) {
-        console.error(err);
-        toast.error("Failed to load categories");
-      }
-    };
-  
-    useEffect(() => {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      fetchCategories();
-    }, []);
+    try {
+      const res = await getAllCategoriesApi();
+      console.log(res);
+
+      setCategories(res.data.data);
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to load categories");
+    }
+  };
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    fetchCategories();
+  }, []);
 
   return (
     <div className="container py-4">
@@ -343,7 +351,7 @@ console.log(formData);
                   <h6>Description <span className="text-danger">*</span></h6>
                   <Suspense fallback={<div>Loading editor...</div>}>
                     <ReactQuill
-                       className="custom-quill"
+                      className="custom-quill"
                       value={formData.description}
                       onChange={(value) => setFormData({ ...formData, description: value })}
                       modules={Modules}
@@ -364,44 +372,47 @@ console.log(formData);
               <div>
                 {/* STATUS */}
                 <label className="form-label">Status</label>
-  
+
                 <select
                   className="form-control"
-                value={formData.status ? "true" : "false"}
-                onChange={(e) =>
-                  setFormData({
-                    ...formData,
-                    status: e.target.value === "true",
-                  })
-                } 
+                  value={formData.status ? "true" : "false"}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      status: e.target.value === "true",
+                    })
+                  }
                 >
                   <option value="true">Active</option>
                   <option value="false">Draft</option>
                 </select>
               </div>
               <div>
-                <label htmlFor="category" className="form-label mt-3">Category</label>
+                <label htmlFor="category" className="form-label mt-3">Category<span className="text-danger">*</span></label>
 
-          <select
-            id="category"
-            className="form-control"
-             value={formData.category} 
-             onChange={(e) =>
-              setFormData({ ...formData, category: e.target.value })
-            } 
-          >
-            <option value="">Choose Category</option>
+                <select
+                  id="category"
+                  className="form-control"
+                  value={formData.category}
+                  onChange={(e) =>
+                    setFormData({ ...formData, category: e.target.value })
+                  }
+                >
+                  <option value="">Choose Category</option>
 
-             {categories
-              .filter(cat => cat._id !== category?._id)
-              .map((cat) => (
-                <option key={cat._id} value={cat.name}>
-                  {cat.name}
-                </option>
-              ))}
-          </select>
+                  {categories
+                    .filter(cat => cat._id !== category?._id)
+                    .map((cat) => (
+                      <option key={cat._id} value={cat._id}>
+                        {cat.name}
+                      </option>
+                    ))}
+                </select>
+                {errors.category && (
+                    <div className="form-control" style={{'color':'red','border':'none'}}>{errors.category}</div>
+                  )}
               </div>
-
+                    
             </div>
           </div>
 

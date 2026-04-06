@@ -67,6 +67,12 @@ function ProductTable({ data, onEdit ,onDelete,onToggle}: Props) {
             header: 'Quantity',
             accessorKey: "quantity",
             enableSorting: false,   // ✅ only this column sortable
+        },{
+            header: 'Category',
+            accessorKey: "category",
+             cell: ({ row }) =>
+            row.original.category?.name || "-",
+            enableSorting: false,   // ✅ only this column sortable
         },
         {
             header: 'Price',
