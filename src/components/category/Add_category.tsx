@@ -3,7 +3,7 @@ import "react-quill-new/dist/quill.snow.css";
 import { toast } from "react-toastify";
 import { useLocation, useNavigate } from "react-router-dom";
 import { Modules } from "../quillmodule";
-import type { CategoryResponse, CategoryTypes } from "../../types/types";
+import type { CategoryApiResponse, CategoryResponse, CategoryTypes } from "../../types/types";
 import {
   add_category_Api,
   getAllCategoriesApi,
@@ -20,6 +20,8 @@ function Add_category() {
 
   const location = useLocation();
   const category = location.state?.category;
+  
+  
   const isEditMode = !!category;
 
   const navigate = useNavigate();
@@ -45,7 +47,7 @@ function Add_category() {
     const fetchCategories = async () => {
       try {
         const res = await getAllCategoriesApi();
-        setCategories(res.data);
+        setCategories(res.data.data);
       } catch {
         toast.error("Failed to load categories");
       }
@@ -60,12 +62,14 @@ function Add_category() {
 
     setFormData({
       name: category.name,
-      parentCategory: category.parentCategory || "",
+      parentCategory: category.parent_category || "",
       shortDescription: category.shortDescription || "",
       description: category.description || "",
       status: category.isActive,
       image: null,
     });
+    console.log(category);
+    console.log(category.parent_category);
 
     if (category.image) {
       setExistingImages([category.image]);
@@ -200,7 +204,7 @@ function Add_category() {
             {categories
               .filter(cat => cat._id !== category?._id)
               .map((cat) => (
-                <option key={cat._id} value={cat.name}>
+                <option key={cat._id} value={cat._id} >
                   {cat.name}
                 </option>
               ))}

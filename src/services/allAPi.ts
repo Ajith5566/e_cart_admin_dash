@@ -1,5 +1,5 @@
 
-import type { AdminUserPayload,  CategoryResponse,  FetchedAdminUser,  fetchedProducts, GetPagesResponse, PageType } from "../types/types";
+import type { AdminUserPayload,  CategoryApiResponse,  CategoryResponse,  FetchedAdminUser,  fetchedProducts, GetPagesResponse, PageType } from "../types/types";
 import { BASE_URL } from "./baseURL";
 import { commonApi } from "./commonAPi";
 
@@ -225,7 +225,7 @@ export const add_category_Api =async (reqBody:unknown)=>{
 
 //get all category
 export const getAllCategoriesApi = () => {
-  return commonApi<CategoryResponse[]>("GET", `${BASE_URL}/get/categories`);
+  return commonApi<CategoryApiResponse>("GET", `${BASE_URL}/get/categories`);
 };
 
 //category status

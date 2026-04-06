@@ -45,6 +45,8 @@ function CategoryTable({ data, onEdit, onToggle }: Props) {
         {
             header: 'Parent Category',
             accessorKey: "parent_category",
+            cell: ({ row }) =>
+            row.original.parent_category?.name || "-",
             enableSorting: false,   // ✅ only this column sortable
         },
         {

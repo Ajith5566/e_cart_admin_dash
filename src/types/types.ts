@@ -128,14 +128,25 @@ export type CategoryTypes = {
    image: File | null;
 };
 
-//response
 export type CategoryResponse = {
   _id: string;
   name: string;
+
   description: string;
-   shortDescription:string;
-  
-parent_category: string;
+  shortDescription: string;
+
+  parent_category?: {
+    _id: string;
+    name: string;
+  } | null;
+
   isActive: boolean;
-   image: File | null;
+
+  image: string; // URL from Cloudinary / server
+};
+
+export type CategoryApiResponse = {
+  success: boolean;
+  count: number;
+  data: CategoryResponse[];
 };
