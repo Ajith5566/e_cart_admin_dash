@@ -237,7 +237,7 @@ console.log(formData);
         const res = await getAllCategoriesApi();
         console.log(res);
   
-        setCategories(res.data);
+        setCategories(res.data.data);
       } catch (err) {
         console.error(err);
         toast.error("Failed to load categories");

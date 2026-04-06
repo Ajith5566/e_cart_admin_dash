@@ -1,5 +1,5 @@
 
-import type { AdminUserPayload,  CategoryApiResponse,  CategoryResponse,  FetchedAdminUser,  fetchedProducts, GetPagesResponse, PageType } from "../types/types";
+import type { AdminUserPayload,  CategoryApiResponse,  FetchedAdminUser,  fetchedProducts, GetPagesResponse, PageType } from "../types/types";
 import { BASE_URL } from "./baseURL";
 import { commonApi } from "./commonAPi";
 

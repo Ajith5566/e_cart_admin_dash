@@ -1,9 +1,10 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import { useEffect, useState, lazy, Suspense, useRef } from "react";
 import "react-quill-new/dist/quill.snow.css";
 import { toast } from "react-toastify";
 import { useLocation, useNavigate } from "react-router-dom";
 import { Modules } from "../quillmodule";
-import type { CategoryApiResponse, CategoryResponse, CategoryTypes } from "../../types/types";
+import type { CategoryResponse, CategoryTypes } from "../../types/types";
 import {
   add_category_Api,
   getAllCategoriesApi,
@@ -12,18 +13,38 @@ import {
 
 const ReactQuill = lazy(() => import("react-quill-new"));
 
+// Recursively get all descendant IDs of a given category
+const getDescendantIds = (
+  allCategories: CategoryResponse[],
+  parentId: string
+): string[] => {
+  const children = allCategories.filter((cat) => {
+    const pid =
+      typeof cat.parent_category === "object"
+        ? cat.parent_category?._id
+        : cat.parent_category;
+    return pid === parentId;
+  });
+
+  const childIds = children.map((cat) => cat._id);
+  const deeperIds = childIds.flatMap((id) =>
+    getDescendantIds(allCategories, id)
+  );
+
+  return [...childIds, ...deeperIds];
+};
+
 function Add_category() {
-  const [categories, setCategories] = useState<CategoryResponse[]>([]);
+  const [_categories, setCategories] = useState<CategoryResponse[]>([]);
+  const [filteredCategories, setFilteredCategories] = useState<CategoryResponse[]>([]);
   const [loading, setLoading] = useState(false);
 
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   const location = useLocation();
-  const category = location.state?.category;
-  
-  
-  const isEditMode = !!category;
+  const category: CategoryResponse | undefined = location.state?.category;
 
+  const isEditMode = !!category;
   const navigate = useNavigate();
 
   const [previewImage, setPreviewImage] = useState<string | null>(null);
@@ -38,16 +59,23 @@ function Add_category() {
     image: null,
   });
 
-  const [errors, setErrors] = useState({
-    name: "",
-  });
+  const [errors, setErrors] = useState({ name: "" });
 
-  // 🔥 Fetch categories
+  // Fetch all categories and filter out current + its descendants
   useEffect(() => {
     const fetchCategories = async () => {
       try {
         const res = await getAllCategoriesApi();
-        setCategories(res.data.data);
+        const all: CategoryResponse[] = res.data.data;
+        setCategories(all);
+
+        if (isEditMode && category?._id) {
+          const descendantIds = getDescendantIds(all, category._id);
+          const excluded = new Set([category._id, ...descendantIds]);
+          setFilteredCategories(all.filter((cat) => !excluded.has(cat._id)));
+        } else {
+          setFilteredCategories(all);
+        }
       } catch {
         toast.error("Failed to load categories");
       }
@@ -56,27 +84,25 @@ function Add_category() {
     fetchCategories();
   }, []);
 
-  // 🔥 Prefill for edit
+  // Prefill form in edit mode
   useEffect(() => {
     if (!category) return;
 
     setFormData({
       name: category.name,
-      parentCategory: category.parent_category || "",
+      // parent_category is a populated object, extract _id for the select value
+      parentCategory: category.parent_category?._id || "",
       shortDescription: category.shortDescription || "",
       description: category.description || "",
       status: category.isActive,
       image: null,
     });
-    console.log(category);
-    console.log(category.parent_category);
 
     if (category.image) {
       setExistingImages([category.image]);
     }
   }, [category]);
 
-  // 🔥 Validation
   const validateForm = () => {
     const newErrors = { name: "" };
     let isValid = true;
@@ -90,38 +116,29 @@ function Add_category() {
     return isValid;
   };
 
-  // 🔥 Remove new image
   const removeImage = () => {
     setPreviewImage(null);
-    setFormData(prev => ({ ...prev, image: null }));
+    setFormData((prev) => ({ ...prev, image: null }));
   };
 
-  // 🔥 Remove existing image
   const removeExistingImage = () => {
     setExistingImages([]);
   };
 
-  // 🔥 Submit
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
     if (!validateForm()) return;
 
     try {
       setLoading(true);
 
       const payload = new FormData();
-
       payload.append("name", formData.name.trim());
       payload.append("shortDescription", formData.shortDescription);
       payload.append("description", formData.description);
       payload.append("parentCategory", formData.parentCategory || "");
       payload.append("status", String(formData.status));
-        // 🔥 VERY IMPORTANT → send existing image state
-    payload.append(
-      "existingImage",
-      JSON.stringify(existingImages)
-    );
+      payload.append("existingImage", existingImages[0] || "");
 
       if (formData.image) {
         payload.append("image", formData.image);
@@ -136,7 +153,6 @@ function Add_category() {
       }
 
       navigate("/admin-dash/category");
-
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
       if (err?.response?.status === 409) {
@@ -157,7 +173,6 @@ function Add_category() {
         <h4 className="fw-bold">
           {isEditMode ? "Edit Category" : "Add Category"}
         </h4>
-
         <button
           className="btn btn-secondary"
           onClick={() => navigate("/admin-dash/category")}
@@ -175,7 +190,6 @@ function Add_category() {
           <label className="form-label">
             Name <span className="text-danger">*</span>
           </label>
-
           <input
             className={`form-control ${errors.name ? "is-invalid" : ""}`}
             value={formData.name}
@@ -183,14 +197,14 @@ function Add_category() {
               setFormData({ ...formData, name: e.target.value })
             }
           />
-
           {errors.name && (
             <div className="invalid-feedback">{errors.name}</div>
           )}
 
           {/* PARENT CATEGORY */}
-          <label htmlFor="parent_category" className="form-label mt-3">Parent Category</label>
-
+          <label htmlFor="parent_category" className="form-label mt-3">
+            Parent Category
+          </label>
           <select
             id="parent_category"
             className="form-control w-50"
@@ -200,19 +214,15 @@ function Add_category() {
             }
           >
             <option value="">Choose Category</option>
-
-            {categories
-              .filter(cat => cat._id !== category?._id)
-              .map((cat) => (
-                <option key={cat._id} value={cat._id} >
-                  {cat.name}
-                </option>
-              ))}
+            {filteredCategories.map((cat) => (
+              <option key={cat._id} value={cat._id}>
+                {cat.name}
+              </option>
+            ))}
           </select>
 
           {/* SHORT DESC */}
           <label className="form-label mt-4">Short Description</label>
-
           <textarea
             className="form-control"
             value={formData.shortDescription}
@@ -224,7 +234,6 @@ function Add_category() {
           {/* DESCRIPTION */}
           <div className="mt-4">
             <h6>Description</h6>
-
             <Suspense fallback={<div>Loading editor...</div>}>
               <ReactQuill
                 value={formData.description}
@@ -237,7 +246,7 @@ function Add_category() {
             </Suspense>
           </div>
 
-          {/* BUTTON */}
+          {/* SUBMIT */}
           <div className="mt-4">
             <button
               className="btn btn-primary"
@@ -254,15 +263,11 @@ function Add_category() {
 
           {/* STATUS */}
           <label className="form-label">Status</label>
-
           <select
             className="form-control"
             value={formData.status ? "true" : "false"}
             onChange={(e) =>
-              setFormData({
-                ...formData,
-                status: e.target.value === "true",
-              })
+              setFormData({ ...formData, status: e.target.value === "true" })
             }
           >
             <option value="true">Active</option>
@@ -271,44 +276,38 @@ function Add_category() {
 
           {/* IMAGE */}
           <div className="mt-4">
-            <div>
-                                <h6>Image </h6>
-                                <p className=" font_small text-justify">
-                                    Preferred dimension is 300px x 450px
-                                    Allowed file types are jpg, jpeg, png, webp
-                                    Maximum allowed file size is 2 MB
-                                </p>
-                            </div>
+            <h6>Image</h6>
+            <p className="font_small text-justify">
+              Preferred dimension is 300px x 450px.
+              Allowed file types: jpg, jpeg, png, webp.
+              Maximum file size: 2 MB.
+            </p>
 
             <div className="upload-box text-center p-5 border">
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  className="d-none"
-                  id="imageUpload"
-                  accept="image/*"
-                  onChange={(e) => {
-                    const file = e.target.files?.[0];
-                    if (!file) return;
-    
-                    setFormData(prev => ({ ...prev, image: file }));
-                    setPreviewImage(URL.createObjectURL(file));
-                  }}
-                />
-                <label htmlFor="imageUpload" style={{ cursor: "pointer" }}>
-                                        <p className="text-primary fw-semibold">
-                                            Click / Drop file here to upload
-                                        </p>
-                                    </label>
+              <input
+                ref={fileInputRef}
+                type="file"
+                className="d-none"
+                id="imageUpload"
+                accept="image/*"
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (!file) return;
+                  setFormData((prev) => ({ ...prev, image: file }));
+                  setPreviewImage(URL.createObjectURL(file));
+                }}
+              />
+              <label htmlFor="imageUpload" style={{ cursor: "pointer" }}>
+                <p className="text-primary fw-semibold">
+                  Click / Drop file here to upload
+                </p>
+              </label>
             </div>
 
-            {/* Existing */}
+            {/* Existing image */}
             {existingImages.map((img) => (
               <div key={img} className="mt-3">
-                <img
-                  src={img}
-                  className="img-thumbnail"
-                />
+                <img src={img} className="img-thumbnail" alt="existing" />
                 <button
                   className="btn btn-danger btn-sm mt-2"
                   onClick={removeExistingImage}
@@ -318,10 +317,10 @@ function Add_category() {
               </div>
             ))}
 
-            {/* Preview */}
+            {/* New image preview */}
             {previewImage && (
               <div className="mt-3">
-                <img src={previewImage} className="img-thumbnail" />
+                <img src={previewImage} className="img-thumbnail" alt="preview" />
                 <button
                   className="btn btn-danger btn-sm mt-2"
                   onClick={removeImage}
@@ -330,10 +329,8 @@ function Add_category() {
                 </button>
               </div>
             )}
-
           </div>
         </div>
-
       </div>
     </div>
   );
