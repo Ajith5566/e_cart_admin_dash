@@ -4,7 +4,7 @@ import { resetPasswordApi } from "../services/allAPi";
 import "./ResetPassword.css";
 import axios from "axios";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faEye, faEyeSlash } from "@fortawesome/free-solid-svg-icons";
+import { faEye, faEyeSlash, faCheckCircle } from "@fortawesome/free-solid-svg-icons";
 
 type ResetPasswordResponse = {
   message?: string;
@@ -17,39 +17,53 @@ function ResetPassword() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [message, setMessage] = useState("");
+  const [isSuccess, setIsSuccess] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
-const handleSubmit = async (e: React.FormEvent) => {
-  e.preventDefault();
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
 
-  if (password !== confirmPassword) {
-    setMessage("Passwords do not match");
-    return;
-  }
-
-  try {
-
-    const res = await resetPasswordApi(token!, password);
-
-    const data = res.data as ResetPasswordResponse;
-
-    setMessage(data.message || "Password updated successfully");
-
-  } catch (error: unknown) {
-
-    if (axios.isAxiosError(error)) {
-
-      const message =
-        (error.response?.data as { message?: string })?.message ||
-        "Failed to reset password";
-
-      setMessage(message);
-
-    } else {
-      setMessage("Something went wrong. Please try again.");
+    if (password !== confirmPassword) {
+      setMessage("Passwords do not match");
+      return;
     }
 
+    setIsLoading(true);
+
+    try {
+      const res = await resetPasswordApi(token!, password);
+      const data = res.data as ResetPasswordResponse;
+
+      setMessage(data.message || "Password updated successfully");
+      setIsSuccess(true); // ✅ flip success flag
+
+    } catch (error: unknown) {
+      if (axios.isAxiosError(error)) {
+        const msg =
+          (error.response?.data as { message?: string })?.message ||
+          "Failed to reset password";
+        setMessage(msg);
+      } else {
+        setMessage("Something went wrong. Please try again.");
+      }
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // ✅ Replace the whole form on success
+  if (isSuccess) {
+    return (
+      <div className="reset-wrapper">
+        <div className="reset-card success-card">
+          <FontAwesomeIcon icon={faCheckCircle} className="success-icon" />
+          <h2>Password Reset!</h2>
+          <p className="subtitle">Your password has been updated successfully.</p>
+          <a href="/" className="login-link">Back to Login</a>
+        </div>
+      </div>
+    );
   }
-};
 
   return (
     <div className="reset-wrapper">
@@ -65,12 +79,10 @@ const handleSubmit = async (e: React.FormEvent) => {
               required
               onChange={(e) => setPassword(e.target.value)}
             />
-
-            <span
-              className="eye"
-              onClick={() => setShowPassword(!showPassword)}
-            >
-              {showPassword ?<FontAwesomeIcon icon={faEye} /> : <FontAwesomeIcon icon={faEyeSlash} />}
+            <span className="eye" onClick={() => setShowPassword(!showPassword)}>
+              {showPassword
+                ? <FontAwesomeIcon icon={faEye} />
+                : <FontAwesomeIcon icon={faEyeSlash} />}
             </span>
           </div>
 
@@ -78,10 +90,13 @@ const handleSubmit = async (e: React.FormEvent) => {
             type={showPassword ? "text" : "password"}
             placeholder="Confirm Password"
             required
-            onChange={(e) => setConfirmPassword(e.target.value)}
+            onChange={(e) => setConfirmPassword(e.target.value)}  
           />
 
-          <button type="submit">Reset Password</button>
+          {/* ✅ Shows loading state while request is in flight */}
+          <button type="submit" disabled={isLoading}>
+            {isLoading ? "Resetting..." : "Reset Password"}
+          </button>
         </form>
 
         {message && <p className="message">{message}</p>}
