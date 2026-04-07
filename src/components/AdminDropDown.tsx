@@ -1,11 +1,13 @@
 import { faGear, faRightFromBracket, faUser } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { useNavigate } from "react-router-dom";
 
 type AdminDropdownProps = {
   dropdownOpen: boolean;
   logout: () => void;
 };
 function AdminDropDown({ dropdownOpen, logout }:AdminDropdownProps) {
+  const navigate = useNavigate();
 
   return (
     <>
@@ -30,7 +32,7 @@ function AdminDropDown({ dropdownOpen, logout }:AdminDropdownProps) {
 
         <button className="dropdown-item py-2">
           <FontAwesomeIcon icon={faGear} className="me-2" />
-          Settings
+          <button  onClick={() => navigate("/admin-dash/settings")} style={{"border":"none",'background':'transparent'}}>Settings</button >
         </button>
 
       </div>
