@@ -149,3 +149,31 @@ export type CategoryApiResponse = {
   count: number;
   data: CategoryResponse[];
 };
+
+
+//seo types
+
+// types/types.ts
+export type MetaFields = {
+  slug?: string;
+  meta_title?: string;
+  meta_keywords?: string[];
+  meta_description?: string;
+  canonical_url?: string;
+
+  og_title?: string;
+  og_description?: string;
+  og_image?: File | string | null;
+
+  twitter_title?: string;
+  twitter_description?: string;
+  twitter_image?: File | string | null;
+
+  schema_markup?: string;
+
+  allow_indexing?: boolean;
+  allow_following?: boolean;
+  include_sitemap?: boolean;
+  sitemap_priority?: string;
+  change_frequency?: string;
+};

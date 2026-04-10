@@ -1,12 +1,13 @@
 import React, { Suspense, useEffect, useRef, useState } from "react";
 import { toast } from "react-toastify";
-import type { AdminProduct, CategoryResponse, fetchedProducts } from "../../types/types";
+import type { AdminProduct, CategoryResponse, fetchedProducts, MetaFields } from "../../types/types";
 import { AddproductApi, getAllCategoriesApi, updateProductApi } from "../../services/allAPi";
 import { useLocation, useNavigate } from "react-router-dom";
 import '../common/common_styels.css';
 import '../products/add_products.css'
 import ReactQuill from "react-quill-new";
 import { Modules } from "../quillmodule";
+import SeoPreview from "../seo/Seo";
 
 export default function Add_product() {
 
@@ -30,6 +31,9 @@ export default function Add_product() {
   //category
   const [categories, setCategories] = useState<CategoryResponse[]>([]);
   console.log(categories);
+const [meta, setMeta] = useState<MetaFields>({});
+console.log(meta);
+
 
 
   // Main form state
@@ -544,6 +548,11 @@ export default function Add_product() {
             </div>
 
           </div>
+          <SeoPreview
+  value={meta}
+  onChange={setMeta}
+  baseUrl="https://test.boilerplate.pbsmokeup.in/"
+/>
 
           {/* Submit button */}
           <button className="btn btn-success mt-5">
