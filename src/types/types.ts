@@ -68,6 +68,7 @@ export type fetchedProducts={
   } | null;
   isActive: boolean;
   images:string[]; // image URL
+   meta?: MetaFields;    // ✅ add this
 }
 
 

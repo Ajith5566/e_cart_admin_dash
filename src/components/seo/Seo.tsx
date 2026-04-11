@@ -9,15 +9,18 @@ type SeoPreviewProps = {
   value: MetaFields;
   onChange: (updated: MetaFields) => void;
   baseUrl?: string;
+   onManualEdit?: (field: keyof MetaFields) => void; // 👈 add this
 };
 
-function SeoPreview({ value, onChange, baseUrl = "https://yourdomain.com/" }: SeoPreviewProps) {
+function SeoPreview({ value,onManualEdit, onChange, baseUrl = "https://yourdomain.com/" }: SeoPreviewProps) {
   const [isOpen, setIsOpen] = useState(false);
 
-  const handle =
+   const handle =
     (field: keyof MetaFields) =>
-    (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) =>
+    (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+      onManualEdit?.(field); // 👈 notify parent before updating
       onChange({ ...value, [field]: e.target.value });
+    };
 
   const previewUrl   = `${baseUrl}${value.slug || ""}`;
   const previewTitle = value.meta_title || "Page Title";

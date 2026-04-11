@@ -8,6 +8,7 @@ import '../products/add_products.css'
 import ReactQuill from "react-quill-new";
 import { Modules } from "../quillmodule";
 import SeoPreview from "../seo/Seo";
+import slugify from "slugify";
 
 export default function Add_product() {
 
@@ -31,6 +32,9 @@ export default function Add_product() {
   //category
   const [categories, setCategories] = useState<CategoryResponse[]>([]);
   console.log(categories);
+  const [slugManuallyEdited, setSlugManuallyEdited] = useState(false);
+const [metaTitleManuallyEdited, setMetaTitleManuallyEdited] = useState(false);
+const [metaDescManuallyEdited, setMetaDescManuallyEdited] = useState(false);
 const [meta, setMeta] = useState<MetaFields>({});
 console.log(meta);
 
@@ -61,6 +65,20 @@ console.log(meta);
     category:""
   });
 
+useEffect(() => {
+  if (!formData.name) return;
+
+  setMeta((prev) => ({
+    ...prev,
+    slug: slugManuallyEdited
+      ? prev.slug
+      : slugify(formData.name, { lower: true, strict: true, trim: true }),
+    meta_title: metaTitleManuallyEdited ? prev.meta_title : formData.name,
+    meta_description: metaDescManuallyEdited
+      ? prev.meta_description
+      : formData.shortDescription,
+  }));
+}, [formData.name, formData.shortDescription, slugManuallyEdited, metaTitleManuallyEdited, metaDescManuallyEdited]);
   const isEditorEmpty = (html: string) => {
     const text = html.replace(/<[^>]+>/g, "").trim();
     return text.length === 0;
@@ -143,25 +161,33 @@ console.log(meta);
    * Populate form when editing an existing product
    * Only runs when 'product' changes
    */
-  useEffect(() => {
-    if (!product) return;
+useEffect(() => {
+  if (!product) return;
 
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setFormData({
-      name: product.productName,
-      price: product.price,
-      quantity: product.quantity,
-      shortDescription: product.shortDescription,
-      description: product.description,
-      category: product.category?._id || "",
-      status: product.isActive,
-      images: [], // existing images not added here (only new uploads)
-    });
+  // eslint-disable-next-line react-hooks/set-state-in-effect
+  setFormData({
+    name:             product.productName,
+    price:            product.price,
+    quantity:         product.quantity,
+    shortDescription: product.shortDescription,
+    description:      product.description,
+    category:         product.category?._id || "",
+    status:           product.isActive,
+    images:           [],
+  });
 
-    // ⭐ load existing images from DB
-    setExistingImages(product.images || []);
+  setExistingImages(product.images || []);
 
-  }, [product]);
+  // ✅ pre-fill meta when editing
+  if (product.meta && Object.keys(product.meta).length > 0) {
+    setMeta(product.meta);
+    // ✅ mark as manually edited so auto-fill doesn't overwrite
+    setSlugManuallyEdited(true);
+    setMetaTitleManuallyEdited(true);
+    setMetaDescManuallyEdited(true);
+  }
+
+}, [product]);
 
   /**
    * Remove image preview + corresponding file from formData
@@ -209,6 +235,7 @@ console.log(meta);
     fd.append("shortDescription", shortDescription);
     fd.append("status", String(status));
     fd.append("category", category);
+    fd.append("meta", JSON.stringify(meta));   // ✅ add this line
 
     // Append multiple image files
     images.forEach((file) => {
@@ -552,6 +579,11 @@ console.log(meta);
   value={meta}
   onChange={setMeta}
   baseUrl="https://test.boilerplate.pbsmokeup.in/"
+  onManualEdit={(field) => {
+    if (field === "slug") setSlugManuallyEdited(true);
+    if (field === "meta_title") setMetaTitleManuallyEdited(true);
+    if (field === "meta_description") setMetaDescManuallyEdited(true);
+  }}
 />
 
           {/* Submit button */}
