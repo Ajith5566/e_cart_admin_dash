@@ -23,6 +23,7 @@ export default function Add_product() {
   // If editing product, data comes through route state
   const product = location.state?.product as fetchedProducts | undefined;
 
+
   // Stores preview URLs for UI display only
   const [previewImages, setPreviewImages] = useState<string[]>([]);
 
@@ -31,12 +32,12 @@ export default function Add_product() {
 
   //category
   const [categories, setCategories] = useState<CategoryResponse[]>([]);
-  console.log(categories);
+  /*  console.log(categories); */
   const [slugManuallyEdited, setSlugManuallyEdited] = useState(false);
-const [metaTitleManuallyEdited, setMetaTitleManuallyEdited] = useState(false);
-const [metaDescManuallyEdited, setMetaDescManuallyEdited] = useState(false);
-const [meta, setMeta] = useState<MetaFields>({});
-console.log(meta);
+  const [metaTitleManuallyEdited, setMetaTitleManuallyEdited] = useState(false);
+  const [metaDescManuallyEdited, setMetaDescManuallyEdited] = useState(false);
+  const [meta, setMeta] = useState<MetaFields>({});
+  /* console.log(meta); */
 
 
 
@@ -62,23 +63,24 @@ console.log(meta);
     shortDescription: "",
     description: "",
     images: "",
-    category:""
+    category: ""
   });
 
-useEffect(() => {
-  if (!formData.name) return;
+  useEffect(() => {
+    if (!formData.name) return;
 
-  setMeta((prev) => ({
-    ...prev,
-    slug: slugManuallyEdited
-      ? prev.slug
-      : slugify(formData.name, { lower: true, strict: true, trim: true }),
-    meta_title: metaTitleManuallyEdited ? prev.meta_title : formData.name,
-    meta_description: metaDescManuallyEdited
-      ? prev.meta_description
-      : formData.shortDescription,
-  }));
-}, [formData.name, formData.shortDescription, slugManuallyEdited, metaTitleManuallyEdited, metaDescManuallyEdited]);
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setMeta((prev) => ({
+      ...prev,
+      slug: slugManuallyEdited
+        ? prev.slug
+        : slugify(formData.name, { lower: true, strict: true, trim: true }),
+      meta_title: metaTitleManuallyEdited ? prev.meta_title : formData.name,
+      meta_description: metaDescManuallyEdited
+        ? prev.meta_description
+        : formData.shortDescription,
+    }));
+  }, [formData.name, formData.shortDescription, slugManuallyEdited, metaTitleManuallyEdited, metaDescManuallyEdited]);
   const isEditorEmpty = (html: string) => {
     const text = html.replace(/<[^>]+>/g, "").trim();
     return text.length === 0;
@@ -161,33 +163,33 @@ useEffect(() => {
    * Populate form when editing an existing product
    * Only runs when 'product' changes
    */
-useEffect(() => {
-  if (!product) return;
+  useEffect(() => {
+    if (!product) return;
 
-  // eslint-disable-next-line react-hooks/set-state-in-effect
-  setFormData({
-    name:             product.productName,
-    price:            product.price,
-    quantity:         product.quantity,
-    shortDescription: product.shortDescription,
-    description:      product.description,
-    category:         product.category?._id || "",
-    status:           product.isActive,
-    images:           [],
-  });
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setFormData({
+      name: product.productName,
+      price: product.price,
+      quantity: product.quantity,
+      shortDescription: product.shortDescription,
+      description: product.description,
+      category: product.category?._id || "",
+      status: product.isActive,
+      images: [],
+    });
 
-  setExistingImages(product.images || []);
+    setExistingImages(product.images || []);
 
-  // ✅ pre-fill meta when editing
-  if (product.meta && Object.keys(product.meta).length > 0) {
-    setMeta(product.meta);
-    // ✅ mark as manually edited so auto-fill doesn't overwrite
-    setSlugManuallyEdited(true);
-    setMetaTitleManuallyEdited(true);
-    setMetaDescManuallyEdited(true);
-  }
+    // ✅ pre-fill meta when editing
+    if (product.meta && Object.keys(product.meta).length > 0) {
+      setMeta(product.meta);
+      // ✅ mark as manually edited so auto-fill doesn't overwrite
+      setSlugManuallyEdited(true);
+      setMetaTitleManuallyEdited(true);
+      setMetaDescManuallyEdited(true);
+    }
 
-}, [product]);
+  }, [product]);
 
   /**
    * Remove image preview + corresponding file from formData
@@ -222,11 +224,13 @@ useEffect(() => {
 
     const { name, price, description, shortDescription, quantity, images, status, category } = formData;
 
-    // Basic validation
     if (!validateForm()) return;
 
+    // ── build meta without image files — strip them out ──
+    const metaWithoutImages = { ...meta };
+    delete metaWithoutImages.og_image;
+    delete metaWithoutImages.twitter_image;
 
-    // Prepare multipart/form-data
     const fd = new FormData();
     fd.append("name", name);
     fd.append("price", price.toString());
@@ -235,46 +239,44 @@ useEffect(() => {
     fd.append("shortDescription", shortDescription);
     fd.append("status", String(status));
     fd.append("category", category);
-    fd.append("meta", JSON.stringify(meta));   // ✅ add this line
+    fd.append("meta", JSON.stringify(metaWithoutImages)); // ✅ no File objects inside
 
-    // Append multiple image files
-    images.forEach((file) => {
-      fd.append("images", file);
-    });
+    // ── product images — unchanged ────────────────────────
+    images.forEach((file) => fd.append("images", file));
 
-    console.log(formData.images);
+    // ── meta images as separate named fields ─────────────
+    // multer will process these just like product images
+    if (meta.og_image instanceof File) {
+      fd.append("og_image", meta.og_image);         // ✅ separate field
+    }
+
+    if (meta.twitter_image instanceof File) {
+      fd.append("twitter_image", meta.twitter_image); // ✅ separate field
+    }
 
     try {
-
-
-      // Update existing product
       if (product) {
         fd.append("existingImages", JSON.stringify(existingImages));
         await updateProductApi(product._id, fd);
         toast.success("Product updated");
-
-        // Add new product
       } else {
-        const result = await AddproductApi(fd);
-        console.log(result);
+        await AddproductApi(fd);
         toast.success("Product added");
       }
-
-      // Redirect after success
       navigate("/admin-dash/products");
-
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    } catch (error: any) {
-      const message =
-        error?.response?.data?.message || "Action failed";
-
-      toast.error(message);
+    } catch (error: unknown) {
+  if (error instanceof Error) {
+    toast.error(error.message);
+  } else {
+    toast.error("Action failed");
+  }
     }
   };
+
   const fetchCategories = async () => {
     try {
       const res = await getAllCategoriesApi();
-      console.log(res);
+      /* console.log(res); */
 
       setCategories(res.data.data);
     } catch (err) {
@@ -440,10 +442,10 @@ useEffect(() => {
                     ))}
                 </select>
                 {errors.category && (
-                    <div className="form-control" style={{'color':'red','border':'none'}}>{errors.category}</div>
-                  )}
+                  <div className="form-control" style={{ 'color': 'red', 'border': 'none' }}>{errors.category}</div>
+                )}
               </div>
-                    
+
             </div>
           </div>
 
@@ -576,15 +578,15 @@ useEffect(() => {
 
           </div>
           <SeoPreview
-  value={meta}
-  onChange={setMeta}
-  baseUrl="https://test.boilerplate.pbsmokeup.in/"
-  onManualEdit={(field) => {
-    if (field === "slug") setSlugManuallyEdited(true);
-    if (field === "meta_title") setMetaTitleManuallyEdited(true);
-    if (field === "meta_description") setMetaDescManuallyEdited(true);
-  }}
-/>
+            value={meta}
+            onChange={setMeta}
+            baseUrl="https://test.boilerplate.pbsmokeup.in/"
+            onManualEdit={(field) => {
+              if (field === "slug") setSlugManuallyEdited(true);
+              if (field === "meta_title") setMetaTitleManuallyEdited(true);
+              if (field === "meta_description") setMetaDescManuallyEdited(true);
+            }}
+          />
 
           {/* Submit button */}
           <button className="btn btn-success mt-5">

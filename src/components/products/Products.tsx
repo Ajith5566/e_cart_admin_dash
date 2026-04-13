@@ -11,6 +11,8 @@ export default function Products() {
   const navigate = useNavigate();
 
   const [products, setProducts] = useState<fetchedProducts[]>([]);
+  console.log(products);
+  
 
   /* ---------- FETCH PRODUCTS ---------- */
   const fetchProducts = async () => {

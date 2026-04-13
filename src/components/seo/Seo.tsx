@@ -1,5 +1,5 @@
 // components/SeoPreview.tsx
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faChevronDown, faChevronUp } from "@fortawesome/free-solid-svg-icons";
 import type { MetaFields } from "../../types/types";
@@ -9,64 +9,71 @@ type SeoPreviewProps = {
   value: MetaFields;
   onChange: (updated: MetaFields) => void;
   baseUrl?: string;
-   onManualEdit?: (field: keyof MetaFields) => void; // 👈 add this
+  onManualEdit?: (field: keyof MetaFields) => void; // 👈 add this
 };
 
-function SeoPreview({ value,onManualEdit, onChange, baseUrl = "https://yourdomain.com/" }: SeoPreviewProps) {
+function SeoPreview({ value, onManualEdit, onChange, baseUrl = "https://yourdomain.com/" }: SeoPreviewProps) {
   const [isOpen, setIsOpen] = useState(false);
 
-   const handle =
+  const handle =
     (field: keyof MetaFields) =>
-    (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
-      onManualEdit?.(field); // 👈 notify parent before updating
-      onChange({ ...value, [field]: e.target.value });
-    };
+      (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+        onManualEdit?.(field); // 👈 notify parent before updating
+        onChange({ ...value, [field]: e.target.value });
+      };
 
-  const previewUrl   = `${baseUrl}${value.slug || ""}`;
+  const previewUrl = `${baseUrl}${value.slug || ""}`;
   const previewTitle = value.meta_title || "Page Title";
-  const previewDesc  = value.meta_description || "Meta description here.";
-   // ✅ define state types
+  const previewDesc = value.meta_description || "Meta description here.";
+  // ✅ define state types
   const [keywords, setKeywords] = useState<string[]>([]);
   const [input, setInput] = useState<string>("");
 
+  useEffect(() => {
+    if (value.meta_keywords) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setKeywords(value.meta_keywords);
+    }
+  }, [value.meta_keywords]);
+
   // ✅ type the keyboard event
   const handleKeyDown = (
-  e: React.KeyboardEvent<HTMLInputElement>
-) => {
-  if (e.key === "Enter" || e.key === ",") {
-    e.preventDefault();
+    e: React.KeyboardEvent<HTMLInputElement>
+  ) => {
+    if (e.key === "Enter" || e.key === ",") {
+      e.preventDefault();
 
-    const val = input.trim();
+      const val = input.trim();
 
-    if (val && !keywords.includes(val)) {
-      const updated = [...keywords, val];
+      if (val && !keywords.includes(val)) {
+        const updated = [...keywords, val];
 
-      setKeywords(updated);
+        setKeywords(updated);
 
-      // ✅ update meta
-      onChange({
-        ...value,
-        meta_keywords: updated,
-      });
+        // ✅ update meta
+        onChange({
+          ...value,
+          meta_keywords: updated,
+        });
+      }
+
+      setInput("");
     }
-
-    setInput("");
-  }
-};
+  };
 
   const removeKeyword = (index: number) => {
-  const updated = keywords.filter(
-    (_, i) => i !== index
-  );
+    const updated = keywords.filter(
+      (_, i) => i !== index
+    );
 
-  setKeywords(updated);
+    setKeywords(updated);
 
-  // ✅ update meta
-  onChange({
-    ...value,
-    meta_keywords: updated,
-  });
-};
+    // ✅ update meta
+    onChange({
+      ...value,
+      meta_keywords: updated,
+    });
+  };
 
 
   return (
@@ -135,25 +142,25 @@ function SeoPreview({ value,onManualEdit, onChange, baseUrl = "https://yourdomai
                   <span className="seo-info" title="Comma-separated keywords">ℹ</span>
                 </label>
                 <div className="tag-input">
-        {keywords.map((word, index) => (
-          <span key={index} className="tag">
-            {word}
-            <button 
-            type="button"
-            onClick={() => removeKeyword(index)}>
-              ×
-            </button>
-          </span>
-        ))}
+                  {keywords.map((word, index) => (
+                    <span key={index} className="tag">
+                      {word}
+                      <button
+                        type="button"
+                        onClick={() => removeKeyword(index)}>
+                        ×
+                      </button>
+                    </span>
+                  ))}
 
-        <input
-          className="seo-input"
-          placeholder="Enter meta keywords"
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          onKeyDown={handleKeyDown}
-        />
-      </div>
+                  <input
+                    className="seo-input"
+                    placeholder="Enter meta keywords"
+                    value={input}
+                    onChange={(e) => setInput(e.target.value)}
+                    onKeyDown={handleKeyDown}
+                  />
+                </div>
 
                 <small className="seo-hint">Enter meta keywords, separated by commas</small>
               </div>
@@ -221,7 +228,11 @@ function SeoPreview({ value,onManualEdit, onChange, baseUrl = "https://yourdomai
                   <span className="seo-info" title="Image shown when shared on social media">ℹ</span>
                 </label>
                 {value.og_image && typeof value.og_image === "string" && (
-                  <img src={value.og_image} alt="OG preview" className="seo-og-preview" />
+                  <img src={value.og_image} alt="OG preview" className="seo-og-preview" style={{
+                    width: "150px",
+                    height: "150px",
+                    objectFit: "cover"
+                  }} />
                 )}
                 <input
                   type="file"
@@ -248,7 +259,7 @@ function SeoPreview({ value,onManualEdit, onChange, baseUrl = "https://yourdomai
                 <input
                   className="seo-input"
                   placeholder="Enter Twitter title"
-                  value={value.twitter_title ?? ""}   
+                  value={value.twitter_title ?? ""}
                   onChange={handle("twitter_title")}
                 />
               </div>
@@ -261,7 +272,7 @@ function SeoPreview({ value,onManualEdit, onChange, baseUrl = "https://yourdomai
                 <textarea
                   className="seo-textarea"
                   placeholder="Enter Twitter description"
-                  value={value.twitter_description ?? ""}  
+                  value={value.twitter_description ?? ""}
                   onChange={handle("twitter_description")}
                 />
               </div>
@@ -272,7 +283,11 @@ function SeoPreview({ value,onManualEdit, onChange, baseUrl = "https://yourdomai
                   <span className="seo-info" title="Image shown when shared on Twitter">ℹ</span>
                 </label>
                 {value.twitter_image && typeof value.twitter_image === "string" && (
-                  <img src={value.twitter_image} alt="Twitter preview" className="seo-og-preview" />
+                  <img src={value.twitter_image} alt="Twitter preview" className="seo-og-preview" style={{
+                    width: "150px",
+                    height: "150px",
+                    objectFit: "cover"
+                  }} />
                 )}
                 <input
                   type="file"
@@ -297,7 +312,7 @@ function SeoPreview({ value,onManualEdit, onChange, baseUrl = "https://yourdomai
                 <textarea
                   className="seo-textarea seo-textarea--tall"
                   placeholder="Enter JSON-LD or other schema markup"
-                  value={value.schema_markup ?? ""}  
+                  value={value.schema_markup ?? ""}
                   onChange={handle("schema_markup")}
                   rows={10}
                 />
@@ -319,7 +334,7 @@ function SeoPreview({ value,onManualEdit, onChange, baseUrl = "https://yourdomai
               <label className="seo-checkbox-label">
                 <input
                   type="checkbox"
-                  checked={value.allow_indexing ?? true}   
+                  checked={value.allow_indexing ?? true}
                   onChange={(e) => onChange({ ...value, allow_indexing: e.target.checked })}
                 />
                 Allow search engines to index this page
@@ -329,7 +344,7 @@ function SeoPreview({ value,onManualEdit, onChange, baseUrl = "https://yourdomai
               <label className="seo-checkbox-label">
                 <input
                   type="checkbox"
-                  checked={value.allow_following ?? true}  
+                  checked={value.allow_following ?? true}
                   onChange={(e) => onChange({ ...value, allow_following: e.target.checked })}
                 />
                 Allow search engines to follow links on this page
@@ -339,7 +354,7 @@ function SeoPreview({ value,onManualEdit, onChange, baseUrl = "https://yourdomai
               <label className="seo-checkbox-label">
                 <input
                   type="checkbox"
-                  checked={value.include_sitemap ?? true} 
+                  checked={value.include_sitemap ?? true}
                   onChange={(e) => onChange({ ...value, include_sitemap: e.target.checked })}
                 />
                 Include this page in sitemap
@@ -360,7 +375,7 @@ function SeoPreview({ value,onManualEdit, onChange, baseUrl = "https://yourdomai
                   max="1"
                   step="0.1"
                   placeholder="0.5"
-                  value={value.sitemap_priority ?? "0.5"}   
+                  value={value.sitemap_priority ?? "0.5"}
                   onChange={handle("sitemap_priority")}
                 />
               </div>
@@ -372,7 +387,7 @@ function SeoPreview({ value,onManualEdit, onChange, baseUrl = "https://yourdomai
                 </label>
                 <select
                   className="seo-input seo-select"
-                  value={value.change_frequency ?? "daily"}  
+                  value={value.change_frequency ?? "daily"}
                   onChange={handle("change_frequency")}
                 >
                   <option value="always">Always</option>

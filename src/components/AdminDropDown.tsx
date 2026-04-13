@@ -30,10 +30,10 @@ function AdminDropDown({ dropdownOpen, logout }:AdminDropdownProps) {
           Profile
         </button>
 
-        <button className="dropdown-item py-2">
+        <div className="dropdown-item py-2">
           <FontAwesomeIcon icon={faGear} className="me-2" />
           <button  onClick={() => navigate("/admin-dash/settings")} style={{"border":"none",'background':'transparent'}}>Settings</button >
-        </button>
+        </div>
 
       </div>
 
