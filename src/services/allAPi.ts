@@ -97,11 +97,11 @@ export const getProductByIdApi = (id: string) => {
 
 /* ================= PAGES ================= */
 
-export const addPageApi = (data: PagePayload) => {
-  return commonApi(
+export const addPageApi = <T = unknown>(reqBody: unknown) => {
+  return commonApi<T>(
     "POST",
     `${BASE_URL}/admin/pages`,
-    data
+    reqBody
   );
 };
 
@@ -115,7 +115,7 @@ export const getAllPagesApi = (
 
 export const updatePageApi = (
   id: string,
-  data: PagePayload
+  data: FormData
 ) => {
   return commonApi(
     "PUT",

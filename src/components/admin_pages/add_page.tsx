@@ -5,6 +5,9 @@ import { toast } from 'react-toastify';
 import { addPageApi, updatePageApi } from '../../services/allAPi';
 import { Modules } from '../quillmodule';
 import { useLocation, useNavigate } from "react-router-dom";
+import type { MetaFields } from '../../types/types';
+import SeoPreview from '../seo/Seo';
+import slugify from "slugify";
 /* -------------------- QUILL -------------------- */
 
 type PageType = {
@@ -14,6 +17,7 @@ type PageType = {
   shortDescription: string;
   description: string;
   isActive: boolean;
+  meta?: MetaFields;
 };
 const ReactQuill = lazy(() => import("react-quill-new"));
 
@@ -30,8 +34,14 @@ function Add_page() {
   const [description, setDescription] = useState("");
   const [editingPage, setEditingPage] = useState<PageType | null>(null);
 
-
   const [loading, setLoading] = useState(false);
+
+  const [slugManuallyEdited, setSlugManuallyEdited] = useState(false);
+  const [metaTitleManuallyEdited, setMetaTitleManuallyEdited] = useState(false);
+  const [metaDescManuallyEdited, setMetaDescManuallyEdited] = useState(false);
+  const [meta, setMeta] = useState<MetaFields>({});
+
+
 
   useEffect(() => {
     if (!page) return;
@@ -40,10 +50,37 @@ function Add_page() {
     setTitle(page.title);
     setShortDesc(page.shortDescription);
     setDescription(page.description);
+
+    // ✅ pre-fill meta when editing
+    if (page.meta && Object.keys(page.meta).length > 0) {
+      setMeta(page.meta);
+      // ✅ mark as manually edited so auto-fill doesn't overwrite
+      setSlugManuallyEdited(true);
+      setMetaTitleManuallyEdited(true);
+      setMetaDescManuallyEdited(true);
+    }
   }, [page]);
 
 
+  useEffect(() => {
+    if (!title) return;
 
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setMeta((prev) => ({
+      ...prev,
+      slug: slugManuallyEdited
+        ? prev.slug
+        : slugify(title, { lower: true, strict: true, trim: true }),
+      meta_title: metaTitleManuallyEdited ? prev.meta_title : title,
+      meta_description: metaDescManuallyEdited
+        ? prev.meta_description
+        : shortDesc,
+    }));
+  }, [title, shortDesc, slugManuallyEdited, metaTitleManuallyEdited, metaDescManuallyEdited]);
+  const isEditorEmpty = (html: string) => {
+    const text = html.replace(/<[^>]+>/g, "").trim();
+    return text.length === 0;
+  };
 
   /* form validation */
   const [errors, setErrors] = useState({
@@ -52,10 +89,6 @@ function Add_page() {
     description: "",
   });
 
-  const isEditorEmpty = (html: string) => {
-    const text = html.replace(/<[^>]+>/g, "").trim();
-    return text.length === 0;
-  };
   const validateForm = () => {
 
     const newErrors = {
@@ -74,10 +107,10 @@ function Add_page() {
     if (!shortDesc.trim()) {
       newErrors.shortDesc = "Short description is required";
       isValid = false;
-    }else if (shortDesc.length > 150) {
-    newErrors.shortDesc = "Short description cannot exceed 150 characters";
-    isValid = false;
-  }
+    } else if (shortDesc.length > 150) {
+      newErrors.shortDesc = "Short description cannot exceed 150 characters";
+      isValid = false;
+    }
 
     if (!description.trim() || description === "<p><br></p>") {
       newErrors.description = "Description is required";
@@ -97,61 +130,70 @@ function Add_page() {
 
   /* ---------- ADD / UPDATE ---------- */
 
- const handleSubmit = async () => {
+  const handleSubmit = async () => {
 
-  if (!validateForm()) return;
+    if (!validateForm()) return;
+    const metaWithoutImages = { ...meta };
+    delete metaWithoutImages.og_image;
+    delete metaWithoutImages.twitter_image;
 
-  try {
-
-    setLoading(true);
-
-    if (editingPage) {
-
-      await updatePageApi(editingPage._id, {
-        title: title.trim(),
-        shortDescription: shortDesc.trim(),
-        description,
-      });
-
-      toast.success("Page updated");
-       navigate("/admin-dash/pages");
-
-    } else {
-
-      await addPageApi({
-        title: title.trim(),
-        shortDescription: shortDesc.trim(),
-        description,
-      });
-
-      toast.success("Page added");
-      // Redirect after success
-      navigate("/admin-dash/pages");
-
+    const fd = new FormData();
+    fd.append("title", title);
+    fd.append("shortDescription", shortDesc);
+    fd.append("description", description);
+    fd.append("meta", JSON.stringify(metaWithoutImages));// ✅ no File objects inside
+    // multer will process these just like product images
+    if (meta.og_image instanceof File) {
+      fd.append("og_image", meta.og_image);         // ✅ separate field
     }
 
-    cancelEdit();
-
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  } catch (err: any) {
-
-    // ⭐ Check backend status
-    if (err?.response?.status === 409) {
-
-      toast.error("Page title already exist");
-
-    } else {
-
-      toast.error("Action failed");
-
+    if (meta.twitter_image instanceof File) {
+      fd.append("twitter_image", meta.twitter_image); // ✅ separate field
     }
 
-  } finally {
+    try {
 
-    setLoading(false);
+      setLoading(true);
 
-  }
-};
+      if (editingPage) {
+
+        await updatePageApi(editingPage._id, fd);
+
+        toast.success("Page updated");
+        navigate("/admin-dash/pages");
+
+      } else {
+
+        await addPageApi(fd);
+
+        toast.success("Page added");
+        // Redirect after success
+        navigate("/admin-dash/pages");
+
+      }
+
+      cancelEdit();
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (err: any) {
+
+      // ⭐ Check backend status
+      if (err?.response?.status === 409) {
+
+        toast.error("Page title already exist");
+
+      } else {
+
+        toast.error("Action failed");
+
+      }
+
+    } finally {
+
+      setLoading(false);
+
+    }
+  };
 
 
   /* ---------- EDIT ---------- */
@@ -208,7 +250,7 @@ function Add_page() {
           <textarea
             className={`form-control mb-1 ${errors.shortDesc ? "is-invalid" : ""}`}
             value={shortDesc}
-             maxLength={150}
+            maxLength={150}
             onChange={(e) => setShortDesc(e.target.value)}
           />
 
@@ -233,6 +275,16 @@ function Add_page() {
             )}
 
           </div>
+          <SeoPreview
+            value={meta}
+            onChange={setMeta}
+            baseUrl="https://test.boilerplate.pbsmokeup.in/"
+            onManualEdit={(field) => {
+              if (field === "slug") setSlugManuallyEdited(true);
+              if (field === "meta_title") setMetaTitleManuallyEdited(true);
+              if (field === "meta_description") setMetaDescManuallyEdited(true);
+            }}
+          />
 
 
           <div className="mt-3 d-flex gap-2">

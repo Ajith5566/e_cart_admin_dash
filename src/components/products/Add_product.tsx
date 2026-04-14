@@ -33,6 +33,7 @@ export default function Add_product() {
   //category
   const [categories, setCategories] = useState<CategoryResponse[]>([]);
   /*  console.log(categories); */
+  
   const [slugManuallyEdited, setSlugManuallyEdited] = useState(false);
   const [metaTitleManuallyEdited, setMetaTitleManuallyEdited] = useState(false);
   const [metaDescManuallyEdited, setMetaDescManuallyEdited] = useState(false);
