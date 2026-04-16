@@ -22,7 +22,7 @@ export default function PageEditor() {
   const navigate = useNavigate();
 
   const [pages, setPages] = useState<PageType[]>([]);
-  console.log(pages);
+  /* console.log(pages); */
 
 
   /* ---------- FETCH PAGES ---------- */
@@ -31,7 +31,7 @@ export default function PageEditor() {
     try {
 
       const res = await getAllPagesApi();
-      console.log(res); 
+      /* console.log(res);  */
       
       setPages(res.data);
     } catch {
