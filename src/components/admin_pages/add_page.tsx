@@ -77,6 +77,7 @@ function Add_page() {
         : shortDesc,
     }));
   }, [title, shortDesc, slugManuallyEdited, metaTitleManuallyEdited, metaDescManuallyEdited]);
+ 
   const isEditorEmpty = (html: string) => {
     const text = html.replace(/<[^>]+>/g, "").trim();
     return text.length === 0;
@@ -275,16 +276,18 @@ function Add_page() {
             )}
 
           </div>
-          <SeoPreview
-            value={meta}
-            onChange={setMeta}
-            baseUrl="https://test.boilerplate.pbsmokeup.in/"
-            onManualEdit={(field) => {
-              if (field === "slug") setSlugManuallyEdited(true);
-              if (field === "meta_title") setMetaTitleManuallyEdited(true);
-              if (field === "meta_description") setMetaDescManuallyEdited(true);
-            }}
-          />
+         <div className='mt-5'>
+            <SeoPreview
+              value={meta}
+              onChange={setMeta}
+              baseUrl="https://test.boilerplate.pbsmokeup.in/"
+              onManualEdit={(field) => {
+                if (field === "slug") setSlugManuallyEdited(true);
+                if (field === "meta_title") setMetaTitleManuallyEdited(true);
+                if (field === "meta_description") setMetaDescManuallyEdited(true);
+              }}
+            />
+         </div>
 
 
           <div className="mt-3 d-flex gap-2">

@@ -27,7 +27,7 @@ export default function Product_category() {
   const fetchCategories = async () => {
     try {
       const res = await getAllCategoriesApi();
-      /* console.log(res); */
+       console.log(res); 
 
       setCategories(res.data.data);
     } catch (err) {

@@ -143,6 +143,7 @@ export type CategoryResponse = {
   } | null;
   isActive: boolean;
   image: string; // URL from Cloudinary / server
+   meta?: MetaFields; 
 };
 
 export type CategoryApiResponse = {

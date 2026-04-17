@@ -82,6 +82,7 @@ export default function Add_product() {
         : formData.shortDescription,
     }));
   }, [formData.name, formData.shortDescription, slugManuallyEdited, metaTitleManuallyEdited, metaDescManuallyEdited]);
+  
   const isEditorEmpty = (html: string) => {
     const text = html.replace(/<[^>]+>/g, "").trim();
     return text.length === 0;

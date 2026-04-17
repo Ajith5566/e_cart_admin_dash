@@ -4,12 +4,14 @@ import "react-quill-new/dist/quill.snow.css";
 import { toast } from "react-toastify";
 import { useLocation, useNavigate } from "react-router-dom";
 import { Modules } from "../quillmodule";
-import type { CategoryResponse, CategoryTypes } from "../../types/types";
+import type { CategoryResponse, CategoryTypes, MetaFields } from "../../types/types";
 import {
   add_category_Api,
   getAllCategoriesApi,
   updateCategoryApi,
 } from "../../services/allAPi";
+import SeoPreview from "../seo/Seo";
+import slugify from "slugify";
 
 const ReactQuill = lazy(() => import("react-quill-new"));
 
@@ -50,6 +52,13 @@ function Add_category() {
   const [previewImage, setPreviewImage] = useState<string | null>(null);
   const [existingImages, setExistingImages] = useState<string[]>([]);
 
+  const [slugManuallyEdited, setSlugManuallyEdited] = useState(false);
+    const [metaTitleManuallyEdited, setMetaTitleManuallyEdited] = useState(false);
+    const [metaDescManuallyEdited, setMetaDescManuallyEdited] = useState(false);
+    const [meta, setMeta] = useState<MetaFields>({});
+  
+  
+
   const [formData, setFormData] = useState<CategoryTypes>({
     name: "",
     parentCategory: "",
@@ -60,12 +69,31 @@ function Add_category() {
   });
 
   const [errors, setErrors] = useState({ name: "" });
+  
+   useEffect(() => {
+    if (!formData.name) return;
+
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setMeta((prev) => ({
+      ...prev,
+      slug: slugManuallyEdited
+        ? prev.slug
+        : slugify(formData.name, { lower: true, strict: true, trim: true }),
+      meta_title: metaTitleManuallyEdited ? prev.meta_title : formData.name,
+      meta_description: metaDescManuallyEdited
+        ? prev.meta_description
+        : formData.shortDescription,
+    }));
+  }, [formData.name, formData.shortDescription, slugManuallyEdited, metaTitleManuallyEdited, metaDescManuallyEdited]);
+  
 
   // Fetch all categories and filter out current + its descendants
   useEffect(() => {
     const fetchCategories = async () => {
       try {
         const res = await getAllCategoriesApi();
+        console.log(res);
+        
         const all: CategoryResponse[] = res.data.data;
         setCategories(all);
 
@@ -101,6 +129,16 @@ function Add_category() {
     if (category.image) {
       setExistingImages([category.image]);
     }
+
+    // ✅ pre-fill meta when editing
+    if (category.meta && Object.keys(category.meta).length > 0) {
+      setMeta(category.meta);
+      // ✅ mark as manually edited so auto-fill doesn't overwrite
+      setSlugManuallyEdited(true);
+      setMetaTitleManuallyEdited(true);
+      setMetaDescManuallyEdited(true);
+    }
+
   }, [category]);
 
   const validateForm = () => {
@@ -129,6 +167,10 @@ function Add_category() {
     e.preventDefault();
     if (!validateForm()) return;
 
+     // ── build meta without image files — strip them out ──
+    const metaWithoutImages = { ...meta };
+    delete metaWithoutImages.og_image;
+    delete metaWithoutImages.twitter_image;
     try {
       setLoading(true);
 
@@ -139,10 +181,18 @@ function Add_category() {
       payload.append("parentCategory", formData.parentCategory || "");
       payload.append("status", String(formData.status));
       payload.append("existingImage", existingImages[0] || "");
+      payload.append("meta", JSON.stringify(metaWithoutImages)); // ✅ no File objects inside
 
       if (formData.image) {
         payload.append("image", formData.image);
       }
+        if (meta.og_image instanceof File) {
+      payload.append("og_image", meta.og_image);         // ✅ separate field
+    }
+
+    if (meta.twitter_image instanceof File) {
+      payload.append("twitter_image", meta.twitter_image); // ✅ separate field
+    }
 
       if (isEditMode) {
         await updateCategoryApi(category._id, payload);
@@ -236,6 +286,7 @@ function Add_category() {
             <h6>Description</h6>
             <Suspense fallback={<div>Loading editor...</div>}>
               <ReactQuill
+                className="custom-quill"
                 value={formData.description}
                 onChange={(value) =>
                   setFormData({ ...formData, description: value })
@@ -246,17 +297,9 @@ function Add_category() {
             </Suspense>
           </div>
 
-          {/* SUBMIT */}
-          <div className="mt-4">
-            <button
-              className="btn btn-primary"
-              onClick={handleSubmit}
-              disabled={loading}
-            >
-              {isEditMode ? "Update Category" : "Add Category"}
-            </button>
-          </div>
+          
         </div>
+
 
         {/* RIGHT */}
         <div className="col-3 p-4">
@@ -332,6 +375,29 @@ function Add_category() {
           </div>
         </div>
       </div>
+      <div className="mt-5">
+          <SeoPreview
+              value={meta}
+              onChange={setMeta}
+              baseUrl="https://test.boilerplate.pbsmokeup.in/"
+              onManualEdit={(field) => {
+                if (field === "slug") setSlugManuallyEdited(true);
+                if (field === "meta_title") setMetaTitleManuallyEdited(true);
+                if (field === "meta_description") setMetaDescManuallyEdited(true);
+              }}
+            />
+        </div>
+        {/* SUBMIT */}
+          <div className="mt-4">
+            <button
+              className="btn btn-primary"
+              onClick={handleSubmit}
+              disabled={loading}
+            >
+              {isEditMode ? "Update Category" : "Add Category"}
+            </button>
+          </div>
+      
     </div>
   );
 }
