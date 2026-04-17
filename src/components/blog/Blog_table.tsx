@@ -2,20 +2,19 @@ import { useEffect, useMemo, useState } from 'react'
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { useReactTable, getCoreRowModel, flexRender, getPaginationRowModel, getSortedRowModel, getFilteredRowModel } from '@tanstack/react-table'
 import type { ColumnDef, SortingState } from "@tanstack/react-table";
-import type {  fetchedProducts } from '../../types/types';
-import '../common/common_toggle.css';
-import '../common/common_styels.css';
-import styles from "./adminProduct.module.css";
+import type { BlogResponse, } from '../../types/types';
+import '../common/common_toggle.css'
+import '../common/common_styels.css'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faAngleLeft, faAngleRight, faAnglesLeft, faAnglesRight } from '@fortawesome/free-solid-svg-icons';
 
 type Props = {
-    data: fetchedProducts[];
-    onEdit: (product: fetchedProducts) => void;
-    onDelete:(id:string)=>void;
+    data: BlogResponse[];
+    onEdit: (blog: BlogResponse) => void;
     onToggle: (id: string) => void;
+     onDelete:(id:string)=>void;
 };
-function ProductTable({ data, onEdit ,onDelete,onToggle}: Props) {
+function BlogTable({ data, onEdit, onToggle,onDelete }: Props) {
 
 
     const [limit, setLimit] = useState(5)
@@ -38,47 +37,29 @@ function ProductTable({ data, onEdit ,onDelete,onToggle}: Props) {
         }));
     }, [limit]);
 
-    const columns = useMemo<ColumnDef<fetchedProducts>[]>(() => [
-         {
-    header: "Image",
-    cell: ({ row }) => {
-      const item = row.original;
-
-      return (
-        <img
-          src={
-            item.images?.length
-              ? item.images[0]
-              : "/no-image.png"
-          }
-          className={styles.tableImg}
-          alt={item.productName}
-        />
-      );
-    },
-    enableSorting: false,
-  },
+    const columns = useMemo<ColumnDef<BlogResponse>[]>(() => [
         {
-            header: 'Name',
-            accessorKey: 'productName',
+            header: 'Title',
+            accessorKey: 'title',
             enableSorting: true,   // ✅ only this column sortable
         },
         {
-            header: 'Quantity',
-            accessorKey: "quantity",
-            enableSorting: false,   // ✅ only this column sortable
-        },{
-            header: 'Category',
-            accessorKey: "category",
-             cell: ({ row }) =>
-            row.original.category?.name || "-",
+            header: 'Author',
+            accessorKey: "author",
             enableSorting: false,   // ✅ only this column sortable
         },
         {
-            header: 'Price',
-            accessorKey: "price",
-            enableSorting: false,   // ✅ only this column sortable
-        },{
+            header: "Edit",
+            cell: ({ row }) => (
+                <button
+                    className="btn btn-sm btn-warning"
+                    onClick={() => onEdit(row.original)}
+                >
+                    Edit
+                </button>
+            ),
+            enableSorting: false,
+        }, {
             header: "Status",
             cell: ({ row }) => (
                 <label className="toggle-switch">
@@ -90,18 +71,6 @@ function ProductTable({ data, onEdit ,onDelete,onToggle}: Props) {
                     />
                     <span className="toggle-slider"></span>
                 </label>
-            ),
-            enableSorting: false,
-        },
-        {
-            header: "Edit",
-            cell: ({ row }) => (
-                <button
-                    className="btn btn-sm btn-warning"
-                    onClick={() => onEdit(row.original)}
-                >
-                    Edit
-                </button>
             ),
             enableSorting: false,
         },{
@@ -116,20 +85,20 @@ function ProductTable({ data, onEdit ,onDelete,onToggle}: Props) {
             ),
             enableSorting: false,
         },
-    ], [onEdit,onDelete,onToggle])
-    /*  {
-  {
-  adminId: "...",
-  createdAt: "...",
-  description: "...",
-  images: [...],
-  price: "5004",
-  productName: "car",
-  quantity: "300",
-  shortDescription: "...",
-  updatedAt: "..."
-}
-} */
+    ], [onEdit, onToggle,onDelete])
+    /*     [
+      {
+        adminId: "694a3c3be6be07cb5c80a762",
+        name: "cars cat",
+        parent_category: "toys",
+        shortDescription: "toy car is good",
+        description: "<p>qdqfqe <strong>dqwd</strong></p>",
+        isActive: true,
+        createdAt: "2026-03-17T05:29:07.583Z",
+        updatedAt: "2026-03-20T10:53:24.804Z",
+        _id: "69b8e6a355058e"
+      }
+    ] */
 
     // eslint-disable-next-line react-hooks/incompatible-library
     const table = useReactTable({
@@ -245,7 +214,7 @@ function ProductTable({ data, onEdit ,onDelete,onToggle}: Props) {
                         ) : (
                             <tr>
                                 <td colSpan={columns.length} className="text-center text-muted">
-                                    No Product found
+                                    No Category found
                                 </td>
                             </tr>
                         )}
@@ -301,4 +270,4 @@ function ProductTable({ data, onEdit ,onDelete,onToggle}: Props) {
     )
 }
 
-export default ProductTable
+export default BlogTable

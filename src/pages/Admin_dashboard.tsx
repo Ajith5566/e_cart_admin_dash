@@ -9,6 +9,7 @@ import { Outlet, useNavigate, useLocation } from "react-router";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faAngleDown,
+  faBlog,
   faBox,
   faFileLines,
   faGear,
@@ -148,6 +149,22 @@ function Admin_dashboard() {
                         <FontAwesomeIcon icon={faUsers} /> Users
                       </button>
                     </li>
+
+                    {/* blogs */}
+
+                    <li className="nav-item">
+                      <button
+                        className={`nav-link text-start border-0 w-100 px-3 py-2 mb-2 rounded-3 ${
+                          activeTab === "blog"
+                            ? "bg-primary text-white"
+                            : "text-muted"
+                        }`}
+                        onClick={() => navigate("/admin-dash/blog")}
+                      >
+                        <FontAwesomeIcon icon={faBlog} /> blog
+                      </button>
+                    </li>
+
 
                     {/* Pages */}
 
