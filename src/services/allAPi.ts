@@ -1,5 +1,5 @@
 
-import type { AdminUserPayload,  CategoryApiResponse,  FetchedAdminUser,  fetchedProducts, GetPagesResponse, PageType } from "../types/types";
+import type { AdminUserPayload,  BlogApiResponse,  CategoryApiResponse,  FetchedAdminUser,  fetchedProducts, GetPagesResponse, PageType } from "../types/types";
 import { BASE_URL } from "./baseURL";
 import { commonApi } from "./commonAPi";
 
@@ -245,5 +245,45 @@ export const updateCategoryApi = (
     "PUT",
     `${BASE_URL}/admin/CategoryUpdate/${id}`,
     data
+  );
+};
+
+//blogs
+
+//add blog 
+export const add_blog_Api =async (reqBody:unknown)=>{
+    return await commonApi('POST',`${BASE_URL}/blogs`,reqBody)
+}
+
+//get all category
+export const getAllBlogsApi = () => {
+  return commonApi<BlogApiResponse>("GET", `${BASE_URL}/get/blogs`);
+};
+
+//category status
+export const toggleBlogApi = (id: string) => {
+  return commonApi(
+    "PUT",
+    `${BASE_URL}/admin/blog/${id}/toggle`
+  );
+};
+
+//update
+export const updateBlogApi = (
+  id: string,
+  data: FormData
+) => {
+  return commonApi(
+    "PUT",
+    `${BASE_URL}/admin/Updateblog/${id}`,
+    data
+  );
+};
+
+//delete
+export const deleteblogApi = (id: string) => {
+  return commonApi(
+    "DELETE",
+    `${BASE_URL}/admin/blog/delete/${id}`
   );
 };

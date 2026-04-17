@@ -17,6 +17,8 @@ import Product_category from "./components/category/Product_category"
 import ForgotPassword from "./forgot_password/Forgotpassword";
 import ResetPassword from "./forgot_password/Reset_password";
 import Add_category from "./components/category/Add_category";
+import Blog from "./components/blog/Blog";
+import Add_blog from "./components/blog/Add_blog";
 
 function App() {
   return (
@@ -39,6 +41,9 @@ function App() {
 
           <Route path="category" element={<Product_category/>} />
           <Route path="category/add" element={<Add_category/>} />
+
+          <Route path="blog" element={<Blog/>}  />
+          <Route path="blog/add" element={<Add_blog/>} />
 
           <Route path="Customer_list" element={<Customer_list/>} />
 
