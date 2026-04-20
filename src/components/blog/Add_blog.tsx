@@ -110,8 +110,30 @@ function Add_blog() {
     }
 
     setErrors(newErrors);
+
+     // NEW FEATURE — scroll to first error
+        if (!isValid) {
+    scrollToFirstError(newErrors);
+}
     return isValid;
   };
+
+
+   //focus effect
+    const scrollToFirstError = (newErrors: typeof errors) => {
+  const firstErrorKey = Object.keys(newErrors).find(
+    (key) => newErrors[key as keyof typeof newErrors] !== ""
+  );
+
+  if (!firstErrorKey) return;
+
+  const element = document.getElementById(firstErrorKey);
+  if (element) {
+    element.scrollIntoView({ behavior: "smooth", block: "center" });
+    setTimeout(() => (element as HTMLElement).focus(), 300);
+  }
+};
+
 
   const removeImage = () => {
     setPreviewImage(null);
@@ -200,6 +222,7 @@ function Add_blog() {
             Title <span className="text-danger">*</span>
           </label>
           <input
+          id="name"
             className={`form-control ${errors.name ? "is-invalid" : ""}`}
             value={formData.title}
             onChange={(e) =>
@@ -211,12 +234,12 @@ function Add_blog() {
           )}
 
           {/* PARENT CATEGORY */}
-          <label htmlFor="auhor" className="form-label mt-3">
+          <label htmlFor="author" className="form-label mt-3">
             Author<span className="text-danger">*</span>
           </label>
           <input
             id="author"
-            className="form-control w-50"
+            className={`form-control ${errors.author ? "is-invalid" : ""}`}
             value={formData.author}
             onChange={(e) =>
               setFormData({ ...formData, author: e.target.value })

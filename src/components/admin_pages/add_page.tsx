@@ -123,9 +123,28 @@ function Add_page() {
 
 
     setErrors(newErrors);
+    // NEW FEATURE — scroll to first error
+        if (!isValid) {
+    scrollToFirstError(newErrors);
+}
 
     return isValid;
   };
+
+   //focus effect
+    const scrollToFirstError = (newErrors: typeof errors) => {
+  const firstErrorKey = Object.keys(newErrors).find(
+    (key) => newErrors[key as keyof typeof newErrors] !== ""
+  );
+
+  if (!firstErrorKey) return;
+
+  const element = document.getElementById(firstErrorKey);
+  if (element) {
+    element.scrollIntoView({ behavior: "smooth", block: "center" });
+    setTimeout(() => (element as HTMLElement).focus(), 300);
+  }
+};
 
 
 
@@ -238,6 +257,7 @@ function Add_page() {
           )}
           <label htmlFor="title" className='form-label'>Title <span className="text-danger">*</span></label>
           <input
+          id='title'
             className={`form-control mb-1 ${errors.title ? "is-invalid" : ""}`}
             value={title}
             onChange={(e) => setTitle(e.target.value)}
@@ -247,8 +267,9 @@ function Add_page() {
             <div className="invalid-feedback">{errors.title}</div>
           )}
 
-          <label htmlFor="short_description" className='form-label mt-3'>Short description <span className="text-danger">*</span></label>
+          <label htmlFor="shortDesc" className='form-label mt-3'>Short description <span className="text-danger">*</span></label>
           <textarea
+          id='shortDesc'
             className={`form-control mb-1 ${errors.shortDesc ? "is-invalid" : ""}`}
             value={shortDesc}
             maxLength={150}
@@ -260,10 +281,11 @@ function Add_page() {
           )}
 
 
-          <div className='mt-3'>
+          <div className='mt-3 ' id='decription'>
             <h6>Description <span className="text-danger">*</span></h6>
             <Suspense fallback={<div>Loading editor...</div>}>
               <ReactQuill
+              className="custom-quill"
                 value={description}
                 onChange={setDescription}
                 modules={Modules}

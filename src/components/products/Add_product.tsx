@@ -33,7 +33,7 @@ export default function Add_product() {
   //category
   const [categories, setCategories] = useState<CategoryResponse[]>([]);
   /*  console.log(categories); */
-  
+
   const [slugManuallyEdited, setSlugManuallyEdited] = useState(false);
   const [metaTitleManuallyEdited, setMetaTitleManuallyEdited] = useState(false);
   const [metaDescManuallyEdited, setMetaDescManuallyEdited] = useState(false);
@@ -82,7 +82,7 @@ export default function Add_product() {
         : formData.shortDescription,
     }));
   }, [formData.name, formData.shortDescription, slugManuallyEdited, metaTitleManuallyEdited, metaDescManuallyEdited]);
-  
+
   const isEditorEmpty = (html: string) => {
     const text = html.replace(/<[^>]+>/g, "").trim();
     return text.length === 0;
@@ -107,7 +107,7 @@ export default function Add_product() {
 
     if (!formData.name.trim() || "") {
       newErrors.name = "Product name is required";
-      nameRef.current?.focus();
+      /*   nameRef.current?.focus(); */
       isValid = false;
     }
 
@@ -155,11 +155,29 @@ export default function Add_product() {
     }
 
     setErrors(newErrors);
+    // Scroll to first error
+    // NEW FEATURE — scroll to first error
+    if (!isValid) {
+      scrollToFirstError(newErrors);
+    }
+
 
     return isValid;
   };
+  //focus effect
+  const scrollToFirstError = (newErrors: typeof errors) => {
+    const firstErrorKey = Object.keys(newErrors).find(
+      (key) => newErrors[key as keyof typeof newErrors] !== ""
+    );
 
+    if (!firstErrorKey) return;
 
+    const element = document.getElementById(firstErrorKey);
+    if (element) {
+      element.scrollIntoView({ behavior: "smooth", block: "center" });
+      setTimeout(() => (element as HTMLElement).focus(), 300);
+    }
+  };
 
   /**
    * Populate form when editing an existing product
@@ -267,11 +285,11 @@ export default function Add_product() {
       }
       navigate("/admin-dash/products");
     } catch (error: unknown) {
-  if (error instanceof Error) {
-    toast.error(error.message);
-  } else {
-    toast.error("Action failed");
-  }
+      if (error instanceof Error) {
+        toast.error(error.message);
+      } else {
+        toast.error("Action failed");
+      }
     }
   };
 
@@ -291,6 +309,8 @@ export default function Add_product() {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchCategories();
   }, []);
+
+
 
   return (
     <div className="container py-4">
@@ -315,6 +335,7 @@ export default function Add_product() {
               <div>
                 <label className="form-label w-100">Product Name <span className="text-danger">*</span></label>
                 <input
+                  id="name"
                   className={`form-control mb-1 ${errors.name ? "is-invalid" : ""}`}
                   value={formData.name}
                   onChange={(e) =>
@@ -335,6 +356,7 @@ export default function Add_product() {
                 <div className="col-md-6">
                   <label className="form-label">Price <span className="text-danger">*</span></label>
                   <input
+                    id="price"
                     type="text"
                     className={`form-control mb-1 ${errors.price ? "is-invalid" : ""}`}
                     value={formData.price}
@@ -352,6 +374,7 @@ export default function Add_product() {
                 <div className="col-md-6">
                   <label className="form-label">Quantity <span className="text-danger">*</span></label>
                   <input
+                    id="quantity"
                     type="text"
                     className={`form-control mb-1 ${errors.quantity ? "is-invalid" : ""}`}
                     value={formData.quantity}
@@ -367,9 +390,9 @@ export default function Add_product() {
 
               </div>
               <div>
-                <label htmlFor="short_description" className='form-label mt-3'>Short description <span className="text-danger">*</span></label>
+                <label htmlFor="shortDescription" className='form-label mt-3'>Short description <span className="text-danger">*</span></label>
                 <textarea
-                  id="short_description"
+                  id="shortDescription"
                   className={`form-control ${errors.shortDescription ? "is-invalid" : ""}`}
                   value={formData.shortDescription}
                   name="short_description"
@@ -382,7 +405,7 @@ export default function Add_product() {
                 )}
 
 
-                <div className='mt-3' >
+                <div id="description" className='mt-3' >
                   <h6>Description <span className="text-danger">*</span></h6>
                   <Suspense fallback={<div>Loading editor...</div>}>
                     <ReactQuill
@@ -409,6 +432,7 @@ export default function Add_product() {
                 <label className="form-label">Status</label>
 
                 <select
+
                   className="form-control"
                   value={formData.status ? "true" : "false"}
                   onChange={(e) =>
@@ -469,15 +493,25 @@ export default function Add_product() {
             <div className={`upload-box text-center p-5 border ${errors.images ? "border-danger" : ""
               }`}>
               <input
+
                 ref={fileInputRef}
                 type="file"
                 multiple
-                id="imageUpload"
+                id="images"
                 className="d-none"
                 accept="image/*"
                 onChange={(e) => {
 
                   const files = Array.from(e.target.files || []);
+                  const totalImages =
+                    formData.images.length +
+                    existingImages.length +
+                    files.length;
+
+                  if (totalImages > 5) {
+                    toast.error("Maximum 5 images allowed");
+                    return;
+                  }
 
                   // Add files into form state
                   setFormData(prev => ({
@@ -501,7 +535,7 @@ export default function Add_product() {
 
               />
 
-              <label htmlFor="imageUpload" style={{ cursor: "pointer" }}>
+              <label htmlFor="images" style={{ cursor: "pointer" }}>
                 <p className="mb-1">Drag and Drop image here</p>
                 <p className="mb-1">Or</p>
                 <p className="text-primary fw-semibold">Click to select image</p>
