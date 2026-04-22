@@ -229,7 +229,7 @@ function Add_testimonial() {
                             onClick={handleSubmit}
                             disabled={loading}
                         >
-                            {isEditMode ? "Update blog" : "Add blog"}
+                            {isEditMode ? "Update testimonial" : "Add testimonial"}
                         </button>
                     </div>
 
