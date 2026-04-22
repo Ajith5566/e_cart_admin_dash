@@ -2,11 +2,12 @@ import { useEffect, useMemo, useState } from 'react'
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { useReactTable, getCoreRowModel, flexRender, getPaginationRowModel, getSortedRowModel, getFilteredRowModel } from '@tanstack/react-table'
 import type { ColumnDef, SortingState } from "@tanstack/react-table";
-import type { CategoryResponse } from '../../types/types';
+
 import '../common/common_toggle.css'
 import '../common/common_styels.css'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faAngleLeft, faAngleRight, faAnglesLeft, faAnglesRight } from '@fortawesome/free-solid-svg-icons';
+import type { CategoryResponse } from '../../types/categoryTypes';
 
 type Props = {
     data: CategoryResponse[];

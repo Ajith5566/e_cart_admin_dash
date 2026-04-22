@@ -1,5 +1,8 @@
 
-import type { AdminUserPayload,  BlogApiResponse,  CategoryApiResponse,  FetchedAdminUser,  fetchedProducts, GetPagesResponse, PageType } from "../types/types";
+import type { BlogApiResponse } from "../types/blogTypes";
+import type { CategoryApiResponse } from "../types/categoryTypes";
+import type { TestimonialApiResponse } from "../types/testimonialTypes";
+import type { AdminUserPayload,  FetchedAdminUser,  fetchedProducts, GetPagesResponse, PageType} from "../types/types";
 import { BASE_URL } from "./baseURL";
 import { commonApi } from "./commonAPi";
 
@@ -255,12 +258,12 @@ export const add_blog_Api =async (reqBody:unknown)=>{
     return await commonApi('POST',`${BASE_URL}/blogs`,reqBody)
 }
 
-//get all category
+//get all blog
 export const getAllBlogsApi = () => {
   return commonApi<BlogApiResponse>("GET", `${BASE_URL}/get/blogs`);
 };
 
-//category status
+//blog status
 export const toggleBlogApi = (id: string) => {
   return commonApi(
     "PUT",
@@ -285,5 +288,43 @@ export const deleteblogApi = (id: string) => {
   return commonApi(
     "DELETE",
     `${BASE_URL}/admin/blog/delete/${id}`
+  );
+};
+
+//add testimonial
+export const add_testimonial_Api =async (reqBody:unknown)=>{
+    return await commonApi('POST',`${BASE_URL}/testimonials`,reqBody)
+}
+
+//get all testimonial
+export const getAlltestimonialsApi = () => {
+  return commonApi<TestimonialApiResponse>("GET", `${BASE_URL}/get/testimonials`);
+};
+
+//testimonial status
+export const toggletestimonialApi = (id: string) => {
+  return commonApi(
+    "PUT",
+    `${BASE_URL}/admin/testimonial/${id}/toggle`
+  );
+};
+
+//update
+export const updatetestimonialApi = (
+  id: string,
+  data: FormData
+) => {
+  return commonApi(
+    "PUT",
+    `${BASE_URL}/admin/Updatetestimonial/${id}`,
+    data
+  );
+};
+
+//delete
+export const deletetestimonialApi = (id: string) => {
+  return commonApi(
+    "DELETE",
+    `${BASE_URL}/admin/testimonial/delete/${id}`
   );
 };

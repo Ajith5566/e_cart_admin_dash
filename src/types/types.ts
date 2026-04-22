@@ -121,69 +121,6 @@ export type AdminUserPayload = {
 };
 
 
-/* category type */
-export type CategoryTypes = {
-
-  name: string;
-  description: string;
-   shortDescription:string;
-  parentCategory: string;
-  status: boolean;
-   image: File | null;
-};
-
-export type CategoryResponse = {
-  _id: string;
-  name: string;
-  description: string;
-  shortDescription: string;
-  parent_category?: {
-    _id: string;
-    name: string;
-  } | null;
-  isActive: boolean;
-  image: string; // URL from Cloudinary / server
-   meta?: MetaFields; 
-};
-
-export type CategoryApiResponse = {
-  success: boolean;
-  count: number;
-  data: CategoryResponse[];
-};
-
-//bog types
-
-export type BlogTypes = {
-
-  title: string;
-  description: string;
-   shortDescription:string;
-  author: string;
-  status: boolean;
-   image: File | null;
-};
-export type BlogResponse = {
-  _id: string;
-  title: string;
-  description: string;
-  shortDescription: string;
-  author:string;
-  isActive: boolean;
-  image: string; // URL from Cloudinary / server
-   meta?: MetaFields; 
-};
-export type BlogApiResponse = {
-  success: boolean;
-  count: number;
-  data: BlogResponse[];
-};
-
-
-
-
-
-
 //seo types
 
 // types/types.ts

@@ -4,13 +4,14 @@ import "react-quill-new/dist/quill.snow.css";
 import { toast } from "react-toastify";
 import { useLocation, useNavigate } from "react-router-dom";
 import { Modules } from "../quillmodule";
-import type { BlogResponse, BlogTypes, MetaFields } from "../../types/types";
+import type { MetaFields } from "../../types/types";
 import {
   add_blog_Api,
   updateBlogApi,
 } from "../../services/allAPi";
 import SeoPreview from "../seo/Seo";
 import slugify from "slugify";
+import type { BlogResponse, BlogTypes } from "../../types/blogTypes";
 
 const ReactQuill = lazy(() => import("react-quill-new"));
 

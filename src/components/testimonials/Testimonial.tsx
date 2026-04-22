@@ -2,21 +2,21 @@
 import { useEffect, useState } from "react";
 /* import { useNavigate } from "react-router-dom"; */
 import { useNavigate } from "react-router-dom";
-import { deleteblogApi, getAllBlogsApi, toggleBlogApi } from "../../services/allAPi";
+import {  deletetestimonialApi, getAlltestimonialsApi, toggletestimonialApi } from "../../services/allAPi";
 import '../common/common_toggle.css'
 import '../common/common_styels.css'
 import { toast } from "react-toastify";
-import BlogTable from "./Blog_table";
-import type { BlogResponse } from "../../types/blogTypes";
+import TestimonialTable from "./Testimonial_table";
+import type { TestimonialResponse } from "../../types/testimonialTypes";
 /* import Pagination from "../Pagination"; */
 /* import PaginationLimit from "../PaginationLimit"; */
 /* import Pagination from "./Pagination"; */
 
-export default function Blog() {
+export default function Testimonials() {
 
   const navigate = useNavigate();
 
-  const [blogs, setBlogs] = useState<BlogResponse[]>([]);
+  const [testimonials, setTestimonials] = useState<TestimonialResponse[]>([]);
 
   //pagination
   /* const [page, setPage] = useState(1); */
@@ -24,20 +24,20 @@ export default function Blog() {
   /*  const [limit, setLimit] = useState(5) */
 
 
-  const fetchBlogs = async () => {
+  const fetchTestimonials = async () => {
     try {
-      const res = await getAllBlogsApi();
+      const res = await getAlltestimonialsApi();
        console.log(res); 
 
-      setBlogs(res.data.data);
+      setTestimonials(res.data.data);
     } catch (err) {
       console.error(err);
-      toast.error("Failed to load blogs");
+      toast.error("Failed to load testimonials");
     }
   };
 
   useEffect(() => {
-    fetchBlogs();
+    fetchTestimonials();
   }, []);
 
 
@@ -55,11 +55,11 @@ export default function Blog() {
     <div className="container p-4 ">
       <div className="p-3 d-flex justify-content-between">
         <h4 className="  fw-bold text-dark">
-          Blog
+           Testimonials
         </h4>
         <button
           className="btn btn-success"
-          onClick={() => navigate("/admin-dash/blog/add")}
+          onClick={() => navigate("/admin-dash/testimonials/add")}
         >
           + Add blog
         </button>
@@ -70,22 +70,22 @@ export default function Blog() {
         {/* PRODUCT LIST */}
         {/* HEADER + SEARCH */}
         
-          <BlogTable data={blogs} onEdit={(blog) =>  navigate("/admin-dash/blog/add", {  state: { blog }, }) }
+          <TestimonialTable data={testimonials} onEdit={(testimonial) =>  navigate("/admin-dash/testimonials/add", {  state: { testimonial }, }) }
         onToggle={async (id) => {
           try {
-            await toggleBlogApi(id);
-            fetchBlogs();
+            await toggletestimonialApi(id);
+            fetchTestimonials();
           } catch {
             toast.error("Status update failed");
           }
         }} 
          onDelete={async (id) => {
-                      if (!window.confirm("Delete this blog?")) return;
+                      if (!window.confirm("Delete this testimonial?")) return;
         
                       try {
-                        await deleteblogApi(id);
-                        fetchBlogs();
-                        toast.success("Blog deleted");
+                        await deletetestimonialApi(id);
+                        fetchTestimonials();
+                        toast.success("testimonial deleted");
                       } catch {
                         toast.error("Delete failed");
                       }

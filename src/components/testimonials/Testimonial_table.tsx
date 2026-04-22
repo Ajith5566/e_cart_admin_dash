@@ -2,19 +2,20 @@ import { useEffect, useMemo, useState } from 'react'
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { useReactTable, getCoreRowModel, flexRender, getPaginationRowModel, getSortedRowModel, getFilteredRowModel } from '@tanstack/react-table'
 import type { ColumnDef, SortingState } from "@tanstack/react-table";
+
 import '../common/common_toggle.css'
 import '../common/common_styels.css'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faAngleLeft, faAngleRight, faAnglesLeft, faAnglesRight } from '@fortawesome/free-solid-svg-icons';
-import type { BlogResponse } from '../../types/blogTypes';
+import type { TestimonialResponse } from '../../types/testimonialTypes';
 
 type Props = {
-    data: BlogResponse[];
-    onEdit: (blog: BlogResponse) => void;
+    data: TestimonialResponse[];
+    onEdit: (testimonial: TestimonialResponse) => void;
     onToggle: (id: string) => void;
-     onDelete:(id:string)=>void;
+    onDelete: (id: string) => void;
 };
-function BlogTable({ data, onEdit, onToggle,onDelete }: Props) {
+function TestimonialTable({ data, onEdit, onToggle, onDelete }: Props) {
 
 
     const [limit, setLimit] = useState(5)
@@ -37,15 +38,21 @@ function BlogTable({ data, onEdit, onToggle,onDelete }: Props) {
         }));
     }, [limit]);
 
-    const columns = useMemo<ColumnDef<BlogResponse>[]>(() => [
+    const columns = useMemo<ColumnDef<TestimonialResponse>[]>(() => [
         {
-            header: 'Title',
-            accessorKey: 'title',
+            header: 'Author',
+            accessorKey: 'name',
             enableSorting: true,   // ✅ only this column sortable
         },
         {
-            header: 'Author',
-            accessorKey: "author",
+            header: 'Message',
+            accessorKey: "message",
+            cell: ({ row }) => {
+                const msg = row.original.message;
+                return msg.length > 30
+                    ? msg.substring(0, 30) + "..."
+                    : msg;
+            },
             enableSorting: false,   // ✅ only this column sortable
         },
         {
@@ -73,7 +80,7 @@ function BlogTable({ data, onEdit, onToggle,onDelete }: Props) {
                 </label>
             ),
             enableSorting: false,
-        },{
+        }, {
             header: "Delete",
             cell: ({ row }) => (
                 <button
@@ -85,7 +92,7 @@ function BlogTable({ data, onEdit, onToggle,onDelete }: Props) {
             ),
             enableSorting: false,
         },
-    ], [onEdit, onToggle,onDelete])
+    ], [onEdit, onToggle, onDelete])
     /*     [
       {
         adminId: "694a3c3be6be07cb5c80a762",
@@ -214,7 +221,7 @@ function BlogTable({ data, onEdit, onToggle,onDelete }: Props) {
                         ) : (
                             <tr>
                                 <td colSpan={columns.length} className="text-center text-muted">
-                                    No blogs found
+                                    No Testimonials found
                                 </td>
                             </tr>
                         )}
@@ -270,4 +277,4 @@ function BlogTable({ data, onEdit, onToggle,onDelete }: Props) {
     )
 }
 
-export default BlogTable
+export default TestimonialTable

@@ -3,11 +3,11 @@ import { useEffect, useState } from "react";
 /* import { useNavigate } from "react-router-dom"; */
 import { useNavigate } from "react-router-dom";
 import { getAllCategoriesApi, toggleCategoryApi } from "../../services/allAPi";
-import type { CategoryResponse } from "../../types/types";
 import '../common/common_toggle.css'
 import '../common/common_styels.css'
 import { toast } from "react-toastify";
 import CategoryTable from "./CategoryTable";
+import type { CategoryResponse } from "../../types/categoryTypes";
 /* import Pagination from "../Pagination"; */
 /* import PaginationLimit from "../PaginationLimit"; */
 /* import Pagination from "./Pagination"; */

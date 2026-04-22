@@ -13,6 +13,7 @@ import {
   faBox,
   faFileLines,
   faGear,
+  faQuoteLeft,
   faTableCellsLarge,
   faTags,
   faUserGroup,
@@ -208,6 +209,22 @@ function Admin_dashboard() {
                        <FontAwesomeIcon icon={faTags} /> category
                       </button>
                     </li>
+
+                    {/* Testimonials */}
+
+                    <li className="nav-item">
+                      <button
+                        className={`nav-link text-start border-0 w-100 px-3 py-2 mb-2 rounded-3 ${
+                          activeTab === "testimonials"
+                            ? "bg-primary text-white"
+                            : "text-muted"
+                        }`}
+                        onClick={() => navigate("/admin-dash/testimonials")}
+                      >
+                        <FontAwesomeIcon icon={faQuoteLeft} /> Testimonials
+                      </button>
+                    </li>
+
 
 
                     {/* Customers */}

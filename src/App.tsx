@@ -19,6 +19,8 @@ import ResetPassword from "./forgot_password/Reset_password";
 import Add_category from "./components/category/Add_category";
 import Blog from "./components/blog/Blog";
 import Add_blog from "./components/blog/Add_blog";
+import Testimonials from "./components/testimonials/Testimonial";
+import Add_testimonial from "./components/testimonials/Add_testimonials";
 
 function App() {
   return (
@@ -44,6 +46,9 @@ function App() {
 
           <Route path="blog" element={<Blog/>}  />
           <Route path="blog/add" element={<Add_blog/>} />
+
+          <Route path="testimonials" element={<Testimonials/>} />
+          <Route path="testimonials/add" element={<Add_testimonial/>} />
 
           <Route path="Customer_list" element={<Customer_list/>} />
 

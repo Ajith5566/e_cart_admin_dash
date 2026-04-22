@@ -4,7 +4,7 @@ import "react-quill-new/dist/quill.snow.css";
 import { toast } from "react-toastify";
 import { useLocation, useNavigate } from "react-router-dom";
 import { Modules } from "../quillmodule";
-import type { CategoryResponse, CategoryTypes, MetaFields } from "../../types/types";
+import type {  MetaFields } from "../../types/types";
 import {
   add_category_Api,
   getAllCategoriesApi,
@@ -12,6 +12,7 @@ import {
 } from "../../services/allAPi";
 import SeoPreview from "../seo/Seo";
 import slugify from "slugify";
+import type { CategoryResponse, CategoryTypes } from "../../types/categoryTypes";
 
 const ReactQuill = lazy(() => import("react-quill-new"));
 
