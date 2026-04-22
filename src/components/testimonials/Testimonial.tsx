@@ -61,7 +61,7 @@ export default function Testimonials() {
           className="btn btn-success"
           onClick={() => navigate("/admin-dash/testimonials/add")}
         >
-          + Add blog
+          + Add Testimonial
         </button>
       </div>
 
