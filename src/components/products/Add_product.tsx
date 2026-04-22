@@ -1,6 +1,6 @@
 import React, { Suspense, useEffect, useRef, useState } from "react";
 import { toast } from "react-toastify";
-import type { AdminProduct, CategoryResponse, fetchedProducts, MetaFields } from "../../types/types";
+import type { AdminProduct, fetchedProducts, MetaFields } from "../../types/types";
 import { AddproductApi, getAllCategoriesApi, updateProductApi } from "../../services/allAPi";
 import { useLocation, useNavigate } from "react-router-dom";
 import '../common/common_styels.css';
@@ -9,6 +9,7 @@ import ReactQuill from "react-quill-new";
 import { Modules } from "../quillmodule";
 import SeoPreview from "../seo/Seo";
 import slugify from "slugify";
+import type { CategoryResponse } from "../../types/categoryTypes";
 
 export default function Add_product() {
 
