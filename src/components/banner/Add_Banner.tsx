@@ -6,9 +6,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import {
     add_banner_Api,
     updatebannerApi,
-    updateBlogApi,
 } from "../../services/allAPi";
-import type { BlogResponse } from "../../types/blogTypes";
 import type { BannerResponse, BannerTypes } from "../../types/bannerTypes";
 
 
