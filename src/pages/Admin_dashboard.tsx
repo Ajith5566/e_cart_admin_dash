@@ -13,6 +13,7 @@ import {
   faBox,
   faFileLines,
   faGear,
+  faPenToSquare,
   faQuoteLeft,
   faTableCellsLarge,
   faTags,
@@ -163,6 +164,20 @@ function Admin_dashboard() {
                         onClick={() => navigate("/admin-dash/blog")}
                       >
                         <FontAwesomeIcon icon={faBlog} /> blog
+                      </button>
+                    </li>
+                    {/* blogs */}
+
+                    <li className="nav-item">
+                      <button
+                        className={`nav-link text-start border-0 w-100 px-3 py-2 mb-2 rounded-3 ${
+                          activeTab === "banner"
+                            ? "bg-primary text-white"
+                            : "text-muted"
+                        }`}
+                        onClick={() => navigate("/admin-dash/banner")}
+                      >
+                        <FontAwesomeIcon icon={faPenToSquare}  /> banner
                       </button>
                     </li>
 

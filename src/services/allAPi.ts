@@ -1,4 +1,5 @@
 
+import type { BannerApiResponse } from "../types/bannerTypes";
 import type { BlogApiResponse } from "../types/blogTypes";
 import type { CategoryApiResponse } from "../types/categoryTypes";
 import type { TestimonialApiResponse } from "../types/testimonialTypes";
@@ -326,5 +327,43 @@ export const deletetestimonialApi = (id: string) => {
   return commonApi(
     "DELETE",
     `${BASE_URL}/admin/testimonial/delete/${id}`
+  );
+};
+
+//add banner
+export const add_banner_Api =async (reqBody:unknown)=>{
+    return await commonApi('POST',`${BASE_URL}/banner`,reqBody)
+}
+
+//get all banners
+export const getAllbannersApi = () => {
+  return commonApi<BannerApiResponse>("GET", `${BASE_URL}/get/banners`);
+};
+
+//banners status
+export const togglebannerApi = (id: string) => {
+  return commonApi(
+    "PUT",
+    `${BASE_URL}/admin/banner/${id}/toggle`
+  );
+};
+
+//update
+export const updatebannerApi = (
+  id: string,
+  data: FormData
+) => {
+  return commonApi(
+    "PUT",
+    `${BASE_URL}/admin/Updatebanner/${id}`,
+    data
+  );
+};
+
+//delete
+export const deletebannerApi = (id: string) => {
+  return commonApi(
+    "DELETE",
+    `${BASE_URL}/admin/banner/delete/${id}`
   );
 };

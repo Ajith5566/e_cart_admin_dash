@@ -21,6 +21,8 @@ import Blog from "./components/blog/Blog";
 import Add_blog from "./components/blog/Add_blog";
 import Testimonials from "./components/testimonials/Testimonial";
 import Add_testimonial from "./components/testimonials/Add_testimonials";
+import Banner from "./components/banner/Banner";
+import Add_banner from "./components/banner/Add_Banner";
 
 function App() {
   return (
@@ -49,6 +51,9 @@ function App() {
 
           <Route path="testimonials" element={<Testimonials/>} />
           <Route path="testimonials/add" element={<Add_testimonial/>} />
+
+          <Route path="banner" element={<Banner/>} />
+          <Route path="banner/add" element={<Add_banner/>} />
 
           <Route path="Customer_list" element={<Customer_list/>} />
 
