@@ -35,11 +35,12 @@ function Add_testimonial() {
         message: "",
         status: true,
         image: null,
+        url:""
     });
     console.log(formData);
 
 
-    const [errors, setErrors] = useState({ name: "", message: "" });
+    const [errors, setErrors] = useState({ name: "", message: "" ,url:""});
 
 
 
@@ -54,6 +55,7 @@ function Add_testimonial() {
        designation:testimonial.designation || "",
        status: testimonial.isActive,
        image: null,
+       url:testimonial.url
      });
  
      if (testimonial.image) {
@@ -63,7 +65,7 @@ function Add_testimonial() {
    }, [testimonial]); 
 
     const validateForm = () => {
-        const newErrors = { name: "", message: "" };
+        const newErrors = { name: "", message: "",url:""};
         let isValid = true;
 
         if (!formData.name.trim()) {
@@ -73,6 +75,11 @@ function Add_testimonial() {
 
         if (!formData.message.trim()) {
             newErrors.message = "This field is required";
+            isValid = false;
+        }
+
+        if (!formData.url.trim()) {
+            newErrors.url = "This field is required";
             isValid = false;
         }
 
@@ -124,6 +131,7 @@ function Add_testimonial() {
             payload.append("designation", formData.designation);
             payload.append("status", String(formData.status));
             payload.append("existingImage", existingImages[0] || "");
+            payload.append("url",formData.url.trim());
 
             if (formData.image) {
                 payload.append("image", formData.image);
@@ -206,6 +214,24 @@ function Add_testimonial() {
 
                         </div>
                     </div>
+                    <div className="mt-3">
+                            {/* URL*/}
+                            <label className="form-label">
+                                URL<span className="text-danger">*</span>
+                            </label>
+                            <input
+                                id="url"
+                                 className={`form-control ${errors.url ? "is-invalid" : ""}`}
+                                value={formData.url}
+                                onChange={(e) =>
+                                    setFormData({ ...formData, url: e.target.value })
+                                }
+                            />
+                             {errors.url && (
+                                <div className="invalid-feedback">{errors.url}</div>
+                            )}
+
+                        </div>
 
 
                     {/* Message */}

@@ -7,6 +7,7 @@ export type TestimonialTypes = {
    message:string;
   status: boolean;
    image: File | null;
+   url:string;
 };
 export type TestimonialResponse = {
   _id: string;
@@ -14,7 +15,8 @@ export type TestimonialResponse = {
   message: string;
   designation: string;
   isActive: boolean;
-  image: string; 
+  image: string;
+  url:string;
 };
 export type TestimonialApiResponse = {
   success: boolean;
