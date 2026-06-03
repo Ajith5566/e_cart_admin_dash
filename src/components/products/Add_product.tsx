@@ -314,7 +314,7 @@ export default function Add_product() {
 
 
   return (
-    <div className="container py-4">
+    <div className="container py-md-4">
 
       {/* Header */}
       <div className="d-flex justify-content-between mb-3">
@@ -327,11 +327,11 @@ export default function Add_product() {
         </button>
       </div>
 
-      <div className=" p-4">
+      <div className=" p-md-4">
         <form onSubmit={handleSubmit}>
           <div className="row">
 
-            <div className="col-9">
+            <div className="col-md-9 col-12">
               {/* Product Name */}
               <div>
                 <label className="form-label w-100">Product Name <span className="text-danger">*</span></label>
@@ -426,7 +426,7 @@ export default function Add_product() {
 
             </div>
             {/* RIGHT */}
-            <div className="col-3">
+            <div className="col-md-3 col-12">
 
               <div>
                 {/* STATUS */}
@@ -483,7 +483,7 @@ export default function Add_product() {
 
             <div>
               <h6>Image <span className="text-danger">*</span></h6>
-              <p className="w-25 font_small text-justify">
+              <p className="w-md-25 font_small text-justify">
                 Preferred dimension is 300px x 450px <br />
                 Allowed file types are jpg, jpeg, png, webp <br />
                 Maximum allowed file size is 2 MB

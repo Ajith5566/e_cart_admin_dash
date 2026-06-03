@@ -233,7 +233,7 @@ function Add_page() {
   };
   return (
     <>
-      <div className='p-5'>
+      <div className='p-md-5' p-2>
 
         <div className='d-flex justify-content-between'>
           <h2 className="mb-4 fw-bold">
@@ -249,7 +249,7 @@ function Add_page() {
 
 
         {/* ---------- FORM ---------- */}
-        <div className=" p-4 mb-4">
+        <div className=" p-md-4  mb-4">
           {editingPage && (
             <div className="alert alert-warning py-2">
               Editing page: <strong>{editingPage.title}</strong>

@@ -145,15 +145,15 @@ export default function Settings() {
 
     return (
 
-        <div className="container p-4">
+        <div className="container p-md-4 ">
 
             <div>
                 <h4 className="fw-bold text-dark">Settings</h4>
             </div>
 
-                <div className="container py-4">
+                <div>
 
-                    <div className="card-body table-responsive" style={{ minHeight: "520px" }}>
+                    <div className="card-body" style={{ minHeight: "520px" }}>
 
                         <form noValidate onSubmit={handleSubmit}>
 
@@ -212,7 +212,7 @@ export default function Settings() {
                                     name="address"
                                     value={formData.address}
                                     onChange={handleChange}
-                                    className="form-control w-50"
+                                    className="form-control w-md-50"
                                 />
 
                             </div>

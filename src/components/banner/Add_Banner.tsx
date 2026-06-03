@@ -182,7 +182,7 @@ function Add_banner() {
     };
 
     return (
-        <div className="p-5">
+        <div className="p-md-5 p-3">
 
             {/* HEADER */}
             <div className="d-flex justify-content-between">
@@ -200,7 +200,7 @@ function Add_banner() {
             <div className="row mt-5">
 
                 {/* LEFT */}
-                <div className="col-9 p-4">
+                <div className="col-md-9 col-12 p-4">
 
                     {/* TITLE */}
                     <label className="form-label">
@@ -281,7 +281,7 @@ function Add_banner() {
 
 
                 {/* RIGHT */}
-                <div className="col-3 p-4">
+                <div className="col-md-3 col-12 p-md-4 p-2">
 
                     {/* STATUS */}
                     <label className="form-label">Status</label>

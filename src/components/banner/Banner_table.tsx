@@ -125,15 +125,15 @@ function BannerTable({ data, onEdit, onToggle,onDelete }: Props) {
         totalRows
     );
     return (
-        <div className='container w-100'>
+        <div className='container-fluid px-2 px-md-3 w-100'>
 
-            <div className="d-flex justify-content-between align-items-center mb-3 mt-3 p-3">
+            <div className="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-3 mb-3 mt-3 p-2 p-md-3">
                 {/*  <PaginationLimit limit={limit} onChange={(newLimit) => { setLimit(newLimit); setPage(1); }} /> */}
-                <div className="d-flex align-items-center gap-2">
+                <div className="d-flex flex-wrap align-items-center gap-2 w-100 w-md-auto">
 
                     <select
                         className="form-select"
-                        style={{ width: "100px" }}
+                         style={{ minWidth: "90px", maxWidth: "120px" }}
                         value={limit}
                         onChange={(e) => setLimit(Number(e.target.value))}
                     >
@@ -148,19 +148,26 @@ function BannerTable({ data, onEdit, onToggle,onDelete }: Props) {
 
                 </div>
 
-                <div className="d-flex gap-2 justify-content-center align-items-center p-2">
+                <div className="d-flex flex-column flex-sm-row gap-2 justify-content-center align-items-start align-items-sm-center p-0 w-100 w-md-auto">
                     <h6>Search:</h6>
 
                     <input type="text"
                         className="form-control"
-                        style={{ maxWidth: 250 }}
+                        style={{
+                            maxWidth: "250px",
+                            width: "100%"
+                        }}
                         value={filtering}
                         onChange={(e) => setFiltering(e.target.value)}
                         placeholder='searching...'
                     />
                 </div>
             </div>
-            <div className="card-body table-responsive" style={{ minHeight: "520px" }} >
+            <div className="card-body table-responsive px-0"
+                style={{
+                    minHeight: "520px",
+                    overflowX: "auto"
+                }} >
                 <table className="table table-hover align-middle mb-0">
                     <thead>
                         {
@@ -216,8 +223,8 @@ function BannerTable({ data, onEdit, onToggle,onDelete }: Props) {
                     </tbody>
                 </table>
             </div>
-            <div className='d-flex justify-content-between'>
-                <span>
+            <div className='d-flex flex-column flex-md-row justify-content-between align-items-center gap-3 mt-3'>
+                <span className="text-center text-md-start">
                     Showing {startRow} to {endRow} of {totalRows} entries
                 </span>
                 <div className="d-flex justify-content-center align-items-center mb-2 gap-2 flex-wrap">

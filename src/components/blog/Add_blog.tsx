@@ -16,7 +16,7 @@ import type { BlogResponse, BlogTypes } from "../../types/blogTypes";
 const ReactQuill = lazy(() => import("react-quill-new"));
 
 function Add_blog() {
- /*  const [_blogs, setBlogs] = useState<BlogResponse[]>([]); */
+  /*  const [_blogs, setBlogs] = useState<BlogResponse[]>([]); */
   const [loading, setLoading] = useState(false);
 
   const fileInputRef = useRef<HTMLInputElement | null>(null);
@@ -24,7 +24,7 @@ function Add_blog() {
   const location = useLocation();
   const blog: BlogResponse | undefined = location.state?.blog;
   console.log(blog);
-  
+
 
   const isEditMode = !!blog;
   const navigate = useNavigate();
@@ -33,11 +33,11 @@ function Add_blog() {
   const [existingImages, setExistingImages] = useState<string[]>([]);
 
   const [slugManuallyEdited, setSlugManuallyEdited] = useState(false);
-    const [metaTitleManuallyEdited, setMetaTitleManuallyEdited] = useState(false);
-    const [metaDescManuallyEdited, setMetaDescManuallyEdited] = useState(false);
-    const [meta, setMeta] = useState<MetaFields>({});
-  
-  
+  const [metaTitleManuallyEdited, setMetaTitleManuallyEdited] = useState(false);
+  const [metaDescManuallyEdited, setMetaDescManuallyEdited] = useState(false);
+  const [meta, setMeta] = useState<MetaFields>({});
+
+
 
   const [formData, setFormData] = useState<BlogTypes>({
     title: "",
@@ -48,9 +48,9 @@ function Add_blog() {
     image: null,
   });
 
-  const [errors, setErrors] = useState({ name: "" ,author:""});
-  
-   useEffect(() => {
+  const [errors, setErrors] = useState({ name: "", author: "" });
+
+  useEffect(() => {
     if (!formData.title) return;
 
     // eslint-disable-next-line react-hooks/set-state-in-effect
@@ -65,10 +65,10 @@ function Add_blog() {
         : formData.shortDescription,
     }));
   }, [formData.title, formData.shortDescription, slugManuallyEdited, metaTitleManuallyEdited, metaDescManuallyEdited]);
-  
+
 
   // Prefill form in edit mode
-   useEffect(() => {
+  useEffect(() => {
     if (!blog) return;
 
     setFormData({
@@ -97,7 +97,7 @@ function Add_blog() {
   }, [blog]);
 
   const validateForm = () => {
-    const newErrors = { name: "" ,author:""};
+    const newErrors = { name: "", author: "" };
     let isValid = true;
 
     if (!formData.title.trim()) {
@@ -112,28 +112,28 @@ function Add_blog() {
 
     setErrors(newErrors);
 
-     // NEW FEATURE — scroll to first error
-        if (!isValid) {
-    scrollToFirstError(newErrors);
-}
+    // NEW FEATURE — scroll to first error
+    if (!isValid) {
+      scrollToFirstError(newErrors);
+    }
     return isValid;
   };
 
 
-   //focus effect
-    const scrollToFirstError = (newErrors: typeof errors) => {
-  const firstErrorKey = Object.keys(newErrors).find(
-    (key) => newErrors[key as keyof typeof newErrors] !== ""
-  );
+  //focus effect
+  const scrollToFirstError = (newErrors: typeof errors) => {
+    const firstErrorKey = Object.keys(newErrors).find(
+      (key) => newErrors[key as keyof typeof newErrors] !== ""
+    );
 
-  if (!firstErrorKey) return;
+    if (!firstErrorKey) return;
 
-  const element = document.getElementById(firstErrorKey);
-  if (element) {
-    element.scrollIntoView({ behavior: "smooth", block: "center" });
-    setTimeout(() => (element as HTMLElement).focus(), 300);
-  }
-};
+    const element = document.getElementById(firstErrorKey);
+    if (element) {
+      element.scrollIntoView({ behavior: "smooth", block: "center" });
+      setTimeout(() => (element as HTMLElement).focus(), 300);
+    }
+  };
 
 
   const removeImage = () => {
@@ -149,7 +149,7 @@ function Add_blog() {
     e.preventDefault();
     if (!validateForm()) return;
 
-     // ── build meta without image files — strip them out ──
+    // ── build meta without image files — strip them out ──
     const metaWithoutImages = { ...meta };
     delete metaWithoutImages.og_image;
     delete metaWithoutImages.twitter_image;
@@ -168,13 +168,13 @@ function Add_blog() {
       if (formData.image) {
         payload.append("image", formData.image);
       }
-        if (meta.og_image instanceof File) {
-      payload.append("og_image", meta.og_image);         // ✅ separate field
-    }
+      if (meta.og_image instanceof File) {
+        payload.append("og_image", meta.og_image);         // ✅ separate field
+      }
 
-    if (meta.twitter_image instanceof File) {
-      payload.append("twitter_image", meta.twitter_image); // ✅ separate field
-    }
+      if (meta.twitter_image instanceof File) {
+        payload.append("twitter_image", meta.twitter_image); // ✅ separate field
+      }
 
       if (isEditMode) {
         await updateBlogApi(blog._id, payload);
@@ -185,7 +185,7 @@ function Add_blog() {
       }
 
       navigate("/admin-dash/blog");
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
       if (err?.response?.status === 409) {
         toast.error("Blog already exists");
@@ -198,7 +198,7 @@ function Add_blog() {
   };
 
   return (
-    <div className="p-5">
+    <div className="p-md-5 p-2">
 
       {/* HEADER */}
       <div className="d-flex justify-content-between">
@@ -216,14 +216,14 @@ function Add_blog() {
       <div className="row mt-5">
 
         {/* LEFT */}
-        <div className="col-9 p-4">
+        <div className="col-md-9 col-12 p-4">
 
           {/* NAME */}
           <label className="form-label">
             Title <span className="text-danger">*</span>
           </label>
           <input
-          id="name"
+            id="name"
             className={`form-control ${errors.name ? "is-invalid" : ""}`}
             value={formData.title}
             onChange={(e) =>
@@ -246,7 +246,7 @@ function Add_blog() {
               setFormData({ ...formData, author: e.target.value })
             }
           />
-             {errors.author && (
+          {errors.author && (
             <div className="invalid-feedback">{errors.author}</div>
           )}
 
@@ -277,12 +277,12 @@ function Add_blog() {
             </Suspense>
           </div>
 
-          
+
         </div>
 
 
         {/* RIGHT */}
-        <div className="col-3 p-4">
+        <div className="col-md-3 col-12 p-md-4 p-2">
 
           {/* STATUS */}
           <label className="form-label">Status</label>
@@ -298,80 +298,86 @@ function Add_blog() {
           </select>
 
           {/* IMAGE */}
-<div className="mt-4">
-  <h6>Image</h6>
-  <p className="font_small text-justify">
-    Preferred dimension is 300px x 450px.
-    Allowed file types: jpg, jpeg, png, webp.
-    Maximum file size: 2 MB.
-  </p>
+          <div className="mt-4">
+            <h6>Image</h6>
+            <p className="font_small text-justify">
+              Preferred dimension is 300px x 450px.
+              Allowed file types: jpg, jpeg, png, webp.
+              Maximum file size: 2 MB.
+            </p>
 
-  <div className="upload-box text-center p-5 border">
-    <input
-      ref={fileInputRef}
-      type="file"
-      className="d-none"
-      id="imageUpload"
-      accept="image/*"
-      onChange={(e) => {
-        const file = e.target.files?.[0];
-        if (!file) return;
+            <div className="upload-box text-center p-5 border">
+              <input
+                ref={fileInputRef}
+                type="file"
+                className="d-none"
+                id="imageUpload"
+                accept="image/*"
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (!file) return;
+                  setFormData((prev) => ({ ...prev, image: file }));
+                  setPreviewImage(URL.createObjectURL(file));
+                }}
+              />
+              <label htmlFor="imageUpload" style={{ cursor: "pointer" }}>
+                <p className="text-primary fw-semibold">
+                  Click / Drop file here to upload
+                </p>
+              </label>
+            </div>
 
-        setFormData((prev) => ({ ...prev, image: file }));
-        setPreviewImage(URL.createObjectURL(file));
-      }}
-    />
+            {/* Existing image */}
+            {existingImages.map((img) => (
+              <div key={img} className="mt-3">
+                <img src={img} className="img-thumbnail" alt="existing" />
+                <button
+                  className="btn btn-danger btn-sm mt-2"
+                  onClick={removeExistingImage}
+                >
+                  Remove
+                </button>
+              </div>
+            ))}
 
-    <label htmlFor="imageUpload" style={{ cursor: "pointer" }}>
-      <p className="text-primary fw-semibold">
-        Click / Drop file here to upload
-      </p>
-    </label>
-  </div>
-
-  {/* Show preview image first, otherwise existing image */}
-  {(previewImage || existingImages.length > 0) && (
-    <div className="mt-3">
-      <img
-        src={previewImage || existingImages[0]}
-        className="img-thumbnail"
-        alt="preview"
-      />
-
-      <button
-        className="btn btn-danger btn-sm mt-2"
-        onClick={previewImage ? removeImage : removeExistingImage}
-      >
-        Remove
-      </button>
-    </div>
-  )}
-</div>
+            {/* New image preview */}
+            {previewImage && (
+              <div className="mt-3">
+                <img src={previewImage} className="img-thumbnail" alt="preview" />
+                <button
+                  className="btn btn-danger btn-sm mt-2"
+                  onClick={removeImage}
+                >
+                  Remove
+                </button>
+              </div>
+            )}
+          </div>
         </div>
       </div>
-      <div className="mt-5">
-          <SeoPreview
-              value={meta}
-              onChange={setMeta}
-              baseUrl="https://test.boilerplate.pbsmokeup.in/"
-              onManualEdit={(field) => {
-                if (field === "slug") setSlugManuallyEdited(true);
-                if (field === "meta_title") setMetaTitleManuallyEdited(true);
-                if (field === "meta_description") setMetaDescManuallyEdited(true);
-              }}
-            />
-        </div>
-        {/* SUBMIT */}
-          <div className="mt-4">
-            <button
-              className="btn btn-primary"
-              onClick={handleSubmit}
-              disabled={loading}
-            >
-              {isEditMode ? "Update blog" : "Add blog"}
-            </button>
-          </div>
-      
+      <div className="mt-5 w-100 w-md-100">
+        <SeoPreview
+          value={meta}
+          onChange={setMeta}
+          baseUrl="https://test.boilerplate.pbsmokeup.in/"
+          onManualEdit={(field) => {
+            if (field === "slug") setSlugManuallyEdited(true);
+            if (field === "meta_title") setMetaTitleManuallyEdited(true);
+            if (field === "meta_description") setMetaDescManuallyEdited(true);
+          }}
+        />
+      </div>
+      {/* SUBMIT */}
+      <div className="mt-4">
+        <button
+          className="btn btn-primary"
+          onClick={handleSubmit}
+          disabled={loading}
+        >
+          {isEditMode ? "Update blog" : "Add blog"}
+        </button>
+      </div>
+
     </div>
   );
 }

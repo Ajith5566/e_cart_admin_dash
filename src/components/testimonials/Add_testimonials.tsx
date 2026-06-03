@@ -163,7 +163,7 @@ function Add_testimonial() {
     };
 
     return (
-        <div className="p-5">
+        <div className="p-md-5">
 
             {/* HEADER */}
             <div className="d-flex justify-content-between">
@@ -181,7 +181,7 @@ function Add_testimonial() {
             <div className="row mt-5">
 
                 {/* LEFT */}
-                <div className="col-9 p-4">
+                <div className="col-md-9 col-12 p-md-4">
 
                     <div className="flex row">
                         <div className="col-6">
@@ -269,10 +269,10 @@ function Add_testimonial() {
 
 
                 {/* RIGHT */}
-                <div className="col-3 p-4">
+                <div className="col-md-3 p-md-4 col-12">
 
                     {/* STATUS */}
-                    <label className="form-label">Status</label>
+                    <label className="form-label ">Status</label>
                     <select
                         className="form-control"
                         value={formData.status ? "true" : "false"}

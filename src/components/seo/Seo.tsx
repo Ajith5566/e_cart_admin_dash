@@ -77,7 +77,7 @@ function SeoPreview({ value, onManualEdit, onChange, baseUrl = "https://yourdoma
 
 
   return (
-    <div className="seo-preview-wrapper h-auto">
+    <div className="seo-preview-wrapper h-auto w-74 w-md-100">
 
       {/* ── SEO Preview Card ── */}
       <div className="seo-preview-card">

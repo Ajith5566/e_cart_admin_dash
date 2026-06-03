@@ -52,8 +52,8 @@ export default function Product_category() {
    );
   */
   return (
-    <div className="container p-4 ">
-      <div className="p-3 d-flex justify-content-between">
+    <div className="container p-md-4 ">
+      <div className="p-md-3 d-flex justify-content-between gap-5">
         <h4 className="  fw-bold text-dark">
           Category
         </h4>

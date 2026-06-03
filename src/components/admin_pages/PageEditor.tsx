@@ -45,8 +45,8 @@ export default function PageEditor() {
   /* -------------------- UI -------------------- */
 
   return (
-    <div className="container p-4" >
-      <div className=" d-flex justify-content-between">
+    <div className="container p-md-4" >
+      <div className=" p-md-3 d-flex justify-content-between gap-5">
         <h4 className="  fw-bold text-dark">
           Page
         </h4>

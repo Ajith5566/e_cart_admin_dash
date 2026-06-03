@@ -235,7 +235,7 @@ function Add_category() {
   };
 
   return (
-    <div className="p-5">
+    <div className="p-md-5 p-2">
 
       {/* HEADER */}
       <div className="d-flex justify-content-between">
@@ -253,7 +253,7 @@ function Add_category() {
       <div className="row mt-5">
 
         {/* LEFT */}
-        <div className="col-9 p-4">
+        <div className="col-md-9 col-12 p-md-4">
 
           {/* NAME */}
           <label className="form-label">
@@ -322,7 +322,7 @@ function Add_category() {
 
 
         {/* RIGHT */}
-        <div className="col-3 p-4">
+        <div className="col-md-3 col-12 p-md-4">
 
           {/* STATUS */}
           <label className="form-label">Status</label>
