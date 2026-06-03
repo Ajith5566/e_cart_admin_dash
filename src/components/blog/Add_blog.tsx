@@ -298,61 +298,55 @@ function Add_blog() {
           </select>
 
           {/* IMAGE */}
-          <div className="mt-4">
-            <h6>Image</h6>
-            <p className="font_small text-justify">
-              Preferred dimension is 300px x 450px.
-              Allowed file types: jpg, jpeg, png, webp.
-              Maximum file size: 2 MB.
-            </p>
+<div className="mt-4">
+  <h6>Image</h6>
+  <p className="font_small text-justify">
+    Preferred dimension is 300px x 450px.
+    Allowed file types: jpg, jpeg, png, webp.
+    Maximum file size: 2 MB.
+  </p>
 
-            <div className="upload-box text-center p-5 border">
-              <input
-                ref={fileInputRef}
-                type="file"
-                className="d-none"
-                id="imageUpload"
-                accept="image/*"
-                onChange={(e) => {
-                  const file = e.target.files?.[0];
-                  if (!file) return;
-                  setFormData((prev) => ({ ...prev, image: file }));
-                  setPreviewImage(URL.createObjectURL(file));
-                }}
-              />
-              <label htmlFor="imageUpload" style={{ cursor: "pointer" }}>
-                <p className="text-primary fw-semibold">
-                  Click / Drop file here to upload
-                </p>
-              </label>
-            </div>
+  <div className="upload-box text-center p-5 border">
+    <input
+      ref={fileInputRef}
+      type="file"
+      className="d-none"
+      id="imageUpload"
+      accept="image/*"
+      onChange={(e) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
 
-            {/* Existing image */}
-            {existingImages.map((img) => (
-              <div key={img} className="mt-3">
-                <img src={img} className="img-thumbnail" alt="existing" />
-                <button
-                  className="btn btn-danger btn-sm mt-2"
-                  onClick={removeExistingImage}
-                >
-                  Remove
-                </button>
-              </div>
-            ))}
+        setFormData((prev) => ({ ...prev, image: file }));
+        setPreviewImage(URL.createObjectURL(file));
+      }}
+    />
 
-            {/* New image preview */}
-            {previewImage && (
-              <div className="mt-3">
-                <img src={previewImage} className="img-thumbnail" alt="preview" />
-                <button
-                  className="btn btn-danger btn-sm mt-2"
-                  onClick={removeImage}
-                >
-                  Remove
-                </button>
-              </div>
-            )}
-          </div>
+    <label htmlFor="imageUpload" style={{ cursor: "pointer" }}>
+      <p className="text-primary fw-semibold">
+        Click / Drop file here to upload
+      </p>
+    </label>
+  </div>
+
+  {/* Show preview image first, otherwise existing image */}
+  {(previewImage || existingImages.length > 0) && (
+    <div className="mt-3">
+      <img
+        src={previewImage || existingImages[0]}
+        className="img-thumbnail"
+        alt="preview"
+      />
+
+      <button
+        className="btn btn-danger btn-sm mt-2"
+        onClick={previewImage ? removeImage : removeExistingImage}
+      >
+        Remove
+      </button>
+    </div>
+  )}
+</div>
         </div>
       </div>
       <div className="mt-5">

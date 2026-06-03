@@ -67,6 +67,7 @@ function Add_testimonial() {
     const validateForm = () => {
         const newErrors = { name: "", message: "",url:""};
         let isValid = true;
+        const urlRegex = /^(https?:\/\/)?([\w-]+\.)+[\w-]{2,}(\/.*)?$/;
 
         if (!formData.name.trim()) {
             newErrors.name = "This field is required";
@@ -81,7 +82,10 @@ function Add_testimonial() {
         if (!formData.url.trim()) {
             newErrors.url = "This field is required";
             isValid = false;
-        }
+        }else if (!urlRegex.test(formData.url.trim())) {
+    newErrors.url = "Please enter a valid URL";
+    isValid = false;
+}
 
         setErrors(newErrors);
 

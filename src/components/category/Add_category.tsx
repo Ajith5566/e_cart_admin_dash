@@ -4,7 +4,7 @@ import "react-quill-new/dist/quill.snow.css";
 import { toast } from "react-toastify";
 import { useLocation, useNavigate } from "react-router-dom";
 import { Modules } from "../quillmodule";
-import type {  MetaFields } from "../../types/types";
+import type { MetaFields } from "../../types/types";
 import {
   add_category_Api,
   getAllCategoriesApi,
@@ -54,11 +54,11 @@ function Add_category() {
   const [existingImages, setExistingImages] = useState<string[]>([]);
 
   const [slugManuallyEdited, setSlugManuallyEdited] = useState(false);
-    const [metaTitleManuallyEdited, setMetaTitleManuallyEdited] = useState(false);
-    const [metaDescManuallyEdited, setMetaDescManuallyEdited] = useState(false);
-    const [meta, setMeta] = useState<MetaFields>({});
-  
-  
+  const [metaTitleManuallyEdited, setMetaTitleManuallyEdited] = useState(false);
+  const [metaDescManuallyEdited, setMetaDescManuallyEdited] = useState(false);
+  const [meta, setMeta] = useState<MetaFields>({});
+
+
 
   const [formData, setFormData] = useState<CategoryTypes>({
     name: "",
@@ -70,8 +70,8 @@ function Add_category() {
   });
 
   const [errors, setErrors] = useState({ name: "" });
-  
-   useEffect(() => {
+
+  useEffect(() => {
     if (!formData.name) return;
 
     // eslint-disable-next-line react-hooks/set-state-in-effect
@@ -86,7 +86,7 @@ function Add_category() {
         : formData.shortDescription,
     }));
   }, [formData.name, formData.shortDescription, slugManuallyEdited, metaTitleManuallyEdited, metaDescManuallyEdited]);
-  
+
 
   // Fetch all categories and filter out current + its descendants
   useEffect(() => {
@@ -94,7 +94,7 @@ function Add_category() {
       try {
         const res = await getAllCategoriesApi();
         console.log(res);
-        
+
         const all: CategoryResponse[] = res.data.data;
         setCategories(all);
 
@@ -153,25 +153,25 @@ function Add_category() {
 
     setErrors(newErrors);
     // NEW FEATURE — scroll to first error
-        if (!isValid) {
-    scrollToFirstError(newErrors);
-}
+    if (!isValid) {
+      scrollToFirstError(newErrors);
+    }
     return isValid;
   };
-    //focus effect
-    const scrollToFirstError = (newErrors: typeof errors) => {
-  const firstErrorKey = Object.keys(newErrors).find(
-    (key) => newErrors[key as keyof typeof newErrors] !== ""
-  );
+  //focus effect
+  const scrollToFirstError = (newErrors: typeof errors) => {
+    const firstErrorKey = Object.keys(newErrors).find(
+      (key) => newErrors[key as keyof typeof newErrors] !== ""
+    );
 
-  if (!firstErrorKey) return;
+    if (!firstErrorKey) return;
 
-  const element = document.getElementById(firstErrorKey);
-  if (element) {
-    element.scrollIntoView({ behavior: "smooth", block: "center" });
-    setTimeout(() => (element as HTMLElement).focus(), 300);
-  }
-};
+    const element = document.getElementById(firstErrorKey);
+    if (element) {
+      element.scrollIntoView({ behavior: "smooth", block: "center" });
+      setTimeout(() => (element as HTMLElement).focus(), 300);
+    }
+  };
 
   const removeImage = () => {
     setPreviewImage(null);
@@ -186,7 +186,7 @@ function Add_category() {
     e.preventDefault();
     if (!validateForm()) return;
 
-     // ── build meta without image files — strip them out ──
+    // ── build meta without image files — strip them out ──
     const metaWithoutImages = { ...meta };
     delete metaWithoutImages.og_image;
     delete metaWithoutImages.twitter_image;
@@ -205,13 +205,13 @@ function Add_category() {
       if (formData.image) {
         payload.append("image", formData.image);
       }
-        if (meta.og_image instanceof File) {
-      payload.append("og_image", meta.og_image);         // ✅ separate field
-    }
+      if (meta.og_image instanceof File) {
+        payload.append("og_image", meta.og_image);         // ✅ separate field
+      }
 
-    if (meta.twitter_image instanceof File) {
-      payload.append("twitter_image", meta.twitter_image); // ✅ separate field
-    }
+      if (meta.twitter_image instanceof File) {
+        payload.append("twitter_image", meta.twitter_image); // ✅ separate field
+      }
 
       if (isEditMode) {
         await updateCategoryApi(category._id, payload);
@@ -222,7 +222,7 @@ function Add_category() {
       }
 
       navigate("/admin-dash/category");
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
       if (err?.response?.status === 409) {
         toast.error("Category already exists");
@@ -260,7 +260,7 @@ function Add_category() {
             Name <span className="text-danger">*</span>
           </label>
           <input
-          id="name"
+            id="name"
             className={`form-control ${errors.name ? "is-invalid" : ""}`}
             value={formData.name}
             onChange={(e) =>
@@ -317,7 +317,7 @@ function Add_category() {
             </Suspense>
           </div>
 
-          
+
         </div>
 
 
@@ -336,6 +336,7 @@ function Add_category() {
             <option value="true">Active</option>
             <option value="false">Draft</option>
           </select>
+
 
           {/* IMAGE */}
           <div className="mt-4">
@@ -356,10 +357,12 @@ function Add_category() {
                 onChange={(e) => {
                   const file = e.target.files?.[0];
                   if (!file) return;
+
                   setFormData((prev) => ({ ...prev, image: file }));
                   setPreviewImage(URL.createObjectURL(file));
                 }}
               />
+
               <label htmlFor="imageUpload" style={{ cursor: "pointer" }}>
                 <p className="text-primary fw-semibold">
                   Click / Drop file here to upload
@@ -367,26 +370,18 @@ function Add_category() {
               </label>
             </div>
 
-            {/* Existing image */}
-            {existingImages.map((img) => (
-              <div key={img} className="mt-3">
-                <img src={img} className="img-thumbnail" alt="existing" />
-                <button
-                  className="btn btn-danger btn-sm mt-2"
-                  onClick={removeExistingImage}
-                >
-                  Remove
-                </button>
-              </div>
-            ))}
-
-            {/* New image preview */}
-            {previewImage && (
+            {/* Show preview image first, otherwise existing image */}
+            {(previewImage || existingImages.length > 0) && (
               <div className="mt-3">
-                <img src={previewImage} className="img-thumbnail" alt="preview" />
+                <img
+                  src={previewImage || existingImages[0]}
+                  className="img-thumbnail"
+                  alt="preview"
+                />
+
                 <button
                   className="btn btn-danger btn-sm mt-2"
-                  onClick={removeImage}
+                  onClick={previewImage ? removeImage : removeExistingImage}
                 >
                   Remove
                 </button>
@@ -396,28 +391,28 @@ function Add_category() {
         </div>
       </div>
       <div className="mt-5">
-          <SeoPreview
-              value={meta}
-              onChange={setMeta}
-              baseUrl="https://mern-admin-sable.vercel.app/"
-              onManualEdit={(field) => {
-                if (field === "slug") setSlugManuallyEdited(true);
-                if (field === "meta_title") setMetaTitleManuallyEdited(true);
-                if (field === "meta_description") setMetaDescManuallyEdited(true);
-              }}
-            />
-        </div>
-        {/* SUBMIT */}
-          <div className="mt-4">
-            <button
-              className="btn btn-primary"
-              onClick={handleSubmit}
-              disabled={loading}
-            >
-              {isEditMode ? "Update Category" : "Add Category"}
-            </button>
-          </div>
-      
+        <SeoPreview
+          value={meta}
+          onChange={setMeta}
+          baseUrl="https://mern-admin-sable.vercel.app/"
+          onManualEdit={(field) => {
+            if (field === "slug") setSlugManuallyEdited(true);
+            if (field === "meta_title") setMetaTitleManuallyEdited(true);
+            if (field === "meta_description") setMetaDescManuallyEdited(true);
+          }}
+        />
+      </div>
+      {/* SUBMIT */}
+      <div className="mt-4">
+        <button
+          className="btn btn-primary"
+          onClick={handleSubmit}
+          disabled={loading}
+        >
+          {isEditMode ? "Update Category" : "Add Category"}
+        </button>
+      </div>
+
     </div>
   );
 }
