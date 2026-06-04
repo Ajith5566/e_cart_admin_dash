@@ -153,7 +153,7 @@ export default function Settings() {
 
                 <div>
 
-                    <div className="card-body" style={{ minHeight: "520px" }}>
+                    <div className="card-body mt-3" style={{ minHeight: "520px" }}>
 
                         <form noValidate onSubmit={handleSubmit}>
 

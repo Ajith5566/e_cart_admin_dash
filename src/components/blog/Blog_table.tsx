@@ -130,9 +130,9 @@ function BlogTable({ data, onEdit, onToggle,onDelete }: Props) {
         totalRows
     );
     return (
-        <div className='container-fluid px-2 px-md-3 w-100'>
+        <div className='container px-2  w-100'>
 
-            <div className="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-3 mb-3 mt-3 p-2 p-md-3">
+            <div className="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-3 mb-3 mt-2 p-2 ">
                 {/*  <PaginationLimit limit={limit} onChange={(newLimit) => { setLimit(newLimit); setPage(1); }} /> */}
                 <div className="d-flex flex-wrap align-items-center gap-2 w-100 w-md-auto">
 
@@ -153,7 +153,7 @@ function BlogTable({ data, onEdit, onToggle,onDelete }: Props) {
 
                 </div>
 
-                <div className="d-flex flex-column flex-sm-row gap-2 justify-content-center align-items-start align-items-sm-center p-0 w-100 w-md-auto">
+                <div className="d-flex flex-column flex-sm-row gap-2 justify-content-end align-items-end align-items-sm-center p-0 w-100 w-md-auto">
                     <h6>Search:</h6>
 
                     <input type="text"
