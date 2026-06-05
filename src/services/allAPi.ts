@@ -32,6 +32,26 @@ export const adminLogoutApi = () => {
 
 /* ================= USERS ================= */
 
+//get profile
+export const getProfileApi = () => {
+  return commonApi(
+    "GET",
+    `${BASE_URL}/admin/profile`
+  );
+};
+
+
+//update profile
+export const updateProfileApi = (
+  reqBody: unknown
+) => {
+  return commonApi(
+    "PUT",
+    `${BASE_URL}/admin/profile/update`,
+    reqBody
+  );
+};
+
 export const getAllusersApi = (
   page = 1,
   limit = 5

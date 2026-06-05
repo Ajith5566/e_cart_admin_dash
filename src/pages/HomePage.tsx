@@ -29,17 +29,20 @@ function HomePage() {
       console.log(result);
 
       if (result.status === 200) {
-        // Store user data & token
-        if (result.status === 200) {
-          toast.success("Login successful 🎉");
-          setAdminData({ email: "", password: "" });
-          navigate("/admin-dash");
-        }
 
-        // Reset form
-        setAdminData({ email: "", password: "" });
-        // Navigate to dashboard
-        navigate('/admin-dash')
+        localStorage.setItem(
+          "adminUser",
+          JSON.stringify(result.data.admin)
+        );
+
+        toast.success("Login successful 🎉");
+
+        setAdminData({
+          email: "",
+          password: "",
+        });
+
+        navigate("/admin-dash");
       }
     } catch (error: unknown) {
       if (error instanceof AxiosError) {

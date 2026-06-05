@@ -35,11 +35,14 @@ export interface LoginResponse {
 export interface Admin {
   _id: string;
   email: string;
+  name:string;
+  role: "super_admin" | "staff";
+  isActive?: boolean;
 }
 
 export interface AdminResponse {
   admin: Admin;
-  token: string;
+  message: string;
 }
 
 //poduct type

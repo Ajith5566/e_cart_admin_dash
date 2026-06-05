@@ -1,5 +1,6 @@
 import { Route, Routes } from "react-router-dom";
 import "./App.css";
+import RoleProtectedRoute from "./routes/RoleProtectedRoute";
 import HomePage from "./pages/HomePage";
 import Admin_dashboard from "./pages/Admin_dashboard";
 import "bootstrap/dist/css/bootstrap.min.css";
@@ -23,6 +24,7 @@ import Testimonials from "./components/testimonials/Testimonial";
 import Add_testimonial from "./components/testimonials/Add_testimonials";
 import Banner from "./components/banner/Banner";
 import Add_banner from "./components/banner/Add_Banner";
+import Profile from "./components/profile/profile";
 
 function App() {
   return (
@@ -40,8 +42,8 @@ function App() {
           <Route path="products" element={<Products />} />
           <Route path="product/add" element={<Add_product/>} />
 
-          <Route path="user" element={<User_page/>}  />
-          <Route path="user/add" element={<Add_user/>}  />
+          <Route path="user" element={<RoleProtectedRoute allowedRoles={["super_admin"]}>  <User_page /> </RoleProtectedRoute>}  />
+          <Route path="user/add" element={ <RoleProtectedRoute allowedRoles={["super_admin"]} > <Add_user /> </RoleProtectedRoute>}  />
 
           <Route path="category" element={<Product_category/>} />
           <Route path="category/add" element={<Add_category/>} />
@@ -55,9 +57,12 @@ function App() {
           <Route path="banner" element={<Banner/>} />
           <Route path="banner/add" element={<Add_banner/>} />
 
+           <Route path="profile" element={<Profile />} />
+
+
           <Route path="Customer_list" element={<Customer_list/>} />
 
-          <Route path="settings" element={<Settings/>} />
+          <Route path="settings" element={<RoleProtectedRoute allowedRoles={["super_admin"]} > <Settings/> </RoleProtectedRoute>} />
         </Route>
       </Routes>
 

@@ -37,37 +37,51 @@ interface NavItem {
 
 /* ─── Nav config ─────────────────────────────────────── */
 const NAV_ITEMS: NavItem[] = [
-  { key: "dashboard", label: "Dashboard",     icon: faTableCellsLarge, path: "/admin-dash" },
-  { key: "user",      label: "Users",         icon: faUsers,           path: "/admin-dash/user",         section: "Content" },
-  { key: "blog",      label: "Blog",          icon: faBlog,            path: "/admin-dash/blog" },
-  { key: "banner",    label: "Banner",        icon: faPenToSquare,     path: "/admin-dash/banner" },
-  { key: "pages",     label: "Pages",         icon: faFileLines,       path: "/admin-dash/pages" },
-  { key: "products",  label: "Products",      icon: faBox,             path: "/admin-dash/products",     section: "Store" },
-  { key: "category",  label: "Category",      icon: faTags,            path: "/admin-dash/category" },
-  { key: "testimonials", label: "Testimonials", icon: faQuoteLeft,     path: "/admin-dash/testimonials", section: "Engagement" },
-  { key: "Customer_list", label: "Customers", icon: faUserGroup,       path: "/admin-dash/Customer_list" },
-  { key: "settings",  label: "Settings",      icon: faGear,            path: "/admin-dash/settings",     section: "System" },
+  { key: "dashboard", label: "Dashboard", icon: faTableCellsLarge, path: "/admin-dash" },
+
+  { key: "user", label: "Users", icon: faUsers, path: "/admin-dash/user", section: "Content" },
+
+  { key: "blog", label: "Blog", icon: faBlog, path: "/admin-dash/blog" },
+
+  { key: "banner", label: "Banner", icon: faPenToSquare, path: "/admin-dash/banner" },
+
+  { key: "pages", label: "Pages", icon: faFileLines, path: "/admin-dash/pages" },
+
+  { key: "products", label: "Products", icon: faBox, path: "/admin-dash/products", section: "Store" },
+
+  { key: "category", label: "Category", icon: faTags, path: "/admin-dash/category" },
+
+  { key: "testimonials", label: "Testimonials", icon: faQuoteLeft, path: "/admin-dash/testimonials", section: "Engagement" },
+
+  { key: "Customer_list", label: "Customers", icon: faUserGroup, path: "/admin-dash/Customer_list" },
+
+  { key: "settings", label: "Settings", icon: faGear, path: "/admin-dash/settings", section: "System" },
+  { key: "profile", label: "Profile", icon: faGear, path: "/admin-dash/profile", section: "System" }
 ];
 
 /* ─── Stat card data ─────────────────────────────────── */
 const STATS = [
-  { label: "Total Users",   value: "2,840", trend: "+12%", up: true,  color: "blue",   icon: faUsers },
-  { label: "Products",      value: "184",   trend: "+5%",  up: true,  color: "green",  icon: faBox },
-  { label: "Blog Posts",    value: "36",    trend: "-2%",  up: false, color: "orange", icon: faBlog },
-  { label: "Customers",     value: "1,290", trend: "+18%", up: true,  color: "red",    icon: faUserGroup },
+  { label: "Total Users", value: "2,840", trend: "+12%", up: true, color: "blue", icon: faUsers },
+  { label: "Products", value: "184", trend: "+5%", up: true, color: "green", icon: faBox },
+  { label: "Blog Posts", value: "36", trend: "-2%", up: false, color: "orange", icon: faBlog },
+  { label: "Customers", value: "1,290", trend: "+18%", up: true, color: "red", icon: faUserGroup },
 ];
 
 /* ═══════════════════════════════════════════════════════
    Component
 ═══════════════════════════════════════════════════════ */
 function Admin_dashboard() {
-  const navigate  = useNavigate();
-  const location  = useLocation();
+  const navigate = useNavigate();
+  const location = useLocation();
 
-  const [isLogin,     setIsLogin]     = useState(false);
+  const currentUser = JSON.parse(
+    localStorage.getItem("adminUser") || "{}"
+  );
+
+  const [isLogin, setIsLogin] = useState(false);
   const [authChecked, setAuthChecked] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
-  const [sidebarOpen,  setSidebarOpen]  = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -100,6 +114,15 @@ function Admin_dashboard() {
     return () => document.removeEventListener("mousedown", handler);
   }, []);
 
+  const filteredNavItems =
+    currentUser.role === "super_admin"
+      ? NAV_ITEMS
+      : NAV_ITEMS.filter(
+        item =>
+          item.key !== "user" &&
+          item.key !== "settings"
+      );
+
   /* ── Close sidebar on route change (mobile) ── */
   useEffect(() => { setSidebarOpen(false); }, [location.pathname]);
 
@@ -108,6 +131,7 @@ function Admin_dashboard() {
     try {
       await adminLogoutApi();
       toast.success("Logged out successfully");
+      localStorage.removeItem("adminUser");
       navigate("/");
     } catch {
       toast.error("Logout failed");
@@ -163,10 +187,13 @@ function Admin_dashboard() {
             </button>
 
             <div className={`admin-dropdown ${dropdownOpen ? "open" : ""}`}>
-              <button className="dropdown-item-btn">
+              <button className="dropdown-item-btn" onClick={() => {
+                navigate("/admin-dash/profile");
+                setDropdownOpen(false);
+              }}>
                 <FontAwesomeIcon icon={faUser} /> Profile
               </button>
-              <button className="dropdown-item-btn" onClick={() => navigate("/admin-dash/settings")} style={{"border":"none",'background':'transparent'}}>
+              <button className="dropdown-item-btn" onClick={() => navigate("/admin-dash/settings")} style={{ "border": "none", 'background': 'transparent' }}>
                 <FontAwesomeIcon icon={faGear} /> Settings
               </button>
               <div className="dropdown-divider" />
@@ -210,7 +237,7 @@ function Admin_dashboard() {
           {/* ══════════ SIDEBAR ══════════ */}
           <aside className={`admin-sidebar ${sidebarOpen ? "open" : ""}`}>
             <nav className="sidebar-nav">
-              {NAV_ITEMS.map((item, idx) => {
+              {filteredNavItems.map((item, idx) => {
                 const isActive =
                   item.key === "dashboard"
                     ? activeTab === "dashboard"
@@ -261,7 +288,7 @@ function Admin_dashboard() {
                 <div className="page-header fade-up">
                   <div>
                     <h1 className="page-title">Dashboard Overview</h1>
-                    <p className="page-subtitle">Welcome back, Super Admin 👋</p>
+                    <p className="page-subtitle">{currentUser?.name || "Admin"}👋</p>
                   </div>
                   <button className="btn-primary">
                     + New Report
