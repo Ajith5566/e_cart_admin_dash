@@ -9,7 +9,8 @@ import { toast } from "react-toastify";
 
 
 import type { AuthorResponse } from "../../types/author_types";
-import AuthorTable from "./author_table";
+import AuthorTable from "./Author_table";
+
 /* import Pagination from "../Pagination"; */
 /* import PaginationLimit from "../PaginationLimit"; */
 /* import Pagination from "./Pagination"; */

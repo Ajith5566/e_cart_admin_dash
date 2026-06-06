@@ -25,8 +25,8 @@ import Add_testimonial from "./components/testimonials/Add_testimonials";
 import Banner from "./components/banner/Banner";
 import Add_banner from "./components/banner/Add_Banner";
 import Profile from "./components/profile/profile";
-import BlogAuthor from "./components/blog_author/blog_author";
-import Add_blog_author from "./components/blog_author/add_blogAuthor";
+import BlogAuthor from "./components/blog_author/Blog_author";
+import Add_blog_author from "./components/blog_author/Add_blogAuthor";
 
 function App() {
   return (
