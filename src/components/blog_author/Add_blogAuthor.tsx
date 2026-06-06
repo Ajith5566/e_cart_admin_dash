@@ -4,109 +4,77 @@ import "react-quill-new/dist/quill.snow.css";
 import { toast } from "react-toastify";
 import { useLocation, useNavigate } from "react-router-dom";
 import { Modules } from "../quillmodule";
-import type { MetaFields } from "../../types/types";
 import {
-  add_blog_Api,
-  updateBlogApi,
+    add_author_Api,
+  updateAuthorApi,
 } from "../../services/allAPi";
-import SeoPreview from "../seo/Seo";
-import slugify from "slugify";
-import type { BlogResponse, BlogTypes } from "../../types/blogTypes";
+import type { AuthorResponse, AuthorTypes } from "../../types/author_types";
 
 const ReactQuill = lazy(() => import("react-quill-new"));
 
-function Add_blog() {
+function Add_blog_author() {
   /*  const [_blogs, setBlogs] = useState<BlogResponse[]>([]); */
   const [loading, setLoading] = useState(false);
 
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   const location = useLocation();
-  const blog: BlogResponse | undefined = location.state?.blog;
-  console.log(blog);
+  const author: AuthorResponse | undefined = location.state?.author;
+  console.log(author);
 
 
-  const isEditMode = !!blog;
+  const isEditMode = !!author;
   const navigate = useNavigate();
 
   const [previewImage, setPreviewImage] = useState<string | null>(null);
   const [existingImages, setExistingImages] = useState<string[]>([]);
 
-  const [slugManuallyEdited, setSlugManuallyEdited] = useState(false);
-  const [metaTitleManuallyEdited, setMetaTitleManuallyEdited] = useState(false);
-  const [metaDescManuallyEdited, setMetaDescManuallyEdited] = useState(false);
-  const [meta, setMeta] = useState<MetaFields>({});
 
 
 
-  const [formData, setFormData] = useState<BlogTypes>({
-    title: "",
-    author: "",
-    shortDescription: "",
-    description: "",
+  const [formData, setFormData] = useState<AuthorTypes>({
+      name: "",
+  description: "",
+   tagline:"",
+  linkedin: "",
+  instagram: "",
+  facebook: "",
+  youtube: "",
     status: true,
     image: null,
   });
 
-  const [errors, setErrors] = useState({ name: "", author: "" });
+  const [errors, setErrors] = useState({ name: ""});
 
+
+   // Prefill form in edit mode
   useEffect(() => {
-    if (!formData.title) return;
-
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setMeta((prev) => ({
-      ...prev,
-      slug: slugManuallyEdited
-        ? prev.slug
-        : slugify(formData.title, { lower: true, strict: true, trim: true }),
-      meta_title: metaTitleManuallyEdited ? prev.meta_title : formData.title,
-      meta_description: metaDescManuallyEdited
-        ? prev.meta_description
-        : formData.shortDescription,
-    }));
-  }, [formData.title, formData.shortDescription, slugManuallyEdited, metaTitleManuallyEdited, metaDescManuallyEdited]);
-
-
-  // Prefill form in edit mode
-  useEffect(() => {
-    if (!blog) return;
+    if (!author) return;
 
     setFormData({
-      title: blog.title,
-      // parent_blog is a populated object, extract _id for the select value
-      author: blog.author || "",
-      shortDescription: blog.shortDescription || "",
-      description: blog.description || "",
-      status: blog.isActive,
+      name: author.name,
+      tagline: author.tagline || "",
+      description: author.description || "",
+      status: author.isActive,
       image: null,
+      linkedin:author.linkedin,
+      facebook:author.facebook,
+      instagram:author.instagram,
+      youtube:author.youtube
     });
 
-    if (blog.image) {
-      setExistingImages([blog.image]);
+    if (author.image) {
+      setExistingImages([author.image]);
     }
 
-    // ✅ pre-fill meta when editing
-    if (blog.meta && Object.keys(blog.meta).length > 0) {
-      setMeta(blog.meta);
-      // ✅ mark as manually edited so auto-fill doesn't overwrite
-      setSlugManuallyEdited(true);
-      setMetaTitleManuallyEdited(true);
-      setMetaDescManuallyEdited(true);
-    }
-
-  }, [blog]);
+},[author]);
 
   const validateForm = () => {
-    const newErrors = { name: "", author: "" };
+    const newErrors = { name: "", };
     let isValid = true;
 
-    if (!formData.title.trim()) {
-      newErrors.name = "Blog title is required";
-      isValid = false;
-    }
-
-    if (!formData.author.trim()) {
-      newErrors.author = "Author name is required";
+    if (!formData.name.trim()) {
+      newErrors.name = "Author name is required";
       isValid = false;
     }
 
@@ -149,46 +117,38 @@ function Add_blog() {
     e.preventDefault();
     if (!validateForm()) return;
 
-    // ── build meta without image files — strip them out ──
-    const metaWithoutImages = { ...meta };
-    delete metaWithoutImages.og_image;
-    delete metaWithoutImages.twitter_image;
     try {
       setLoading(true);
 
       const payload = new FormData();
-      payload.append("title", formData.title.trim());
-      payload.append("shortDescription", formData.shortDescription);
+      payload.append("name", formData.name.trim());
+      payload.append("tagline", formData.tagline.trim() || "");
       payload.append("description", formData.description);
-      payload.append("author", formData.author || "");
+      payload.append("instagram", formData.instagram || "");
+      payload.append("linkedin", formData.linkedin || "");
+      payload.append("facebook", formData.facebook || "");
+      payload.append("youtube", formData.youtube || "");
       payload.append("status", String(formData.status));
       payload.append("existingImage", existingImages[0] || "");
-      payload.append("meta", JSON.stringify(metaWithoutImages)); // ✅ no File objects inside
+
 
       if (formData.image) {
         payload.append("image", formData.image);
       }
-      if (meta.og_image instanceof File) {
-        payload.append("og_image", meta.og_image);         // ✅ separate field
-      }
-
-      if (meta.twitter_image instanceof File) {
-        payload.append("twitter_image", meta.twitter_image); // ✅ separate field
-      }
 
       if (isEditMode) {
-        await updateBlogApi(blog._id, payload);
-        toast.success("Blog updated");
+        await updateAuthorApi(author._id, payload);
+        toast.success("author updated");
       } else {
-        await add_blog_Api(payload);
-        toast.success("blog added");
+        await add_author_Api(payload);
+        toast.success("author added successfully");
       }
 
-      navigate("/admin-dash/blog");
+      navigate("/admin-dash/blogAuthor");
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
       if (err?.response?.status === 409) {
-        toast.error("Blog already exists");
+        toast.error("Author already exists");
       } else {
         toast.error("Action failed");
       }
@@ -198,18 +158,18 @@ function Add_blog() {
   };
 
   return (
-    <div className=" p-2">
+    <div className="p-2">
 
       {/* HEADER */}
       <div className="d-flex justify-content-between">
         <h4 className="fw-bold">
-          {isEditMode ? "Edit blog" : "Add blog"}
+          {isEditMode ? "Edit blog" : "Add Author"}
         </h4>
         <button
           className="btn btn-secondary"
           onClick={() => navigate("/admin-dash/blog")}
         >
-          ← Back to blogs
+          ← Back to Authors
         </button>
       </div>
 
@@ -218,48 +178,40 @@ function Add_blog() {
         {/* LEFT */}
         <div className="col-md-9 col-12 p-4">
 
-          {/* NAME */}
-          <label className="form-label">
-            Title <span className="text-danger">*</span>
-          </label>
-          <input
-            id="name"
-            className={`form-control ${errors.name ? "is-invalid" : ""}`}
-            value={formData.title}
-            onChange={(e) =>
-              setFormData({ ...formData, title: e.target.value })
-            }
-          />
-          {errors.name && (
-            <div className="invalid-feedback">{errors.name}</div>
-          )}
-
-          {/* PARENT CATEGORY */}
-          <label htmlFor="author" className="form-label mt-3">
-            Author<span className="text-danger">*</span>
-          </label>
-          <input
-            id="author"
-            className={`form-control ${errors.author ? "is-invalid" : ""}`}
-            value={formData.author}
-            onChange={(e) =>
-              setFormData({ ...formData, author: e.target.value })
-            }
-          />
-          {errors.author && (
-            <div className="invalid-feedback">{errors.author}</div>
-          )}
-
-
-          {/* SHORT DESC */}
-          <label className="form-label mt-4">Short Description</label>
-          <textarea
-            className="form-control"
-            value={formData.shortDescription}
-            onChange={(e) =>
-              setFormData({ ...formData, shortDescription: e.target.value })
-            }
-          />
+         <div className="row">
+              {/* NAME */}
+             <div className="col-md-6">
+                  <label className="form-label">
+                    Author Name <span className="text-danger">*</span>
+                  </label>
+                  <input
+                    id="name"
+                    className={`form-control ${errors.name ? "is-invalid" : ""}`}
+                    value={formData.name}
+                    onChange={(e) =>
+                      setFormData({ ...formData, name: e.target.value })
+                    }
+                  />
+                  {errors.name && (
+                    <div className="invalid-feedback">{errors.name}</div>
+                  )}
+        
+             </div>
+              <div className="col-md-6">
+                  {/* PARENT CATEGORY */}
+                  <label htmlFor="tagline" className="form-label">
+                    Tagline
+                  </label>
+                  <input
+                    id="tagline"
+                    value={formData.tagline}
+                    className="form-control"
+                    onChange={(e) =>
+                      setFormData({ ...formData, tagline: e.target.value })
+                    }
+                  />
+              </div>
+         </div>
 
           {/* DESCRIPTION */}
           <div className="mt-4">
@@ -276,6 +228,72 @@ function Add_blog() {
               />
             </Suspense>
           </div>
+          <div className="row mt-3">
+              {/* NAME */}
+             <div className="col-md-6">
+                  <label className="form-label">
+                    Linkedin 
+                  </label>
+                  <input
+                    id="linkedin"
+                    className="form-control"
+                    value={formData.linkedin}
+                    onChange={(e) =>
+                      setFormData({ ...formData, linkedin: e.target.value })
+                    }
+                  />
+                 
+        
+             </div>
+              <div className="col-md-6">
+                  
+                  <label htmlFor=" instagram" className="form-label">
+                    Instagram
+                  </label>
+                  <input
+                    id="instagram"
+                    value={formData.instagram}
+                    className="form-control"
+                    onChange={(e) =>
+                      setFormData({ ...formData, instagram: e.target.value })
+                    }
+                  />
+                 
+              </div>
+         </div>
+         <div className="row mt-3">
+              
+             <div className="col-md-6">
+                  <label className="form-label">
+                    Facebook 
+                  </label>
+                  <input
+                    id="facebook"
+                    className="form-control"
+                    value={formData.facebook}
+                    onChange={(e) =>
+                      setFormData({ ...formData, facebook: e.target.value })
+                    }
+                  />
+                 
+        
+             </div>
+              <div className="col-md-6">
+                
+                  <label htmlFor="youtube" className="form-label">
+                    Youtube
+                  </label>
+                  <input
+                    id="youtube"
+                   className="form-control"
+                    value={formData.youtube}
+                    onChange={(e) =>
+                      setFormData({ ...formData, youtube: e.target.value })
+                    }
+                  />
+                 
+              </div>
+         </div>
 
 
         </div>
@@ -355,26 +373,14 @@ function Add_blog() {
           </div>
         </div>
       </div>
-      <div className="mt-5 w-100 w-md-100">
-        <SeoPreview
-          value={meta}
-          onChange={setMeta}
-          baseUrl="https://test.boilerplate.pbsmokeup.in/"
-          onManualEdit={(field) => {
-            if (field === "slug") setSlugManuallyEdited(true);
-            if (field === "meta_title") setMetaTitleManuallyEdited(true);
-            if (field === "meta_description") setMetaDescManuallyEdited(true);
-          }}
-        />
-      </div>
-      {/* SUBMIT */}
+       {/* SUBMIT */}
       <div className="mt-4">
         <button
           className="btn btn-primary"
           onClick={handleSubmit}
           disabled={loading}
         >
-          {isEditMode ? "Update blog" : "Add blog"}
+          {isEditMode ? "Update author" : "Add author"}
         </button>
       </div>
 
@@ -382,4 +388,4 @@ function Add_blog() {
   );
 }
 
-export default Add_blog;
+export default Add_blog_author;

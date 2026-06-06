@@ -25,6 +25,8 @@ import Add_testimonial from "./components/testimonials/Add_testimonials";
 import Banner from "./components/banner/Banner";
 import Add_banner from "./components/banner/Add_Banner";
 import Profile from "./components/profile/profile";
+import BlogAuthor from "./components/blog_author/blog_author";
+import Add_blog_author from "./components/blog_author/add_blogAuthor";
 
 function App() {
   return (
@@ -50,6 +52,10 @@ function App() {
 
           <Route path="blog" element={<Blog/>}  />
           <Route path="blog/add" element={<Add_blog/>} />
+
+          <Route path="blogAuthor" element={<BlogAuthor/>}  />
+          <Route path="blogAuthor/add" element={<Add_blog_author/>} />
+          
 
           <Route path="testimonials" element={<Testimonials/>} />
           <Route path="testimonials/add" element={<Add_testimonial/>} />

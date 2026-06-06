@@ -1,4 +1,5 @@
 
+import type { AuthorApiResponse } from "../types/author_types";
 import type { BannerApiResponse } from "../types/bannerTypes";
 import type { BlogApiResponse } from "../types/blogTypes";
 import type { CategoryApiResponse } from "../types/categoryTypes";
@@ -385,5 +386,46 @@ export const deletebannerApi = (id: string) => {
   return commonApi(
     "DELETE",
     `${BASE_URL}/admin/banner/delete/${id}`
+  );
+};
+
+
+//author
+
+//add author
+export const add_author_Api =async (reqBody:unknown)=>{
+    return await commonApi('POST',`${BASE_URL}/author`,reqBody)
+}
+
+//get all author
+export const getAllauthorsApi = () => {
+  return commonApi<AuthorApiResponse>("GET", `${BASE_URL}/get/authors`);
+};
+
+//author status
+export const toggleAuthorApi = (id: string) => {
+  return commonApi(
+    "PUT",
+    `${BASE_URL}/admin/author/${id}/toggle`
+  );
+};
+
+//update
+export const updateAuthorApi = (
+  id: string,
+  data: FormData
+) => {
+  return commonApi(
+    "PUT",
+    `${BASE_URL}/admin/updateAuthor/${id}`,
+    data
+  );
+};
+
+//delete
+export const deleteAuthorApi = (id: string) => {
+  return commonApi(
+    "DELETE",
+    `${BASE_URL}/admin/author/delete/${id}`
   );
 };

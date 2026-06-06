@@ -233,12 +233,12 @@ function Add_page() {
   };
   return (
     <>
-      <div className='p-md-5' p-2>
+      <div className=' p-2'>
 
         <div className='d-flex justify-content-between'>
-          <h2 className="mb-4 fw-bold">
+          <h4 className=" fw-bold">
             {isEditMode ? "Edit Page" : "Add Page"}
-          </h2>
+          </h4>
           <button
             className="btn btn-secondary mb-3"
             onClick={() => navigate("/admin-dash/pages")}
@@ -249,7 +249,7 @@ function Add_page() {
 
 
         {/* ---------- FORM ---------- */}
-        <div className=" p-md-4  mb-4">
+        <div className=" p-md-2  mb-4">
           {editingPage && (
             <div className="alert alert-warning py-2">
               Editing page: <strong>{editingPage.title}</strong>
@@ -258,7 +258,7 @@ function Add_page() {
           <label htmlFor="title" className='form-label'>Title <span className="text-danger">*</span></label>
           <input
           id='title'
-            className={`form-control mb-1 ${errors.title ? "is-invalid" : ""}`}
+            className={`form-control  mb-1 ${errors.title ? "is-invalid" : ""}`}
             value={title}
             onChange={(e) => setTitle(e.target.value)}
           />

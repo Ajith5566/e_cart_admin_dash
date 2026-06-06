@@ -163,7 +163,7 @@ function Add_testimonial() {
     };
 
     return (
-        <div className="p-md-5">
+        <div >
 
             {/* HEADER */}
             <div className="d-flex justify-content-between">
@@ -178,7 +178,7 @@ function Add_testimonial() {
                 </button>
             </div>
 
-            <div className="row mt-5">
+            <div className="row mt-2">
 
                 {/* LEFT */}
                 <div className="col-md-9 col-12 p-md-4">

@@ -540,6 +540,62 @@ body {
 }
 .btn-outline:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-soft); }
 
+
+/* Blog Manager submenu */
+
+.submenu {
+  margin-left: 20px;
+  margin-top: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  animation: slideDown 0.2s ease;
+}
+
+.submenu-btn {
+  border: none;
+  background: transparent;
+  text-align: left;
+  padding: 10px 14px;
+  border-radius: 10px;
+  cursor: pointer;
+  color: var(--text-muted);
+    font-size: 13.5px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all var(--transition);
+  font-family: 'DM Sans', sans-serif;
+  white-space: nowrap;
+}
+
+.submenu-btn:hover {
+  background: rgba(99, 102, 241, 0.08);
+  color: #ffffff
+}
+
+.submenu-btn.active {
+   background: var(--sidebar-active-bg);
+  color: var(--sidebar-active-text);
+  font-weight: 600;
+}
+.submenu-btn.active .nav-icon {
+  color: var(--accent);
+}
+
+/* Active left bar */
+.submenu-btn.active::before {
+  display: none;
+}
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
 /* ─── Responsive ─────────────────────────────────────── */
 
 /* Tablet */

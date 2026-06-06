@@ -314,7 +314,7 @@ export default function Add_product() {
 
 
   return (
-    <div className="container py-md-4">
+    <div className="container py-md-2">
 
       {/* Header */}
       <div className="d-flex justify-content-between mb-3">
@@ -327,7 +327,7 @@ export default function Add_product() {
         </button>
       </div>
 
-      <div className=" p-md-4">
+      <div className=" p-md-2">
         <form onSubmit={handleSubmit}>
           <div className="row">
 

@@ -31,8 +31,9 @@ interface NavItem {
   key: string;
   label: string;
   icon: typeof faTableCellsLarge;
-  path: string;
+  path?: string;
   section?: string;
+  children?: NavItem[];
 }
 
 /* ─── Nav config ─────────────────────────────────────── */
@@ -41,7 +42,22 @@ const NAV_ITEMS: NavItem[] = [
 
   { key: "user", label: "Users", icon: faUsers, path: "/admin-dash/user", section: "Content" },
 
-  { key: "blog", label: "Blog", icon: faBlog, path: "/admin-dash/blog" },
+  {
+    key: "blog-manager", label: "Blog Manager", icon: faBlog, section: "Content", children: [
+      {
+        key: "blog",
+        label: "Blogs",
+        icon: faBlog,
+        path: "/admin-dash/blog"
+      },
+      {
+        key: "blog-author",
+        label: "Authors",
+        icon: faUser,
+        path: "/admin-dash/blogAuthor"
+      }
+    ]
+  },
 
   { key: "banner", label: "Banner", icon: faPenToSquare, path: "/admin-dash/banner" },
 
@@ -82,6 +98,7 @@ function Admin_dashboard() {
   const [authChecked, setAuthChecked] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [openMenus, setOpenMenus] = useState<string[]>([]);
 
   const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -113,6 +130,14 @@ function Admin_dashboard() {
     document.addEventListener("mousedown", handler);
     return () => document.removeEventListener("mousedown", handler);
   }, []);
+
+  const toggleMenu = (key: string) => {
+    setOpenMenus(prev =>
+      prev.includes(key)
+        ? prev.filter(item => item !== key)
+        : [...prev, key]
+    );
+  };
 
   const filteredNavItems =
     currentUser.role === "super_admin"
@@ -251,19 +276,65 @@ function Admin_dashboard() {
                 return (
                   <div key={item.key}>
                     {showSection && (
-                      <div className="sidebar-section-label">{item.section}</div>
+                      <div className="sidebar-section-label">
+                        {item.section}
+                      </div>
                     )}
-                    <button
-                      className={`nav-btn ${isActive ? "active" : ""}`}
-                      onClick={() => goTo(item.path)}
-                    >
-                      <span className="nav-icon">
-                        <FontAwesomeIcon icon={item.icon} />
-                      </span>
-                      {item.label}
-                    </button>
+
+                    {item.children ? (
+                      <>
+                        {/* Blog Manager */}
+                        <button
+                          className="nav-btn"
+                          onClick={() => toggleMenu(item.key)}
+                        >
+                          <span className="nav-icon">
+                            <FontAwesomeIcon icon={item.icon} />
+                          </span>
+
+                          {item.label}
+
+                          <FontAwesomeIcon
+                            icon={faChevronDown}
+                            style={{
+                              marginLeft: "auto",
+                              transform: openMenus.includes(item.key)
+                                ? "rotate(180deg)"
+                                : "rotate(0deg)"
+                            }}
+                          />
+                        </button>
+
+                        {openMenus.includes(item.key) && (
+                          <div className="submenu">
+                            {item.children.map(child => (
+                              <button
+                                key={child.key}
+                                className={`submenu-btn ${location.pathname === child.path ? "active" : ""
+                                  }`}
+                                onClick={() => goTo(child.path!)}
+                              >
+                                {child.label}
+                              </button>
+                            ))}
+                          </div>
+                        )}
+                      </>
+                    ) : (
+                      <button
+                        className={`nav-btn ${isActive ? "active" : ""}`}
+                        onClick={() => goTo(item.path!)}
+                      >
+                        <span className="nav-icon">
+                          <FontAwesomeIcon icon={item.icon} />
+                        </span>
+
+                        {item.label}
+                      </button>
+                    )}
                   </div>
                 );
+
               })}
             </nav>
 
