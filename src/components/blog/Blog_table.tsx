@@ -46,6 +46,8 @@ function BlogTable({ data, onEdit, onToggle,onDelete }: Props) {
         {
             header: 'Author',
             accessorKey: "author",
+              cell: ({ row }) =>
+            row.original.author?.name || "-",
             enableSorting: false,   // ✅ only this column sortable
         },
         {

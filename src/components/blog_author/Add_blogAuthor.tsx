@@ -167,7 +167,7 @@ function Add_blog_author() {
         </h4>
         <button
           className="btn btn-secondary"
-          onClick={() => navigate("/admin-dash/blog")}
+          onClick={() => navigate("/admin-dash/blogAuthor")}
         >
           ← Back to Authors
         </button>

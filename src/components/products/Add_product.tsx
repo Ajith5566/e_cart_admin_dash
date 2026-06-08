@@ -10,6 +10,7 @@ import { Modules } from "../quillmodule";
 import SeoPreview from "../seo/Seo";
 import slugify from "slugify";
 import type { CategoryResponse } from "../../types/categoryTypes";
+import Select from "react-select";
 
 export default function Add_product() {
 
@@ -17,7 +18,7 @@ export default function Add_product() {
   const navigate = useNavigate();
   const location = useLocation();
   const nameRef = useRef<HTMLInputElement | null>(null);
-  const category = location.state?.category;
+/*   const category = location.state?.category; */
 
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
@@ -450,24 +451,28 @@ export default function Add_product() {
               <div>
                 <label htmlFor="category" className="form-label mt-3">Category<span className="text-danger">*</span></label>
 
-                <select
-                  id="category"
-                  className="form-control"
-                  value={formData.category}
-                  onChange={(e) =>
-                    setFormData({ ...formData, category: e.target.value })
-                  }
-                >
-                  <option value="">Choose Category</option>
-
-                  {categories
-                    .filter(cat => cat._id !== category?._id)
-                    .map((cat) => (
-                      <option key={cat._id} value={cat._id}>
-                        {cat.name}
-                      </option>
-                    ))}
-                </select>
+               <Select
+                             options={categories.map(category => ({
+                               value: category._id,
+                               label: category.name,
+                             }))}
+                             value={
+                               categories
+                                 .map(category => ({
+                                   value: category._id,
+                                   label: category.name,
+                                 }))
+                                 .find(option => option.value === formData.category)
+                             }
+                             onChange={(selected) =>
+                               setFormData({
+                                 ...formData,
+                                 category: selected?.value || "",
+                               })
+                             }
+                             isSearchable
+                             className={`form-control mb-1 ${errors.category ? "is-invalid" : ""}`}
+                           />
                 {errors.category && (
                   <div className="form-control" style={{ 'color': 'red', 'border': 'none' }}>{errors.category}</div>
                 )}

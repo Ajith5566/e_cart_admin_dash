@@ -7,17 +7,21 @@ import { Modules } from "../quillmodule";
 import type { MetaFields } from "../../types/types";
 import {
   add_blog_Api,
+  getAllauthorsApi,
   updateBlogApi,
 } from "../../services/allAPi";
 import SeoPreview from "../seo/Seo";
 import slugify from "slugify";
 import type { BlogResponse, BlogTypes } from "../../types/blogTypes";
+import type { AuthorResponse } from "../../types/author_types";
+import Select from "react-select";
 
 const ReactQuill = lazy(() => import("react-quill-new"));
 
 function Add_blog() {
   /*  const [_blogs, setBlogs] = useState<BlogResponse[]>([]); */
   const [loading, setLoading] = useState(false);
+  const [authors, setAuthors] = useState<AuthorResponse[]>([]);
 
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
@@ -74,7 +78,7 @@ function Add_blog() {
     setFormData({
       title: blog.title,
       // parent_blog is a populated object, extract _id for the select value
-      author: blog.author || "",
+      author: blog.author?._id || "",
       shortDescription: blog.shortDescription || "",
       description: blog.description || "",
       status: blog.isActive,
@@ -197,6 +201,23 @@ function Add_blog() {
     }
   };
 
+  const fetchAuthors = async () => {
+    try {
+      const res = await getAllauthorsApi();
+      console.log(res);
+
+      setAuthors(res.data.data);
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to load blogs");
+    }
+  };
+
+  useEffect(() => {
+    fetchAuthors();
+  }, []);
+
+
   return (
     <div className=" p-2">
 
@@ -235,7 +256,7 @@ function Add_blog() {
           )}
 
           {/* PARENT CATEGORY */}
-          <label htmlFor="author" className="form-label mt-3">
+          {/* <label htmlFor="author" className="form-label mt-3">
             Author<span className="text-danger">*</span>
           </label>
           <input
@@ -248,7 +269,38 @@ function Add_blog() {
           />
           {errors.author && (
             <div className="invalid-feedback">{errors.author}</div>
-          )}
+          )} */}
+          <div className="row">
+            <div className="col-12 col-md-6">
+              <label htmlFor="author" className="form-label mt-3">Author<span className="text-danger">*</span></label>
+  
+              <Select
+                options={authors.map(author => ({
+                  value: author._id,
+                  label: author.name,
+                }))}
+                value={
+                  authors
+                    .map(author => ({
+                      value: author._id,
+                      label: author.name,
+                    }))
+                    .find(option => option.value === formData.author)
+                }
+                onChange={(selected) =>
+                  setFormData({
+                    ...formData,
+                    author: selected?.value || "",
+                  })
+                }
+                isSearchable
+                className={`form-control mb-1 ${errors.author ? "is-invalid" : ""}`}
+              />
+              {errors.author && (
+                <div className="invalid-feedback" /* style={{ 'color': 'red', 'border': 'none' }} */>{errors.author}</div>
+              )}
+            </div>
+          </div>
 
 
           {/* SHORT DESC */}

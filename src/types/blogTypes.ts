@@ -14,7 +14,10 @@ export type BlogResponse = {
   title: string;
   description: string;
   shortDescription: string;
-  author:string;
+  author?: {
+    _id: string;
+    name: string;
+  } | null;
   isActive: boolean;
   image: string; // URL from Cloudinary / server
    meta?: MetaFields; 
