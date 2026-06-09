@@ -319,9 +319,9 @@ function Add_blog_author() {
           <div className="mt-4">
             <h6>Image</h6>
             <p className="font_small text-justify">
-              Preferred dimension is 300px x 450px.
-              Allowed file types: jpg, jpeg, png, webp.
-              Maximum file size: 2 MB.
+              Preferred dimension is 650px x 450px
+Allowed file types are jpg, jpeg, png, webp
+Maximum allowed file size is 2 MB
             </p>
 
             <div className="upload-box text-center p-5 border">

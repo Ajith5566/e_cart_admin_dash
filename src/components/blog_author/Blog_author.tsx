@@ -83,7 +83,7 @@ export default function BlogAuthor() {
           }
         }} 
          onDelete={async (id) => {
-                      if (!window.confirm("Delete this blog?")) return;
+                      if (!window.confirm("Delete this author?")) return;
         
                       try {
                         await deleteAuthorApi(id);

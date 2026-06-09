@@ -103,6 +103,8 @@ function Add_blog() {
   const validateForm = () => {
     const newErrors = { name: "", author: "" };
     let isValid = true;
+     
+
 
     if (!formData.title.trim()) {
       newErrors.name = "Blog title is required";

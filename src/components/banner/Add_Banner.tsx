@@ -44,7 +44,7 @@ function Add_banner() {
     console.log(formData);
     
 
-    const [errors, setErrors] = useState({ name: "", mobile_image: "", banner_image: "" });
+    const [errors, setErrors] = useState({ name: "", mobile_image: "", banner_image: "" ,url:""});
 
     
       // Prefill form in edit mode
@@ -71,8 +71,10 @@ function Add_banner() {
       }, [banner]);
 
     const validateForm = () => {
-        const newErrors = { name: "", banner_image: "", mobile_image: "" };
+        const newErrors = { name: "", banner_image: "", mobile_image: "" ,url:"" };
         let isValid = true;
+
+        const urlRegex = /^(https?:\/\/)?([\w-]+\.)+[\w-]{2,}(\/.*)?$/;
 
         if (!formData.title.trim()) {
             newErrors.name = " title is required";
@@ -88,7 +90,11 @@ function Add_banner() {
             newErrors.mobile_image = "image required";
             isValid = false;
         }
-
+        
+        if (formData.url.trim() && !urlRegex.test(formData.url.trim())) {
+  newErrors.url = "Please enter a valid URL";
+  isValid = false;
+}
         setErrors(newErrors);
 
         // NEW FEATURE — scroll to first error
@@ -253,13 +259,16 @@ function Add_banner() {
                             <input
                                 id="url"
                                 type="text"
-                                className='form-control'
+                                  className={`form-control ${errors.url ? "is-invalid" : ""}`}
                                 value={formData.url}
                                 onChange={(e) =>
                                     setFormData({ ...formData, url: e.target.value })
                                 }
                             />
-
+                            {errors.url && (
+                                <div className="invalid-feedback">{errors.url}</div>
+                            )}
+              
                         </div>
 
 

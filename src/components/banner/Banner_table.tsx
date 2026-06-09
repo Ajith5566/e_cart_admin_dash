@@ -216,7 +216,7 @@ function BannerTable({ data, onEdit, onToggle,onDelete }: Props) {
                         ) : (
                             <tr>
                                 <td colSpan={columns.length} className="text-center text-muted">
-                                    No blogs found
+                                    No banners found
                                 </td>
                             </tr>
                         )}

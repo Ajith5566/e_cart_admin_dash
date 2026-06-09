@@ -216,7 +216,7 @@ function AuthorTable({ data, onEdit, onToggle,onDelete }: Props) {
                         ) : (
                             <tr>
                                 <td colSpan={columns.length} className="text-center text-muted">
-                                    No blogs found
+                                    No authors found
                                 </td>
                             </tr>
                         )}
