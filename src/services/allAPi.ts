@@ -138,6 +138,13 @@ export const getAllPagesApi = (
   );
 };
 
+export const getPageByIdApi = (id: string) => {
+  return commonApi<PageType>(
+    "GET",
+    `${BASE_URL}/pagebyid/${id}`
+  );
+};
+
 export const updatePageApi = (
   id: string,
   data: FormData

@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import { useEffect, useState, lazy, Suspense, useRef } from "react";
+import { useEffect, useState, lazy, useRef } from "react";
 import "react-quill-new/dist/quill.snow.css";
 import { toast } from "react-toastify";
 import { useLocation, useNavigate } from "react-router-dom";
@@ -58,7 +58,8 @@ function Add_category() {
   const [metaDescManuallyEdited, setMetaDescManuallyEdited] = useState(false);
   const [meta, setMeta] = useState<MetaFields>({});
 
-
+  // ✅ Fixed: was using `product` (wrong), now correctly uses `category`
+  const [loadingData, setLoadingData] = useState(!!category);
 
   const [formData, setFormData] = useState<CategoryTypes>({
     name: "",
@@ -87,7 +88,6 @@ function Add_category() {
     }));
   }, [formData.name, formData.shortDescription, slugManuallyEdited, metaTitleManuallyEdited, metaDescManuallyEdited]);
 
-
   // Fetch all categories and filter out current + its descendants
   useEffect(() => {
     const fetchCategories = async () => {
@@ -115,11 +115,13 @@ function Add_category() {
 
   // Prefill form in edit mode
   useEffect(() => {
-    if (!category) return;
+    if (!category) {
+      setLoadingData(false);
+      return;
+    }
 
     setFormData({
       name: category.name,
-      // parent_category is a populated object, extract _id for the select value
       parentCategory: category.parent_category?._id || "",
       shortDescription: category.shortDescription || "",
       description: category.description || "",
@@ -131,15 +133,14 @@ function Add_category() {
       setExistingImages([category.image]);
     }
 
-    // ✅ pre-fill meta when editing
     if (category.meta && Object.keys(category.meta).length > 0) {
       setMeta(category.meta);
-      // ✅ mark as manually edited so auto-fill doesn't overwrite
       setSlugManuallyEdited(true);
       setMetaTitleManuallyEdited(true);
       setMetaDescManuallyEdited(true);
     }
 
+    setLoadingData(false);
   }, [category]);
 
   const validateForm = () => {
@@ -152,13 +153,14 @@ function Add_category() {
     }
 
     setErrors(newErrors);
-    // NEW FEATURE — scroll to first error
+
     if (!isValid) {
       scrollToFirstError(newErrors);
     }
     return isValid;
   };
-  //focus effect
+
+  // focus effect
   const scrollToFirstError = (newErrors: typeof errors) => {
     const firstErrorKey = Object.keys(newErrors).find(
       (key) => newErrors[key as keyof typeof newErrors] !== ""
@@ -186,10 +188,10 @@ function Add_category() {
     e.preventDefault();
     if (!validateForm()) return;
 
-    // ── build meta without image files — strip them out ──
     const metaWithoutImages = { ...meta };
     delete metaWithoutImages.og_image;
     delete metaWithoutImages.twitter_image;
+
     try {
       setLoading(true);
 
@@ -200,17 +202,16 @@ function Add_category() {
       payload.append("parentCategory", formData.parentCategory || "");
       payload.append("status", String(formData.status));
       payload.append("existingImage", existingImages[0] || "");
-      payload.append("meta", JSON.stringify(metaWithoutImages)); // ✅ no File objects inside
+      payload.append("meta", JSON.stringify(metaWithoutImages));
 
       if (formData.image) {
         payload.append("image", formData.image);
       }
       if (meta.og_image instanceof File) {
-        payload.append("og_image", meta.og_image);         // ✅ separate field
+        payload.append("og_image", meta.og_image);
       }
-
       if (meta.twitter_image instanceof File) {
-        payload.append("twitter_image", meta.twitter_image); // ✅ separate field
+        payload.append("twitter_image", meta.twitter_image);
       }
 
       if (isEditMode) {
@@ -222,7 +223,7 @@ function Add_category() {
       }
 
       navigate("/admin-dash/category");
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
       if (err?.response?.status === 409) {
         toast.error("Category already exists");
@@ -234,8 +235,38 @@ function Add_category() {
     }
   };
 
+  // ✅ Loading state — keeps layout consistent, matches edit/add header
+  if (loadingData) {
+    return (
+      <div className="p-2">
+
+        {/* Header */}
+        <div className="d-flex justify-content-between">
+          <h4 className="fw-bold">
+            {isEditMode ? "Edit Category" : "Add Category"}
+          </h4>
+          <button
+            className="btn btn-secondary"
+            onClick={() => navigate("/admin-dash/category")}
+          >
+            ← Back to category
+          </button>
+        </div>
+
+        {/* Spinner */}
+        <div className="d-flex flex-column align-items-center justify-content-center py-5 gap-3">
+          <div className="spinner-border text-secondary" role="status">
+            <span className="visually-hidden">Loading...</span>
+          </div>
+          <p className="text-muted mb-0">Loading category...</p>
+        </div>
+
+      </div>
+    );
+  }
+
   return (
-    <div className=" p-2">
+    <div className="p-2">
 
       {/* HEADER */}
       <div className="d-flex justify-content-between">
@@ -300,11 +331,10 @@ function Add_category() {
               setFormData({ ...formData, shortDescription: e.target.value })
             }
           />
-
           {/* DESCRIPTION */}
           <div className="mt-4">
             <h6>Description</h6>
-            <Suspense fallback={<div>Loading editor...</div>}>
+           
               <ReactQuill
                 className="custom-quill"
                 value={formData.description}
@@ -314,12 +344,9 @@ function Add_category() {
                 modules={Modules}
                 theme="snow"
               />
-            </Suspense>
           </div>
 
-
         </div>
-
 
         {/* RIGHT */}
         <div className="col-md-3 col-12 p-md-4">
@@ -336,7 +363,6 @@ function Add_category() {
             <option value="true">Active</option>
             <option value="false">Draft</option>
           </select>
-
 
           {/* IMAGE */}
           <div className="mt-4">
@@ -362,7 +388,6 @@ function Add_category() {
                   setPreviewImage(URL.createObjectURL(file));
                 }}
               />
-
               <label htmlFor="imageUpload" style={{ cursor: "pointer" }}>
                 <p className="text-primary fw-semibold">
                   Click / Drop file here to upload
@@ -378,7 +403,6 @@ function Add_category() {
                   className="img-thumbnail"
                   alt="preview"
                 />
-
                 <button
                   className="btn btn-danger btn-sm mt-2"
                   onClick={previewImage ? removeImage : removeExistingImage}
@@ -390,6 +414,7 @@ function Add_category() {
           </div>
         </div>
       </div>
+
       <div className="mt-5">
         <SeoPreview
           value={meta}
@@ -402,6 +427,7 @@ function Add_category() {
           }}
         />
       </div>
+
       {/* SUBMIT */}
       <div className="mt-4">
         <button

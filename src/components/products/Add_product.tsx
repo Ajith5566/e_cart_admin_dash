@@ -1,10 +1,10 @@
-import React, { Suspense, useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { toast } from "react-toastify";
 import type { AdminProduct, fetchedProducts, MetaFields } from "../../types/types";
-import { AddproductApi, getAllCategoriesApi, updateProductApi } from "../../services/allAPi";
-import { useLocation, useNavigate } from "react-router-dom";
+import { AddproductApi, getAllCategoriesApi, getProductByIdApi, updateProductApi } from "../../services/allAPi";
+import { useNavigate, useParams } from "react-router-dom";
 import '../common/common_styels.css';
-import '../products/add_products.css'
+import '../products/add_products.css';
 import ReactQuill from "react-quill-new";
 import { Modules } from "../quillmodule";
 import SeoPreview from "../seo/Seo";
@@ -12,39 +12,92 @@ import slugify from "slugify";
 import type { CategoryResponse } from "../../types/categoryTypes";
 import Select from "react-select";
 
+// ✅ dnd-kit imports
+import {
+  DndContext,
+  closestCenter,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+} from "@dnd-kit/core";
+import {
+  SortableContext,
+  horizontalListSortingStrategy,
+  useSortable,
+  arrayMove,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
+
+// ✅ Sortable image item component
+function SortableImage({
+  id,
+  src,
+  onRemove,
+}: {
+  id: string;
+  src: string;
+  onRemove: () => void;
+}) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
+    useSortable({ id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+    cursor: "grab",
+  };
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      {...attributes}
+      {...listeners}
+      className="position-relative"
+    >
+      <img
+        src={src}
+        className="img-thumbnail"
+        style={{ width: "150px", height: "150px", objectFit: "cover", display: "block" }}
+        draggable={false}
+      />
+      {/* ✅ stopPropagation prevents drag conflict on remove button */}
+      <button
+        type="button"
+        className="btn btn-danger btn-sm position-absolute"
+        style={{ top: "5px", right: "5px" }}
+        onPointerDown={(e) => e.stopPropagation()}
+        onClick={onRemove}
+      >
+        X
+      </button>
+    </div>
+  );
+}
+
 export default function Add_product() {
 
-  // Navigation hooks
   const navigate = useNavigate();
-  const location = useLocation();
-  const nameRef = useRef<HTMLInputElement | null>(null);
-/*   const category = location.state?.category; */
+  const { id } = useParams();
+  const isEditMode = !!id;
 
+  const nameRef = useRef<HTMLInputElement | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
-  // If editing product, data comes through route state
-  const product = location.state?.product as fetchedProducts | undefined;
+  // ✅ Each image has a unique id for dnd-kit tracking
+  const [existingImages, setExistingImages] = useState<{ id: string; url: string }[]>([]);
+  const [previewImages, setPreviewImages] = useState<{ id: string; url: string; file: File }[]>([]);
 
-
-  // Stores preview URLs for UI display only
-  const [previewImages, setPreviewImages] = useState<string[]>([]);
-
-  //for edit-image preview
-  const [existingImages, setExistingImages] = useState<string[]>([]);
-
-  //category
   const [categories, setCategories] = useState<CategoryResponse[]>([]);
-  /*  console.log(categories); */
 
   const [slugManuallyEdited, setSlugManuallyEdited] = useState(false);
   const [metaTitleManuallyEdited, setMetaTitleManuallyEdited] = useState(false);
   const [metaDescManuallyEdited, setMetaDescManuallyEdited] = useState(false);
   const [meta, setMeta] = useState<MetaFields>({});
-  /* console.log(meta); */
+  const [loadingData, setLoadingData] = useState(!!id);
 
-
-
-  // Main form state
   const [formData, setFormData] = useState<AdminProduct>({
     name: "",
     price: "",
@@ -53,12 +106,9 @@ export default function Add_product() {
     description: "",
     status: true,
     category: "",
-    images: [], // multiple image files
+    images: [],
   });
-  /* console.log(formData); */
 
-
-  /* error handling */
   const [errors, setErrors] = useState({
     name: "",
     price: "",
@@ -66,13 +116,16 @@ export default function Add_product() {
     shortDescription: "",
     description: "",
     images: "",
-    category: ""
+    category: "",
   });
+
+  // ✅ dnd-kit sensors
+  const sensors = useSensors(useSensor(PointerSensor, {
+    activationConstraint: { distance: 5 }, // prevents accidental drag on click
+  }));
 
   useEffect(() => {
     if (!formData.name) return;
-
-    // eslint-disable-next-line react-hooks/set-state-in-effect
     setMeta((prev) => ({
       ...prev,
       slug: slugManuallyEdited
@@ -90,90 +143,33 @@ export default function Add_product() {
     return text.length === 0;
   };
 
-
   const validateForm = () => {
-
     const newErrors = {
-      name: "",
-      price: "",
-      quantity: "",
-      shortDescription: "",
-      description: "",
-      images: "",
-      category: ""
+      name: "", price: "", quantity: "",
+      shortDescription: "", description: "", images: "", category: "",
     };
     const qty = Number(formData.quantity);
     const price = Number(formData.price);
-
     let isValid = true;
 
-    if (!formData.name.trim() || "") {
-      newErrors.name = "Product name is required";
-      /*   nameRef.current?.focus(); */
-      isValid = false;
-    }
-
-    if (
-      formData.price === "" ||
-      isNaN(price) ||
-      price <= 0
-    ) {
-      newErrors.price = "Price must be a valid positive number";
-      isValid = false;
-    }
-
-    if (
-      formData.quantity === "" ||
-      isNaN(qty) ||
-      !Number.isInteger(qty) ||
-      qty <= 0
-    ) {
-      newErrors.quantity = "Quantity must be a positive whole number";
-      isValid = false;
-    }
-    if (!formData.shortDescription.trim()) {
-      newErrors.shortDescription = "Short description is required";
-      isValid = false;
-    }
-
-    if (!formData.description.trim() || formData.description === "<p><br></p>") {
-      newErrors.description = "Description is required";
-      isValid = false;
-    } if (isEditorEmpty(formData.description)) {
-      newErrors.description = "Description is required";
-      isValid = false;
-    }
-
-    if (
-      formData.images.length === 0 &&
-      existingImages.length === 0
-    ) {
-      newErrors.images = "At least one image required";
-      isValid = false;
-    }
-    if (!formData.category) {
-      newErrors.category = "category is required";
-      isValid = false;
-    }
+    if (!formData.name.trim()) { newErrors.name = "Product name is required"; isValid = false; }
+    if (formData.price === "" || isNaN(price) || price <= 0) { newErrors.price = "Price must be a valid positive number"; isValid = false; }
+    if (formData.quantity === "" || isNaN(qty) || !Number.isInteger(qty) || qty <= 0) { newErrors.quantity = "Quantity must be a positive whole number"; isValid = false; }
+    if (!formData.shortDescription.trim()) { newErrors.shortDescription = "Short description is required"; isValid = false; }
+    if (!formData.description.trim() || formData.description === "<p><br></p>" || isEditorEmpty(formData.description)) { newErrors.description = "Description is required"; isValid = false; }
+    if (previewImages.length === 0 && existingImages.length === 0) { newErrors.images = "At least one image required"; isValid = false; }
+    if (!formData.category) { newErrors.category = "Category is required"; isValid = false; }
 
     setErrors(newErrors);
-    // Scroll to first error
-    // NEW FEATURE — scroll to first error
-    if (!isValid) {
-      scrollToFirstError(newErrors);
-    }
-
-
+    if (!isValid) scrollToFirstError(newErrors);
     return isValid;
   };
-  //focus effect
+
   const scrollToFirstError = (newErrors: typeof errors) => {
     const firstErrorKey = Object.keys(newErrors).find(
       (key) => newErrors[key as keyof typeof newErrors] !== ""
     );
-
     if (!firstErrorKey) return;
-
     const element = document.getElementById(firstErrorKey);
     if (element) {
       element.scrollIntoView({ behavior: "smooth", block: "center" });
@@ -181,74 +177,82 @@ export default function Add_product() {
     }
   };
 
-  /**
-   * Populate form when editing an existing product
-   * Only runs when 'product' changes
-   */
   useEffect(() => {
-    if (!product) return;
+    if (!id) { setLoadingData(false); return; }
 
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setFormData({
-      name: product.productName,
-      price: product.price,
-      quantity: product.quantity,
-      shortDescription: product.shortDescription,
-      description: product.description,
-      category: product.category?._id || "",
-      status: product.isActive,
-      images: [],
+    const fetchProduct = async () => {
+      try {
+        const res = await getProductByIdApi(id);
+        const product: fetchedProducts = res.data;
+
+        setFormData({
+          name: product.productName,
+          price: product.price,
+          quantity: product.quantity,
+          shortDescription: product.shortDescription,
+          description: product.description,
+          category: product.category?._id || "",
+          status: product.isActive,
+          images: [],
+        });
+
+        // ✅ give each existing image a unique id
+        setExistingImages(
+          (product.images || []).map((url, i) => ({ id: `existing-${i}-${url}`, url }))
+        );
+
+        if (product.meta && Object.keys(product.meta).length > 0) {
+          setMeta(product.meta);
+          setSlugManuallyEdited(true);
+          setMetaTitleManuallyEdited(true);
+          setMetaDescManuallyEdited(true);
+        }
+      } catch {
+        toast.error("Failed to load product");
+        navigate("/admin-dash/products");
+      } finally {
+        setLoadingData(false);
+      }
+    };
+
+    fetchProduct();
+  }, [id]);
+
+  // ✅ Drag end handler for existing images
+  const handleExistingDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+    setExistingImages((items) => {
+      const oldIndex = items.findIndex((i) => i.id === active.id);
+      const newIndex = items.findIndex((i) => i.id === over.id);
+      return arrayMove(items, oldIndex, newIndex);
     });
-
-    setExistingImages(product.images || []);
-
-    // ✅ pre-fill meta when editing
-    if (product.meta && Object.keys(product.meta).length > 0) {
-      setMeta(product.meta);
-      // ✅ mark as manually edited so auto-fill doesn't overwrite
-      setSlugManuallyEdited(true);
-      setMetaTitleManuallyEdited(true);
-      setMetaDescManuallyEdited(true);
-    }
-
-  }, [product]);
-
-  /**
-   * Remove image preview + corresponding file from formData
-   */
-  const removeImage = (index: number) => {
-
-    // Remove preview URL
-    setPreviewImages(prev => prev.filter((_, i) => i !== index));
-
-    // Remove actual file from formData.images
-    setFormData(prev => ({
-      ...prev,
-      images: prev.images.filter((_, i) => i !== index)
-    }));
   };
 
-
-  /* remove edit- image */
-  const removeExistingImage = (index: number) => {
-
-    setExistingImages(prev =>
-      prev.filter((_, i) => i !== index)
-    );
-
+  // ✅ Drag end handler for new preview images
+  const handlePreviewDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+    setPreviewImages((items) => {
+      const oldIndex = items.findIndex((i) => i.id === active.id);
+      const newIndex = items.findIndex((i) => i.id === over.id);
+      return arrayMove(items, oldIndex, newIndex);
+    });
   };
 
-  /**
-   * Handle form submit (Add / Update product)
-   */
+  const removeExistingImage = (id: string) => {
+    setExistingImages(prev => prev.filter((img) => img.id !== id));
+  };
+
+  const removePreviewImage = (id: string) => {
+    setPreviewImages(prev => prev.filter((img) => img.id !== id));
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
-    const { name, price, description, shortDescription, quantity, images, status, category } = formData;
-
+    const { name, price, description, shortDescription, quantity, status, category } = formData;
     if (!validateForm()) return;
 
-    // ── build meta without image files — strip them out ──
     const metaWithoutImages = { ...meta };
     delete metaWithoutImages.og_image;
     delete metaWithoutImages.twitter_image;
@@ -261,25 +265,19 @@ export default function Add_product() {
     fd.append("shortDescription", shortDescription);
     fd.append("status", String(status));
     fd.append("category", category);
-    fd.append("meta", JSON.stringify(metaWithoutImages)); // ✅ no File objects inside
+    fd.append("meta", JSON.stringify(metaWithoutImages));
 
-    // ── product images — unchanged ────────────────────────
-    images.forEach((file) => fd.append("images", file));
+    // ✅ send files in reordered order
+    previewImages.forEach((img) => fd.append("images", img.file));
 
-    // ── meta images as separate named fields ─────────────
-    // multer will process these just like product images
-    if (meta.og_image instanceof File) {
-      fd.append("og_image", meta.og_image);         // ✅ separate field
-    }
-
-    if (meta.twitter_image instanceof File) {
-      fd.append("twitter_image", meta.twitter_image); // ✅ separate field
-    }
+    if (meta.og_image instanceof File) fd.append("og_image", meta.og_image);
+    if (meta.twitter_image instanceof File) fd.append("twitter_image", meta.twitter_image);
 
     try {
-      if (product) {
-        fd.append("existingImages", JSON.stringify(existingImages));
-        await updateProductApi(product._id, fd);
+      if (id) {
+        // ✅ send existing image URLs in reordered order
+        fd.append("existingImages", JSON.stringify(existingImages.map((img) => img.url)));
+        await updateProductApi(id, fd);
         toast.success("Product updated");
       } else {
         await AddproductApi(fd);
@@ -295,66 +293,64 @@ export default function Add_product() {
     }
   };
 
-  const fetchCategories = async () => {
-    try {
-      const res = await getAllCategoriesApi();
-      /* console.log(res); */
-
-      setCategories(res.data.data);
-    } catch (err) {
-      console.error(err);
-      toast.error("Failed to load categories");
-    }
-  };
-
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
+    const fetchCategories = async () => {
+      try {
+        const res = await getAllCategoriesApi();
+        setCategories(res.data.data);
+      } catch (err) {
+        console.error(err);
+        toast.error("Failed to load categories");
+      }
+    };
     fetchCategories();
   }, []);
 
-
+  if (loadingData) {
+    return (
+      <div className="container py-md-2">
+        <div className="d-flex justify-content-between mb-3">
+          <h4>{isEditMode ? "Edit Product" : "Add Product"}</h4>
+          <button className="btn btn-secondary" onClick={() => navigate("/admin-dash/products")}>
+            ← Back to products
+          </button>
+        </div>
+        <div className="d-flex flex-column align-items-center justify-content-center py-5 gap-3">
+          <div className="spinner-border text-secondary" role="status">
+            <span className="visually-hidden">Loading...</span>
+          </div>
+          <p className="text-muted mb-0">Loading product...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="container py-md-2">
-
-      {/* Header */}
       <div className="d-flex justify-content-between mb-3">
-        <h4>{product ? "Edit Product" : "Add Product"}</h4>
-        <button
-          className="btn btn-secondary"
-          onClick={() => navigate("/admin-dash/products")}
-        >
+        <h4>{isEditMode ? "Edit Product" : "Add Product"}</h4>
+        <button className="btn btn-secondary" onClick={() => navigate("/admin-dash/products")}>
           ← Back to products
         </button>
       </div>
 
-      <div className=" p-md-2">
+      <div className="p-md-2">
         <form onSubmit={handleSubmit}>
           <div className="row">
-
             <div className="col-md-9 col-12">
-              {/* Product Name */}
               <div>
                 <label className="form-label w-100">Product Name <span className="text-danger">*</span></label>
                 <input
                   id="name"
                   className={`form-control mb-1 ${errors.name ? "is-invalid" : ""}`}
                   value={formData.name}
-                  onChange={(e) =>
-                    setFormData({ ...formData, name: e.target.value })
-                  }
+                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                   ref={nameRef}
                 />
-
-                {errors.name && (
-                  <div className="invalid-feedback">{errors.name}</div>
-                )}
-
+                {errors.name && <div className="invalid-feedback">{errors.name}</div>}
               </div>
 
-              {/* Price & Quantity */}
               <div className="row mt-1">
-
                 <div className="col-md-6">
                   <label className="form-label">Price <span className="text-danger">*</span></label>
                   <input
@@ -362,17 +358,10 @@ export default function Add_product() {
                     type="text"
                     className={`form-control mb-1 ${errors.price ? "is-invalid" : ""}`}
                     value={formData.price}
-                    onChange={(e) =>
-                      setFormData({ ...formData, price: e.target.value })
-                    }
+                    onChange={(e) => setFormData({ ...formData, price: e.target.value })}
                   />
-
-                  {errors.price && (
-                    <div className="invalid-feedback">{errors.price}</div>
-                  )}
-
+                  {errors.price && <div className="invalid-feedback">{errors.price}</div>}
                 </div>
-
                 <div className="col-md-6">
                   <label className="form-label">Quantity <span className="text-danger">*</span></label>
                   <input
@@ -380,19 +369,16 @@ export default function Add_product() {
                     type="text"
                     className={`form-control mb-1 ${errors.quantity ? "is-invalid" : ""}`}
                     value={formData.quantity}
-                    onChange={(e) =>
-                      setFormData({ ...formData, quantity: e.target.value })
-                    }
+                    onChange={(e) => setFormData({ ...formData, quantity: e.target.value })}
                   />
-                  {errors.quantity && (
-                    <div className="invalid-feedback">{errors.quantity}</div>
-                  )}
+                  {errors.quantity && <div className="invalid-feedback">{errors.quantity}</div>}
                 </div>
-
-
               </div>
+
               <div>
-                <label htmlFor="shortDescription" className='form-label mt-3'>Short description <span className="text-danger">*</span></label>
+                <label htmlFor="shortDescription" className="form-label mt-3">
+                  Short description <span className="text-danger">*</span>
+                </label>
                 <textarea
                   id="shortDescription"
                   className={`form-control ${errors.shortDescription ? "is-invalid" : ""}`}
@@ -401,91 +387,54 @@ export default function Add_product() {
                   rows={5}
                   onChange={(e) => setFormData({ ...formData, shortDescription: e.target.value })}
                 />
+                {errors.shortDescription && <div className="invalid-feedback">{errors.shortDescription}</div>}
 
-                {errors.shortDescription && (
-                  <div className="invalid-feedback">{errors.shortDescription}</div>
-                )}
-
-
-                <div id="description" className='mt-3' >
+                <div id="description" className="mt-3">
                   <h6>Description <span className="text-danger">*</span></h6>
-                  <Suspense fallback={<div>Loading editor...</div>}>
-                    <ReactQuill
-                      className="custom-quill"
-                      value={formData.description}
-                      onChange={(value) => setFormData({ ...formData, description: value })}
-                      modules={Modules}
-                      theme="snow"
-                    />
-
-                  </Suspense>
-                  {errors.description && (
-                    <div className="text-danger mt-1">{errors.description}</div>
-                  )}
+                  <ReactQuill
+                    className="custom-quill"
+                    value={formData.description}
+                    onChange={(value) => setFormData(prev => ({ ...prev, description: value }))}
+                    modules={Modules}
+                    theme="snow"
+                  />
+                  {errors.description && <div className="text-danger mt-1">{errors.description}</div>}
                 </div>
               </div>
-
             </div>
-            {/* RIGHT */}
+
             <div className="col-md-3 col-12">
-
               <div>
-                {/* STATUS */}
                 <label className="form-label">Status</label>
-
                 <select
-
                   className="form-control"
                   value={formData.status ? "true" : "false"}
-                  onChange={(e) =>
-                    setFormData({
-                      ...formData,
-                      status: e.target.value === "true",
-                    })
-                  }
+                  onChange={(e) => setFormData({ ...formData, status: e.target.value === "true" })}
                 >
                   <option value="true">Active</option>
                   <option value="false">Draft</option>
                 </select>
               </div>
               <div>
-                <label htmlFor="category" className="form-label mt-3">Category<span className="text-danger">*</span></label>
-
-               <Select
-                             options={categories.map(category => ({
-                               value: category._id,
-                               label: category.name,
-                             }))}
-                             value={
-                               categories
-                                 .map(category => ({
-                                   value: category._id,
-                                   label: category.name,
-                                 }))
-                                 .find(option => option.value === formData.category)
-                             }
-                             onChange={(selected) =>
-                               setFormData({
-                                 ...formData,
-                                 category: selected?.value || "",
-                               })
-                             }
-                             isSearchable
-                             className={`form-control mb-1 ${errors.category ? "is-invalid" : ""}`}
-                           />
+                <label htmlFor="category" className="form-label mt-3">
+                  Category <span className="text-danger">*</span>
+                </label>
+                <Select
+                  options={categories.map(cat => ({ value: cat._id, label: cat.name }))}
+                  value={categories.map(cat => ({ value: cat._id, label: cat.name })).find(o => o.value === formData.category)}
+                  onChange={(selected) => setFormData({ ...formData, category: selected?.value || "" })}
+                  isSearchable
+                  className={`form-control mb-1 ${errors.category ? "is-invalid" : ""}`}
+                />
                 {errors.category && (
-                  <div className="form-control" style={{ 'color': 'red', 'border': 'none' }}>{errors.category}</div>
+                  <div className="form-control" style={{ color: "red", border: "none" }}>{errors.category}</div>
                 )}
               </div>
-
             </div>
           </div>
 
-
-
           {/* Image Upload Section */}
           <div className="mt-5">
-
             <div>
               <h6>Image <span className="text-danger">*</span></h6>
               <p className="w-md-25 font_small text-justify">
@@ -495,11 +444,8 @@ export default function Add_product() {
               </p>
             </div>
 
-            {/* Upload Box */}
-            <div className={`upload-box text-center p-5 border ${errors.images ? "border-danger" : ""
-              }`}>
+            <div className={`upload-box text-center p-5 border ${errors.images ? "border-danger" : ""}`}>
               <input
-
                 ref={fileInputRef}
                 type="file"
                 multiple
@@ -507,40 +453,21 @@ export default function Add_product() {
                 className="d-none"
                 accept="image/*"
                 onChange={(e) => {
-
                   const files = Array.from(e.target.files || []);
-                  const totalImages =
-                    formData.images.length +
-                    existingImages.length +
-                    files.length;
+                  const totalImages = previewImages.length + existingImages.length + files.length;
+                  if (totalImages > 5) { toast.error("Maximum 5 images allowed"); return; }
 
-                  if (totalImages > 5) {
-                    toast.error("Maximum 5 images allowed");
-                    return;
-                  }
-
-                  // Add files into form state
-                  setFormData(prev => ({
-                    ...prev,
-                    images: [...prev.images, ...files]
+                  // ✅ each file gets a unique id
+                  const newPreviews = files.map((file) => ({
+                    id: `preview-${Date.now()}-${file.name}`,
+                    url: URL.createObjectURL(file),
+                    file,
                   }));
+                  setPreviewImages(prev => [...prev, ...newPreviews]);
 
-                  // Create preview URLs
-                  const previews = files.map(file =>
-                    URL.createObjectURL(file)
-                  );
-
-                  setPreviewImages(prev => [...prev, ...previews]);
-
-                  // ⭐ IMPORTANT FIX
-                  if (fileInputRef.current) {
-                    fileInputRef.current.value = "";
-                  }
-
+                  if (fileInputRef.current) fileInputRef.current.value = "";
                 }}
-
               />
-
               <label htmlFor="images" style={{ cursor: "pointer" }}>
                 <p className="mb-1">Drag and Drop image here</p>
                 <p className="mb-1">Or</p>
@@ -548,77 +475,52 @@ export default function Add_product() {
                 <h4>+</h4>
               </label>
             </div>
-            {/* Image Error Message */}
-            {errors.images && (
-              <div className="invalid-feedback d-block">
-                {errors.images}
-              </div>
+
+            {errors.images && <div className="invalid-feedback d-block">{errors.images}</div>}
+
+            {/* ✅ Sortable existing images */}
+            {existingImages.length > 0 && (
+              <>
+                <p className="text-muted small mt-3 mb-1">Existing images — drag to reorder</p>
+                <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleExistingDragEnd}>
+                  <SortableContext items={existingImages.map(i => i.id)} strategy={horizontalListSortingStrategy}>
+                    <div className="d-flex gap-3 flex-wrap">
+                      {existingImages.map((img) => (
+                        <SortableImage
+                          key={img.id}
+                          id={img.id}
+                          src={img.url}
+                          onRemove={() => removeExistingImage(img.id)}
+                        />
+                      ))}
+                    </div>
+                  </SortableContext>
+                </DndContext>
+              </>
             )}
-            {/* edit preview */}
-            {/* Existing Images */}
-            <div className="d-flex gap-3 mt-3 flex-wrap">
 
-              {existingImages.map((img, index) => (
-
-                <div key={index} className="position-relative">
-
-                  <img
-                    src={img}
-                    className="img-thumbnail"
-                    style={{
-                      width: "150px",
-                      height: "150px",
-                      objectFit: "cover"
-                    }}
-                  />
-
-                  <button
-                    type="button"
-                    className="btn btn-danger btn-sm position-absolute"
-                    style={{ top: "5px", right: "5px" }}
-                    onClick={() => removeExistingImage(index)}
-                  >
-                    X
-                  </button>
-
-                </div>
-
-              ))}
-
-            </div>
-
-
-            {/* Preview Images */}
-            <div className="d-flex gap-3 mt-3 flex-wrap">
-              {previewImages.map((img, index) => (
-                <div key={index} className="position-relative">
-
-                  <img
-                    src={img}
-                    alt="preview"
-                    className="img-thumbnail"
-                    style={{
-                      width: "150px",
-                      height: "150px",
-                      objectFit: "cover"
-                    }}
-                  />
-
-                  {/* Remove button */}
-                  <button
-                    type="button"
-                    className="btn btn-danger btn-sm position-absolute"
-                    style={{ top: "5px", right: "5px" }}
-                    onClick={() => removeImage(index)}
-                  >
-                    X
-                  </button>
-
-                </div>
-              ))}
-            </div>
-
+            {/* ✅ Sortable new preview images */}
+            {previewImages.length > 0 && (
+              <>
+                <p className="text-muted small mt-3 mb-1">New images — drag to reorder</p>
+                <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handlePreviewDragEnd}>
+                  <SortableContext items={previewImages.map(i => i.id)} strategy={horizontalListSortingStrategy}>
+                    <div className="d-flex gap-3 flex-wrap">
+                      {previewImages.map((img) => (
+                        <SortableImage
+                          key={img.id}
+                          id={img.id}
+                          src={img.url}
+                          onRemove={() => removePreviewImage(img.id)}
+                        />
+                      ))}
+                    </div>
+                  </SortableContext>
+                </DndContext>
+              </>
+            )}
           </div>
+
           <SeoPreview
             value={meta}
             onChange={setMeta}
@@ -630,11 +532,9 @@ export default function Add_product() {
             }}
           />
 
-          {/* Submit button */}
           <button className="btn btn-success mt-5">
-            {product ? "Update Product" : "Add Product"}
+            {isEditMode ? "Update Product" : "Add Product"}
           </button>
-
         </form>
       </div>
     </div>

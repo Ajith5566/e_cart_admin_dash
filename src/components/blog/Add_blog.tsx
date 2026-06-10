@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import { useEffect, useState, lazy, Suspense, useRef } from "react";
+import { useEffect, useState, lazy, useRef } from "react";
 import "react-quill-new/dist/quill.snow.css";
 import { toast } from "react-toastify";
 import { useLocation, useNavigate } from "react-router-dom";
@@ -19,7 +19,6 @@ import Select from "react-select";
 const ReactQuill = lazy(() => import("react-quill-new"));
 
 function Add_blog() {
-  /*  const [_blogs, setBlogs] = useState<BlogResponse[]>([]); */
   const [loading, setLoading] = useState(false);
   const [authors, setAuthors] = useState<AuthorResponse[]>([]);
 
@@ -28,7 +27,6 @@ function Add_blog() {
   const location = useLocation();
   const blog: BlogResponse | undefined = location.state?.blog;
   console.log(blog);
-
 
   const isEditMode = !!blog;
   const navigate = useNavigate();
@@ -41,7 +39,8 @@ function Add_blog() {
   const [metaDescManuallyEdited, setMetaDescManuallyEdited] = useState(false);
   const [meta, setMeta] = useState<MetaFields>({});
 
-
+  // for react quill
+  const [loadingData, setLoadingData] = useState(!!blog);
 
   const [formData, setFormData] = useState<BlogTypes>({
     title: "",
@@ -70,14 +69,15 @@ function Add_blog() {
     }));
   }, [formData.title, formData.shortDescription, slugManuallyEdited, metaTitleManuallyEdited, metaDescManuallyEdited]);
 
-
-  // Prefill form in edit mode
+  // ✅ Prefill form in edit mode + fixed missing setLoadingData(false)
   useEffect(() => {
-    if (!blog) return;
+    if (!blog) {
+      setLoadingData(false);
+      return;
+    }
 
     setFormData({
       title: blog.title,
-      // parent_blog is a populated object, extract _id for the select value
       author: blog.author?._id || "",
       shortDescription: blog.shortDescription || "",
       description: blog.description || "",
@@ -89,22 +89,19 @@ function Add_blog() {
       setExistingImages([blog.image]);
     }
 
-    // ✅ pre-fill meta when editing
     if (blog.meta && Object.keys(blog.meta).length > 0) {
       setMeta(blog.meta);
-      // ✅ mark as manually edited so auto-fill doesn't overwrite
       setSlugManuallyEdited(true);
       setMetaTitleManuallyEdited(true);
       setMetaDescManuallyEdited(true);
     }
 
+    setLoadingData(false); // ✅ was missing in original
   }, [blog]);
 
   const validateForm = () => {
     const newErrors = { name: "", author: "" };
     let isValid = true;
-     
-
 
     if (!formData.title.trim()) {
       newErrors.name = "Blog title is required";
@@ -118,15 +115,13 @@ function Add_blog() {
 
     setErrors(newErrors);
 
-    // NEW FEATURE — scroll to first error
     if (!isValid) {
       scrollToFirstError(newErrors);
     }
     return isValid;
   };
 
-
-  //focus effect
+  // focus effect
   const scrollToFirstError = (newErrors: typeof errors) => {
     const firstErrorKey = Object.keys(newErrors).find(
       (key) => newErrors[key as keyof typeof newErrors] !== ""
@@ -141,7 +136,6 @@ function Add_blog() {
     }
   };
 
-
   const removeImage = () => {
     setPreviewImage(null);
     setFormData((prev) => ({ ...prev, image: null }));
@@ -155,10 +149,10 @@ function Add_blog() {
     e.preventDefault();
     if (!validateForm()) return;
 
-    // ── build meta without image files — strip them out ──
     const metaWithoutImages = { ...meta };
     delete metaWithoutImages.og_image;
     delete metaWithoutImages.twitter_image;
+
     try {
       setLoading(true);
 
@@ -169,17 +163,16 @@ function Add_blog() {
       payload.append("author", formData.author || "");
       payload.append("status", String(formData.status));
       payload.append("existingImage", existingImages[0] || "");
-      payload.append("meta", JSON.stringify(metaWithoutImages)); // ✅ no File objects inside
+      payload.append("meta", JSON.stringify(metaWithoutImages));
 
       if (formData.image) {
         payload.append("image", formData.image);
       }
       if (meta.og_image instanceof File) {
-        payload.append("og_image", meta.og_image);         // ✅ separate field
+        payload.append("og_image", meta.og_image);
       }
-
       if (meta.twitter_image instanceof File) {
-        payload.append("twitter_image", meta.twitter_image); // ✅ separate field
+        payload.append("twitter_image", meta.twitter_image);
       }
 
       if (isEditMode) {
@@ -187,11 +180,11 @@ function Add_blog() {
         toast.success("Blog updated");
       } else {
         await add_blog_Api(payload);
-        toast.success("blog added");
+        toast.success("Blog added");
       }
 
       navigate("/admin-dash/blog");
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
       if (err?.response?.status === 409) {
         toast.error("Blog already exists");
@@ -207,11 +200,10 @@ function Add_blog() {
     try {
       const res = await getAllauthorsApi();
       console.log(res);
-
       setAuthors(res.data.data);
     } catch (err) {
       console.error(err);
-      toast.error("Failed to load blogs");
+      toast.error("Failed to load authors");
     }
   };
 
@@ -219,9 +211,38 @@ function Add_blog() {
     fetchAuthors();
   }, []);
 
+  // ✅ Loading state — keeps layout consistent
+  if (loadingData) {
+    return (
+      <div className="p-2">
+
+        {/* Header */}
+        <div className="d-flex justify-content-between">
+          <h4 className="fw-bold">
+            {isEditMode ? "Edit blog" : "Add blog"}
+          </h4>
+          <button
+            className="btn btn-secondary"
+            onClick={() => navigate("/admin-dash/blog")}
+          >
+            ← Back to blogs
+          </button>
+        </div>
+
+        {/* Spinner */}
+        <div className="d-flex flex-column align-items-center justify-content-center py-5 gap-3">
+          <div className="spinner-border text-secondary" role="status">
+            <span className="visually-hidden">Loading...</span>
+          </div>
+          <p className="text-muted mb-0">Loading blog...</p>
+        </div>
+
+      </div>
+    );
+  }
 
   return (
-    <div className=" p-2">
+    <div className="p-2">
 
       {/* HEADER */}
       <div className="d-flex justify-content-between">
@@ -241,7 +262,7 @@ function Add_blog() {
         {/* LEFT */}
         <div className="col-md-9 col-12 p-4">
 
-          {/* NAME */}
+          {/* TITLE */}
           <label className="form-label">
             Title <span className="text-danger">*</span>
           </label>
@@ -257,25 +278,12 @@ function Add_blog() {
             <div className="invalid-feedback">{errors.name}</div>
           )}
 
-          {/* PARENT CATEGORY */}
-          {/* <label htmlFor="author" className="form-label mt-3">
-            Author<span className="text-danger">*</span>
-          </label>
-          <input
-            id="author"
-            className={`form-control ${errors.author ? "is-invalid" : ""}`}
-            value={formData.author}
-            onChange={(e) =>
-              setFormData({ ...formData, author: e.target.value })
-            }
-          />
-          {errors.author && (
-            <div className="invalid-feedback">{errors.author}</div>
-          )} */}
+          {/* AUTHOR */}
           <div className="row">
             <div className="col-12 col-md-6">
-              <label htmlFor="author" className="form-label mt-3">Author<span className="text-danger">*</span></label>
-  
+              <label htmlFor="author" className="form-label mt-3">
+                Author <span className="text-danger">*</span>
+              </label>
               <Select
                 options={authors.map(author => ({
                   value: author._id,
@@ -283,27 +291,20 @@ function Add_blog() {
                 }))}
                 value={
                   authors
-                    .map(author => ({
-                      value: author._id,
-                      label: author.name,
-                    }))
+                    .map(author => ({ value: author._id, label: author.name }))
                     .find(option => option.value === formData.author)
                 }
                 onChange={(selected) =>
-                  setFormData({
-                    ...formData,
-                    author: selected?.value || "",
-                  })
+                  setFormData({ ...formData, author: selected?.value || "" })
                 }
                 isSearchable
                 className={`form-control mb-1 ${errors.author ? "is-invalid" : ""}`}
               />
               {errors.author && (
-                <div className="invalid-feedback" /* style={{ 'color': 'red', 'border': 'none' }} */>{errors.author}</div>
+                <div className="invalid-feedback">{errors.author}</div>
               )}
             </div>
           </div>
-
 
           {/* SHORT DESC */}
           <label className="form-label mt-4">Short Description</label>
@@ -318,7 +319,7 @@ function Add_blog() {
           {/* DESCRIPTION */}
           <div className="mt-4">
             <h6>Description</h6>
-            <Suspense fallback={<div>Loading editor...</div>}>
+            
               <ReactQuill
                 className="custom-quill"
                 value={formData.description}
@@ -328,12 +329,10 @@ function Add_blog() {
                 modules={Modules}
                 theme="snow"
               />
-            </Suspense>
+            
           </div>
 
-
         </div>
-
 
         {/* RIGHT */}
         <div className="col-md-3 col-12 p-md-4 p-2">
@@ -409,6 +408,7 @@ function Add_blog() {
           </div>
         </div>
       </div>
+
       <div className="mt-5 w-100 w-md-100">
         <SeoPreview
           value={meta}
@@ -421,6 +421,7 @@ function Add_blog() {
           }}
         />
       </div>
+
       {/* SUBMIT */}
       <div className="mt-4">
         <button

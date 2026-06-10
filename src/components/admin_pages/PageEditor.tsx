@@ -60,7 +60,7 @@ export default function PageEditor() {
 
       {/* ---------- PAGE LIST ---------- */}
       <div style={{ minHeight: "420px" }}>
-            <PageTable data={pages} onEdit={(page) =>  navigate("/admin-dash/pages/add", {  state: { page }, }) }
+            <PageTable data={pages} onEdit={(page) =>  navigate(`/admin-dash/pages/edit/${page._id}`) }
                onToggle={async (id) => {
                  try {
                    await togglePageApi(id);

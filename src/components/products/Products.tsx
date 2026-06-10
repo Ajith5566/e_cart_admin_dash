@@ -60,7 +60,7 @@ export default function Products() {
 
       {/* PRODUCT LIST */}
         <div className="card-body table-responsive" style={{ minHeight: "520px" }}>
-          <ProductTable data={products} onEdit={(product) => navigate("/admin-dash/product/add", { state: { product }, })}
+          <ProductTable data={products} onEdit={(product) => navigate(`/admin-dash/product/edit/${product._id}`)}
             onDelete={async (id) => {
               if (!window.confirm("Delete this product?")) return;
 
