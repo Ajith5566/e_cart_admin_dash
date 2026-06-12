@@ -70,7 +70,7 @@ export default function Blog() {
         {/* PRODUCT LIST */}
         {/* HEADER + SEARCH */}
         
-          <BlogTable data={blogs} onEdit={(blog) =>  navigate("/admin-dash/blog/add", {  state: { blog }, }) }
+          <BlogTable data={blogs} onEdit={(blog) =>  navigate(`/admin-dash/blog/edit/${blog._id}`) }
         onToggle={async (id) => {
           try {
             await toggleBlogApi(id);

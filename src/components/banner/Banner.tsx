@@ -70,7 +70,7 @@ export default function Banner() {
         {/* PRODUCT LIST */}
         {/* HEADER + SEARCH */}
         
-          <BannerTable data={banners} onEdit={(banner) =>  navigate("/admin-dash/banner/add", {  state: { banner }, }) }
+          <BannerTable data={banners} onEdit={(banner) =>  navigate(`/admin-dash/banner/edit/${banner._id}`) }
         onToggle={async (id) => {
           try {
             await togglebannerApi(id);

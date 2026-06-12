@@ -1,9 +1,9 @@
 
-import type { AuthorApiResponse } from "../types/author_types";
-import type { BannerApiResponse } from "../types/bannerTypes";
-import type { BlogApiResponse } from "../types/blogTypes";
-import type { CategoryApiResponse } from "../types/categoryTypes";
-import type { TestimonialApiResponse } from "../types/testimonialTypes";
+import type { AuthorApiResponse, AuthorResponse } from "../types/author_types";
+import type { BannerApiResponse, BannerResponse } from "../types/bannerTypes";
+import type { BlogApiResponse, BlogResponse } from "../types/blogTypes";
+import type { CategoryApiResponse, CategoryResponse } from "../types/categoryTypes";
+import type { TestimonialApiResponse, TestimonialResponse } from "../types/testimonialTypes";
 import type { AdminUserPayload,  FetchedAdminUser,  fetchedProducts, GetPagesResponse, PageType} from "../types/types";
 import { BASE_URL } from "./baseURL";
 import { commonApi } from "./commonAPi";
@@ -189,6 +189,13 @@ export const deleteAdmin_userApi = (id: string) => {
   );
 };
 
+export const getuserByIdApi = (id: string) => {
+  return commonApi<{ success: boolean; data: FetchedAdminUser}>(
+    "GET",
+    `${BASE_URL}/userByid/${id}`
+  );
+};
+
 //toggle active or inactive user
 export const Admin_user_isActiveApi = (id: string) => {
   return commonApi(
@@ -280,6 +287,14 @@ export const updateCategoryApi = (
   );
 };
 
+export const getCategoryByIdApi = (id: string) => {
+  return commonApi<{ success: boolean; data: CategoryResponse}>(
+    "GET",
+    `${BASE_URL}/categoryByid/${id}`
+  );
+};
+
+
 //blogs
 
 //add blog 
@@ -320,6 +335,14 @@ export const deleteblogApi = (id: string) => {
   );
 };
 
+export const getBlogByIdApi = (id: string) => {
+  return commonApi<{ success: boolean; data: BlogResponse}>(
+    "GET",
+    `${BASE_URL}/blogByid/${id}`
+  );
+};
+
+
 //add testimonial
 export const add_testimonial_Api =async (reqBody:unknown)=>{
     return await commonApi('POST',`${BASE_URL}/testimonials`,reqBody)
@@ -355,6 +378,13 @@ export const deletetestimonialApi = (id: string) => {
   return commonApi(
     "DELETE",
     `${BASE_URL}/admin/testimonial/delete/${id}`
+  );
+};
+
+export const getTestimonialbyIdApi = (id: string) => {
+  return commonApi<{ success: boolean; data: TestimonialResponse}>(
+    "GET",
+    `${BASE_URL}/testimonialByid/${id}`
   );
 };
 
@@ -396,7 +426,12 @@ export const deletebannerApi = (id: string) => {
   );
 };
 
-
+export const getbannerbyIdApi = (id: string) => {
+  return commonApi<{ success: boolean; data: BannerResponse}>(
+    "GET",
+    `${BASE_URL}/bannerByid/${id}`
+  );
+};
 //author
 
 //add author
@@ -434,5 +469,12 @@ export const deleteAuthorApi = (id: string) => {
   return commonApi(
     "DELETE",
     `${BASE_URL}/admin/author/delete/${id}`
+  );
+};
+
+export const getAuthorByIdApi = (id: string) => {
+  return commonApi<{ success: boolean; data: AuthorResponse}>(
+    "GET",
+    `${BASE_URL}/authorByid/${id}`
   );
 };

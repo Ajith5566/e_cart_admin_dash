@@ -1,13 +1,14 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import { useEffect, useState, lazy, useRef } from "react";
+import { useEffect, useState, lazy, Suspense, useRef } from "react";
 import "react-quill-new/dist/quill.snow.css";
 import { toast } from "react-toastify";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom"; // ✅ removed useLocation
 import { Modules } from "../quillmodule";
 import type { MetaFields } from "../../types/types";
 import {
   add_blog_Api,
   getAllauthorsApi,
+  getBlogByIdApi,  // ✅ add this
   updateBlogApi,
 } from "../../services/allAPi";
 import SeoPreview from "../seo/Seo";
@@ -24,11 +25,8 @@ function Add_blog() {
 
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
-  const location = useLocation();
-  const blog: BlogResponse | undefined = location.state?.blog;
-  console.log(blog);
-
-  const isEditMode = !!blog;
+  const { id } = useParams();               // ✅ get id from URL
+  const isEditMode = !!id;
   const navigate = useNavigate();
 
   const [previewImage, setPreviewImage] = useState<string | null>(null);
@@ -39,8 +37,7 @@ function Add_blog() {
   const [metaDescManuallyEdited, setMetaDescManuallyEdited] = useState(false);
   const [meta, setMeta] = useState<MetaFields>({});
 
-  // for react quill
-  const [loadingData, setLoadingData] = useState(!!blog);
+  const [loadingData, setLoadingData] = useState(!!id); // ✅ based on id
 
   const [formData, setFormData] = useState<BlogTypes>({
     title: "",
@@ -55,7 +52,6 @@ function Add_blog() {
 
   useEffect(() => {
     if (!formData.title) return;
-
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setMeta((prev) => ({
       ...prev,
@@ -69,35 +65,52 @@ function Add_blog() {
     }));
   }, [formData.title, formData.shortDescription, slugManuallyEdited, metaTitleManuallyEdited, metaDescManuallyEdited]);
 
-  // ✅ Prefill form in edit mode + fixed missing setLoadingData(false)
+  // ✅ Fetch blog by ID from API (refresh-safe)
   useEffect(() => {
-    if (!blog) {
+    if (!id) {
       setLoadingData(false);
       return;
     }
 
-    setFormData({
-      title: blog.title,
-      author: blog.author?._id || "",
-      shortDescription: blog.shortDescription || "",
-      description: blog.description || "",
-      status: blog.isActive,
-      image: null,
-    });
+    const fetchBlog = async () => {
+      try {
+        const res = await getBlogByIdApi(id);
+        console.log(res.data);
 
-    if (blog.image) {
-      setExistingImages([blog.image]);
-    }
+        // ✅ adjust based on your backend response shape
+        // if { success: true, data: {...} } → use res.data.data
+        // if blog object directly           → use res.data
+        const blog: BlogResponse = res.data.data ?? res.data;
 
-    if (blog.meta && Object.keys(blog.meta).length > 0) {
-      setMeta(blog.meta);
-      setSlugManuallyEdited(true);
-      setMetaTitleManuallyEdited(true);
-      setMetaDescManuallyEdited(true);
-    }
+        setFormData({
+          title: blog.title,
+          author: blog.author?._id || "",
+          shortDescription: blog.shortDescription || "",
+          description: blog.description || "",
+          status: blog.isActive,
+          image: null,
+        });
 
-    setLoadingData(false); // ✅ was missing in original
-  }, [blog]);
+        if (blog.image) {
+          setExistingImages([blog.image]);
+        }
+
+        if (blog.meta && Object.keys(blog.meta).length > 0) {
+          setMeta(blog.meta);
+          setSlugManuallyEdited(true);
+          setMetaTitleManuallyEdited(true);
+          setMetaDescManuallyEdited(true);
+        }
+      } catch {
+        toast.error("Failed to load blog");
+        navigate("/admin-dash/blog");
+      } finally {
+        setLoadingData(false);
+      }
+    };
+
+    fetchBlog();
+  }, [id]);
 
   const validateForm = () => {
     const newErrors = { name: "", author: "" };
@@ -114,21 +127,15 @@ function Add_blog() {
     }
 
     setErrors(newErrors);
-
-    if (!isValid) {
-      scrollToFirstError(newErrors);
-    }
+    if (!isValid) scrollToFirstError(newErrors);
     return isValid;
   };
 
-  // focus effect
   const scrollToFirstError = (newErrors: typeof errors) => {
     const firstErrorKey = Object.keys(newErrors).find(
       (key) => newErrors[key as keyof typeof newErrors] !== ""
     );
-
     if (!firstErrorKey) return;
-
     const element = document.getElementById(firstErrorKey);
     if (element) {
       element.scrollIntoView({ behavior: "smooth", block: "center" });
@@ -165,18 +172,12 @@ function Add_blog() {
       payload.append("existingImage", existingImages[0] || "");
       payload.append("meta", JSON.stringify(metaWithoutImages));
 
-      if (formData.image) {
-        payload.append("image", formData.image);
-      }
-      if (meta.og_image instanceof File) {
-        payload.append("og_image", meta.og_image);
-      }
-      if (meta.twitter_image instanceof File) {
-        payload.append("twitter_image", meta.twitter_image);
-      }
+      if (formData.image) payload.append("image", formData.image);
+      if (meta.og_image instanceof File) payload.append("og_image", meta.og_image);
+      if (meta.twitter_image instanceof File) payload.append("twitter_image", meta.twitter_image);
 
       if (isEditMode) {
-        await updateBlogApi(blog._id, payload);
+        await updateBlogApi(id!, payload); // ✅ use id from URL
         toast.success("Blog updated");
       } else {
         await add_blog_Api(payload);
@@ -196,47 +197,34 @@ function Add_blog() {
     }
   };
 
-  const fetchAuthors = async () => {
-    try {
-      const res = await getAllauthorsApi();
-      console.log(res);
-      setAuthors(res.data.data);
-    } catch (err) {
-      console.error(err);
-      toast.error("Failed to load authors");
-    }
-  };
-
   useEffect(() => {
+    const fetchAuthors = async () => {
+      try {
+        const res = await getAllauthorsApi();
+        setAuthors(res.data.data);
+      } catch (err) {
+        console.error(err);
+        toast.error("Failed to load authors");
+      }
+    };
     fetchAuthors();
   }, []);
 
-  // ✅ Loading state — keeps layout consistent
   if (loadingData) {
     return (
       <div className="p-2">
-
-        {/* Header */}
         <div className="d-flex justify-content-between">
-          <h4 className="fw-bold">
-            {isEditMode ? "Edit blog" : "Add blog"}
-          </h4>
-          <button
-            className="btn btn-secondary"
-            onClick={() => navigate("/admin-dash/blog")}
-          >
+          <h4 className="fw-bold">{isEditMode ? "Edit blog" : "Add blog"}</h4>
+          <button className="btn btn-secondary" onClick={() => navigate("/admin-dash/blog")}>
             ← Back to blogs
           </button>
         </div>
-
-        {/* Spinner */}
         <div className="d-flex flex-column align-items-center justify-content-center py-5 gap-3">
           <div className="spinner-border text-secondary" role="status">
             <span className="visually-hidden">Loading...</span>
           </div>
           <p className="text-muted mb-0">Loading blog...</p>
         </div>
-
       </div>
     );
   }
@@ -246,13 +234,8 @@ function Add_blog() {
 
       {/* HEADER */}
       <div className="d-flex justify-content-between">
-        <h4 className="fw-bold">
-          {isEditMode ? "Edit blog" : "Add blog"}
-        </h4>
-        <button
-          className="btn btn-secondary"
-          onClick={() => navigate("/admin-dash/blog")}
-        >
+        <h4 className="fw-bold">{isEditMode ? "Edit blog" : "Add blog"}</h4>
+        <button className="btn btn-secondary" onClick={() => navigate("/admin-dash/blog")}>
           ← Back to blogs
         </button>
       </div>
@@ -262,7 +245,6 @@ function Add_blog() {
         {/* LEFT */}
         <div className="col-md-9 col-12 p-4">
 
-          {/* TITLE */}
           <label className="form-label">
             Title <span className="text-danger">*</span>
           </label>
@@ -270,15 +252,10 @@ function Add_blog() {
             id="name"
             className={`form-control ${errors.name ? "is-invalid" : ""}`}
             value={formData.title}
-            onChange={(e) =>
-              setFormData({ ...formData, title: e.target.value })
-            }
+            onChange={(e) => setFormData({ ...formData, title: e.target.value })}
           />
-          {errors.name && (
-            <div className="invalid-feedback">{errors.name}</div>
-          )}
+          {errors.name && <div className="invalid-feedback">{errors.name}</div>}
 
-          {/* AUTHOR */}
           <div className="row">
             <div className="col-12 col-md-6">
               <label htmlFor="author" className="form-label mt-3">
@@ -300,36 +277,28 @@ function Add_blog() {
                 isSearchable
                 className={`form-control mb-1 ${errors.author ? "is-invalid" : ""}`}
               />
-              {errors.author && (
-                <div className="invalid-feedback">{errors.author}</div>
-              )}
+              {errors.author && <div className="invalid-feedback">{errors.author}</div>}
             </div>
           </div>
 
-          {/* SHORT DESC */}
           <label className="form-label mt-4">Short Description</label>
           <textarea
             className="form-control"
             value={formData.shortDescription}
-            onChange={(e) =>
-              setFormData({ ...formData, shortDescription: e.target.value })
-            }
+            onChange={(e) => setFormData({ ...formData, shortDescription: e.target.value })}
           />
 
-          {/* DESCRIPTION */}
           <div className="mt-4">
             <h6>Description</h6>
-            
+            <Suspense fallback={<div>Loading editor...</div>}>
               <ReactQuill
                 className="custom-quill"
                 value={formData.description}
-                onChange={(value) =>
-                  setFormData({ ...formData, description: value })
-                }
+                onChange={(value) => setFormData({ ...formData, description: value })}
                 modules={Modules}
                 theme="snow"
               />
-            
+            </Suspense>
           </div>
 
         </div>
@@ -337,20 +306,16 @@ function Add_blog() {
         {/* RIGHT */}
         <div className="col-md-3 col-12 p-md-4 p-2">
 
-          {/* STATUS */}
           <label className="form-label">Status</label>
           <select
             className="form-control"
             value={formData.status ? "true" : "false"}
-            onChange={(e) =>
-              setFormData({ ...formData, status: e.target.value === "true" })
-            }
+            onChange={(e) => setFormData({ ...formData, status: e.target.value === "true" })}
           >
             <option value="true">Active</option>
             <option value="false">Draft</option>
           </select>
 
-          {/* IMAGE */}
           <div className="mt-4">
             <h6>Image</h6>
             <p className="font_small text-justify">
@@ -380,27 +345,19 @@ function Add_blog() {
               </label>
             </div>
 
-            {/* Existing image */}
             {existingImages.map((img) => (
               <div key={img} className="mt-3">
                 <img src={img} className="img-thumbnail" alt="existing" />
-                <button
-                  className="btn btn-danger btn-sm mt-2"
-                  onClick={removeExistingImage}
-                >
+                <button className="btn btn-danger btn-sm mt-2" onClick={removeExistingImage}>
                   Remove
                 </button>
               </div>
             ))}
 
-            {/* New image preview */}
             {previewImage && (
               <div className="mt-3">
                 <img src={previewImage} className="img-thumbnail" alt="preview" />
-                <button
-                  className="btn btn-danger btn-sm mt-2"
-                  onClick={removeImage}
-                >
+                <button className="btn btn-danger btn-sm mt-2" onClick={removeImage}>
                   Remove
                 </button>
               </div>
@@ -422,7 +379,6 @@ function Add_blog() {
         />
       </div>
 
-      {/* SUBMIT */}
       <div className="mt-4">
         <button
           className="btn btn-primary"

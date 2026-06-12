@@ -2,10 +2,10 @@
 import { useEffect, useState, lazy, Suspense, useRef } from "react";
 import "react-quill-new/dist/quill.snow.css";
 import { toast } from "react-toastify";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom"; // ✅ removed useLocation
 import { Modules } from "../quillmodule";
 import {
-    add_author_Api,
+  add_author_Api,  getAuthorByIdApi,  // ✅ add this
   updateAuthorApi,
 } from "../../services/allAPi";
 import type { AuthorResponse, AuthorTypes } from "../../types/author_types";
@@ -13,64 +13,86 @@ import type { AuthorResponse, AuthorTypes } from "../../types/author_types";
 const ReactQuill = lazy(() => import("react-quill-new"));
 
 function Add_blog_author() {
-  /*  const [_blogs, setBlogs] = useState<BlogResponse[]>([]); */
   const [loading, setLoading] = useState(false);
 
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
-  const location = useLocation();
-  const author: AuthorResponse | undefined = location.state?.author;
-  console.log(author);
-
-
-  const isEditMode = !!author;
+  const { id } = useParams();      
+  /* console.log(id); */
+           // ✅ get id from URL
+  const isEditMode = !!id;
   const navigate = useNavigate();
 
   const [previewImage, setPreviewImage] = useState<string | null>(null);
   const [existingImages, setExistingImages] = useState<string[]>([]);
 
-
-
+  const [loadingData, setLoadingData] = useState(!!id); // ✅ based on id
 
   const [formData, setFormData] = useState<AuthorTypes>({
-      name: "",
-  description: "",
-   tagline:"",
-  linkedin: "",
-  instagram: "",
-  facebook: "",
-  youtube: "",
+    name: "",
+    description: "",
+    tagline: "",
+    linkedin: "",
+    instagram: "",
+    facebook: "",
+    youtube: "",
     status: true,
     image: null,
   });
 
-  const [errors, setErrors] = useState({ name: ""});
+  const [errors, setErrors] = useState({ name: "" });
 
-
-   // Prefill form in edit mode
+  // ✅ Fetch author by ID from API (refresh-safe)
   useEffect(() => {
-    if (!author) return;
-
-    setFormData({
-      name: author.name,
-      tagline: author.tagline || "",
-      description: author.description || "",
-      status: author.isActive,
-      image: null,
-      linkedin:author.linkedin,
-      facebook:author.facebook,
-      instagram:author.instagram,
-      youtube:author.youtube
-    });
-
-    if (author.image) {
-      setExistingImages([author.image]);
+     
+    if (!id) {
+      setLoadingData(false);
+      return;
     }
 
-},[author]);
+    const fetchAuthor = async () => {
+      try {
+
+         
+        const res = await getAuthorByIdApi(id);
+       
+        /* console.log(res.data); */
+           
+            
+
+        // adjust based on your backend response shape
+        // { success: true, data: {...} } → res.data.data
+        // direct object               → res.data
+        const author: AuthorResponse = res.data.data ?? res.data;
+        setFormData({
+          name:        author.name,
+          tagline:     author.tagline     || "",
+          description: author.description || "",
+          status:      author.isActive,
+          image:       null,
+          linkedin:    author.linkedin  || "",
+          facebook:    author.facebook  || "",
+          instagram:   author.instagram || "",
+          youtube:     author.youtube   || "",
+        });
+
+        if (author.image) {
+          setExistingImages([author.image]);
+        }
+      } catch(err) {
+        toast.error("Failed to load author");
+        /* console.error("4. Error", err); */
+        navigate("/admin-dash/blogAuthor");
+      } finally {
+        setLoadingData(false);
+      }
+    };
+
+    fetchAuthor();
+  }, [id]);
 
   const validateForm = () => {
-    const newErrors = { name: "", };
+    const newErrors = { name: "" };
     let isValid = true;
 
     if (!formData.name.trim()) {
@@ -79,30 +101,21 @@ function Add_blog_author() {
     }
 
     setErrors(newErrors);
-
-    // NEW FEATURE — scroll to first error
-    if (!isValid) {
-      scrollToFirstError(newErrors);
-    }
+    if (!isValid) scrollToFirstError(newErrors);
     return isValid;
   };
 
-
-  //focus effect
   const scrollToFirstError = (newErrors: typeof errors) => {
     const firstErrorKey = Object.keys(newErrors).find(
       (key) => newErrors[key as keyof typeof newErrors] !== ""
     );
-
     if (!firstErrorKey) return;
-
     const element = document.getElementById(firstErrorKey);
     if (element) {
       element.scrollIntoView({ behavior: "smooth", block: "center" });
       setTimeout(() => (element as HTMLElement).focus(), 300);
     }
   };
-
 
   const removeImage = () => {
     setPreviewImage(null);
@@ -121,31 +134,28 @@ function Add_blog_author() {
       setLoading(true);
 
       const payload = new FormData();
-      payload.append("name", formData.name.trim());
-      payload.append("tagline", formData.tagline.trim() || "");
+      payload.append("name",        formData.name.trim());
+      payload.append("tagline",     formData.tagline.trim()  || "");
       payload.append("description", formData.description);
-      payload.append("instagram", formData.instagram || "");
-      payload.append("linkedin", formData.linkedin || "");
-      payload.append("facebook", formData.facebook || "");
-      payload.append("youtube", formData.youtube || "");
-      payload.append("status", String(formData.status));
-      payload.append("existingImage", existingImages[0] || "");
+      payload.append("instagram",   formData.instagram       || "");
+      payload.append("linkedin",    formData.linkedin        || "");
+      payload.append("facebook",    formData.facebook        || "");
+      payload.append("youtube",     formData.youtube         || "");
+      payload.append("status",      String(formData.status));
+      payload.append("existingImage", existingImages[0]      || "");
 
-
-      if (formData.image) {
-        payload.append("image", formData.image);
-      }
+      if (formData.image) payload.append("image", formData.image);
 
       if (isEditMode) {
-        await updateAuthorApi(author._id, payload);
-        toast.success("author updated");
+        await updateAuthorApi(id!, payload); // ✅ use id from URL
+        toast.success("Author updated");
       } else {
         await add_author_Api(payload);
-        toast.success("author added successfully");
+        toast.success("Author added successfully");
       }
 
       navigate("/admin-dash/blogAuthor");
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
       if (err?.response?.status === 409) {
         toast.error("Author already exists");
@@ -157,14 +167,32 @@ function Add_blog_author() {
     }
   };
 
+  // ✅ Loading state
+  if (loadingData) {
+    return (
+      <div className="p-2">
+        <div className="d-flex justify-content-between">
+          <h4 className="fw-bold">{isEditMode ? "Edit Author" : "Add Author"}</h4>
+          <button className="btn btn-secondary" onClick={() => navigate("/admin-dash/blogAuthor")}>
+            ← Back to Authors
+          </button>
+        </div>
+        <div className="d-flex flex-column align-items-center justify-content-center py-5 gap-3">
+          <div className="spinner-border text-secondary" role="status">
+            <span className="visually-hidden">Loading...</span>
+          </div>
+          <p className="text-muted mb-0">Loading author...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="p-2">
 
       {/* HEADER */}
       <div className="d-flex justify-content-between">
-        <h4 className="fw-bold">
-          {isEditMode ? "Edit blog" : "Add Author"}
-        </h4>
+        <h4 className="fw-bold">{isEditMode ? "Edit Author" : "Add Author"}</h4>
         <button
           className="btn btn-secondary"
           onClick={() => navigate("/admin-dash/blogAuthor")}
@@ -178,150 +206,106 @@ function Add_blog_author() {
         {/* LEFT */}
         <div className="col-md-9 col-12 p-4">
 
-         <div className="row">
-              {/* NAME */}
-             <div className="col-md-6">
-                  <label className="form-label">
-                    Author Name <span className="text-danger">*</span>
-                  </label>
-                  <input
-                    id="name"
-                    className={`form-control ${errors.name ? "is-invalid" : ""}`}
-                    value={formData.name}
-                    onChange={(e) =>
-                      setFormData({ ...formData, name: e.target.value })
-                    }
-                  />
-                  {errors.name && (
-                    <div className="invalid-feedback">{errors.name}</div>
-                  )}
-        
-             </div>
-              <div className="col-md-6">
-                  {/* PARENT CATEGORY */}
-                  <label htmlFor="tagline" className="form-label">
-                    Tagline
-                  </label>
-                  <input
-                    id="tagline"
-                    value={formData.tagline}
-                    className="form-control"
-                    onChange={(e) =>
-                      setFormData({ ...formData, tagline: e.target.value })
-                    }
-                  />
-              </div>
-         </div>
+          <div className="row">
+            <div className="col-md-6">
+              <label className="form-label">
+                Author Name <span className="text-danger">*</span>
+              </label>
+              <input
+                id="name"
+                className={`form-control ${errors.name ? "is-invalid" : ""}`}
+                value={formData.name}
+                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+              />
+              {errors.name && <div className="invalid-feedback">{errors.name}</div>}
+            </div>
+            <div className="col-md-6">
+              <label htmlFor="tagline" className="form-label">Tagline</label>
+              <input
+                id="tagline"
+                value={formData.tagline}
+                className="form-control"
+                onChange={(e) => setFormData({ ...formData, tagline: e.target.value })}
+              />
+            </div>
+          </div>
 
-          {/* DESCRIPTION */}
           <div className="mt-4">
             <h6>Description</h6>
             <Suspense fallback={<div>Loading editor...</div>}>
               <ReactQuill
                 className="custom-quill"
                 value={formData.description}
-                onChange={(value) =>
-                  setFormData({ ...formData, description: value })
-                }
+                onChange={(value) => setFormData({ ...formData, description: value })}
                 modules={Modules}
                 theme="snow"
               />
             </Suspense>
           </div>
-          <div className="row mt-3">
-              {/* NAME */}
-             <div className="col-md-6">
-                  <label className="form-label">
-                    Linkedin 
-                  </label>
-                  <input
-                    id="linkedin"
-                    className="form-control"
-                    value={formData.linkedin}
-                    onChange={(e) =>
-                      setFormData({ ...formData, linkedin: e.target.value })
-                    }
-                  />
-                 
-        
-             </div>
-              <div className="col-md-6">
-                  
-                  <label htmlFor=" instagram" className="form-label">
-                    Instagram
-                  </label>
-                  <input
-                    id="instagram"
-                    value={formData.instagram}
-                    className="form-control"
-                    onChange={(e) =>
-                      setFormData({ ...formData, instagram: e.target.value })
-                    }
-                  />
-                 
-              </div>
-         </div>
-         <div className="row mt-3">
-              
-             <div className="col-md-6">
-                  <label className="form-label">
-                    Facebook 
-                  </label>
-                  <input
-                    id="facebook"
-                    className="form-control"
-                    value={formData.facebook}
-                    onChange={(e) =>
-                      setFormData({ ...formData, facebook: e.target.value })
-                    }
-                  />
-                 
-        
-             </div>
-              <div className="col-md-6">
-                
-                  <label htmlFor="youtube" className="form-label">
-                    Youtube
-                  </label>
-                  <input
-                    id="youtube"
-                   className="form-control"
-                    value={formData.youtube}
-                    onChange={(e) =>
-                      setFormData({ ...formData, youtube: e.target.value })
-                    }
-                  />
-                 
-              </div>
-         </div>
 
+          <div className="row mt-3">
+            <div className="col-md-6">
+              <label className="form-label">Linkedin</label>
+              <input
+                id="linkedin"
+                className="form-control"
+                value={formData.linkedin}
+                onChange={(e) => setFormData({ ...formData, linkedin: e.target.value })}
+              />
+            </div>
+            <div className="col-md-6">
+              <label htmlFor="instagram" className="form-label">Instagram</label>
+              <input
+                id="instagram"
+                value={formData.instagram}
+                className="form-control"
+                onChange={(e) => setFormData({ ...formData, instagram: e.target.value })}
+              />
+            </div>
+          </div>
+
+          <div className="row mt-3">
+            <div className="col-md-6">
+              <label className="form-label">Facebook</label>
+              <input
+                id="facebook"
+                className="form-control"
+                value={formData.facebook}
+                onChange={(e) => setFormData({ ...formData, facebook: e.target.value })}
+              />
+            </div>
+            <div className="col-md-6">
+              <label htmlFor="youtube" className="form-label">Youtube</label>
+              <input
+                id="youtube"
+                className="form-control"
+                value={formData.youtube}
+                onChange={(e) => setFormData({ ...formData, youtube: e.target.value })}
+              />
+            </div>
+          </div>
 
         </div>
-
 
         {/* RIGHT */}
         <div className="col-md-3 col-12 p-md-4 p-2">
 
-          {/* STATUS */}
           <label className="form-label">Status</label>
           <select
             className="form-control"
             value={formData.status ? "true" : "false"}
-            onChange={(e) =>
-              setFormData({ ...formData, status: e.target.value === "true" })
-            }
+            onChange={(e) => setFormData({ ...formData, status: e.target.value === "true" })}
           >
             <option value="true">Active</option>
             <option value="false">Draft</option>
           </select>
 
-          {/* IMAGE */}
           <div className="mt-4">
             <h6>Image</h6>
             <p className="font_small text-justify">
-              Preferred dimension is 650px x 450px
-Allowed file types are jpg, jpeg, png, webp
-Maximum allowed file size is 2 MB
+              Preferred dimension is 650px x 450px.
+              Allowed file types: jpg, jpeg, png, webp.
+              Maximum file size: 2 MB.
             </p>
 
             <div className="upload-box text-center p-5 border">
@@ -345,27 +329,19 @@ Maximum allowed file size is 2 MB
               </label>
             </div>
 
-            {/* Existing image */}
             {existingImages.map((img) => (
               <div key={img} className="mt-3">
                 <img src={img} className="img-thumbnail" alt="existing" />
-                <button
-                  className="btn btn-danger btn-sm mt-2"
-                  onClick={removeExistingImage}
-                >
+                <button className="btn btn-danger btn-sm mt-2" onClick={removeExistingImage}>
                   Remove
                 </button>
               </div>
             ))}
 
-            {/* New image preview */}
             {previewImage && (
               <div className="mt-3">
                 <img src={previewImage} className="img-thumbnail" alt="preview" />
-                <button
-                  className="btn btn-danger btn-sm mt-2"
-                  onClick={removeImage}
-                >
+                <button className="btn btn-danger btn-sm mt-2" onClick={removeImage}>
                   Remove
                 </button>
               </div>
@@ -373,7 +349,7 @@ Maximum allowed file size is 2 MB
           </div>
         </div>
       </div>
-       {/* SUBMIT */}
+
       <div className="mt-4">
         <button
           className="btn btn-primary"

@@ -1,13 +1,14 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import { useEffect, useState, lazy, useRef } from "react";
+import { useEffect, useState, lazy, Suspense, useRef } from "react";
 import "react-quill-new/dist/quill.snow.css";
 import { toast } from "react-toastify";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom"; // ✅ removed useLocation
 import { Modules } from "../quillmodule";
 import type { MetaFields } from "../../types/types";
 import {
   add_category_Api,
   getAllCategoriesApi,
+  getCategoryByIdApi, // ✅ add this
   updateCategoryApi,
 } from "../../services/allAPi";
 import SeoPreview from "../seo/Seo";
@@ -16,7 +17,6 @@ import type { CategoryResponse, CategoryTypes } from "../../types/categoryTypes"
 
 const ReactQuill = lazy(() => import("react-quill-new"));
 
-// Recursively get all descendant IDs of a given category
 const getDescendantIds = (
   allCategories: CategoryResponse[],
   parentId: string
@@ -28,12 +28,8 @@ const getDescendantIds = (
         : cat.parent_category;
     return pid === parentId;
   });
-
   const childIds = children.map((cat) => cat._id);
-  const deeperIds = childIds.flatMap((id) =>
-    getDescendantIds(allCategories, id)
-  );
-
+  const deeperIds = childIds.flatMap((id) => getDescendantIds(allCategories, id));
   return [...childIds, ...deeperIds];
 };
 
@@ -44,10 +40,8 @@ function Add_category() {
 
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
-  const location = useLocation();
-  const category: CategoryResponse | undefined = location.state?.category;
-
-  const isEditMode = !!category;
+  const { id } = useParams();               // ✅ get id from URL
+  const isEditMode = !!id;
   const navigate = useNavigate();
 
   const [previewImage, setPreviewImage] = useState<string | null>(null);
@@ -58,8 +52,7 @@ function Add_category() {
   const [metaDescManuallyEdited, setMetaDescManuallyEdited] = useState(false);
   const [meta, setMeta] = useState<MetaFields>({});
 
-  // ✅ Fixed: was using `product` (wrong), now correctly uses `category`
-  const [loadingData, setLoadingData] = useState(!!category);
+  const [loadingData, setLoadingData] = useState(!!id); // ✅ based on id now
 
   const [formData, setFormData] = useState<CategoryTypes>({
     name: "",
@@ -74,7 +67,6 @@ function Add_category() {
 
   useEffect(() => {
     if (!formData.name) return;
-
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setMeta((prev) => ({
       ...prev,
@@ -93,14 +85,12 @@ function Add_category() {
     const fetchCategories = async () => {
       try {
         const res = await getAllCategoriesApi();
-        console.log(res);
-
         const all: CategoryResponse[] = res.data.data;
         setCategories(all);
 
-        if (isEditMode && category?._id) {
-          const descendantIds = getDescendantIds(all, category._id);
-          const excluded = new Set([category._id, ...descendantIds]);
+        if (isEditMode && id) {
+          const descendantIds = getDescendantIds(all, id);
+          const excluded = new Set([id, ...descendantIds]);
           setFilteredCategories(all.filter((cat) => !excluded.has(cat._id)));
         } else {
           setFilteredCategories(all);
@@ -113,12 +103,19 @@ function Add_category() {
     fetchCategories();
   }, []);
 
-  // Prefill form in edit mode
+  // ✅ Fetch category by ID from API (refresh-safe)
   useEffect(() => {
-    if (!category) {
+    if (!id) {
       setLoadingData(false);
       return;
     }
+
+    const fetchCategory = async () => {
+  try {
+    const res = await getCategoryByIdApi(id);
+    console.log(res.data); // ✅ this is the category object directly
+    
+    const category: CategoryResponse = res.data.data; // ✅ no .data.data
 
     setFormData({
       name: category.name,
@@ -139,9 +136,15 @@ function Add_category() {
       setMetaTitleManuallyEdited(true);
       setMetaDescManuallyEdited(true);
     }
-
+  } catch {
+    toast.error("Failed to load category");
+    navigate("/admin-dash/category");
+  } finally {
     setLoadingData(false);
-  }, [category]);
+  }
+};
+    fetchCategory();
+  }, [id]);
 
   const validateForm = () => {
     const newErrors = { name: "" };
@@ -153,21 +156,15 @@ function Add_category() {
     }
 
     setErrors(newErrors);
-
-    if (!isValid) {
-      scrollToFirstError(newErrors);
-    }
+    if (!isValid) scrollToFirstError(newErrors);
     return isValid;
   };
 
-  // focus effect
   const scrollToFirstError = (newErrors: typeof errors) => {
     const firstErrorKey = Object.keys(newErrors).find(
       (key) => newErrors[key as keyof typeof newErrors] !== ""
     );
-
     if (!firstErrorKey) return;
-
     const element = document.getElementById(firstErrorKey);
     if (element) {
       element.scrollIntoView({ behavior: "smooth", block: "center" });
@@ -204,18 +201,12 @@ function Add_category() {
       payload.append("existingImage", existingImages[0] || "");
       payload.append("meta", JSON.stringify(metaWithoutImages));
 
-      if (formData.image) {
-        payload.append("image", formData.image);
-      }
-      if (meta.og_image instanceof File) {
-        payload.append("og_image", meta.og_image);
-      }
-      if (meta.twitter_image instanceof File) {
-        payload.append("twitter_image", meta.twitter_image);
-      }
+      if (formData.image) payload.append("image", formData.image);
+      if (meta.og_image instanceof File) payload.append("og_image", meta.og_image);
+      if (meta.twitter_image instanceof File) payload.append("twitter_image", meta.twitter_image);
 
       if (isEditMode) {
-        await updateCategoryApi(category._id, payload);
+        await updateCategoryApi(id!, payload); // ✅ use id from URL
         toast.success("Category updated");
       } else {
         await add_category_Api(payload);
@@ -235,32 +226,21 @@ function Add_category() {
     }
   };
 
-  // ✅ Loading state — keeps layout consistent, matches edit/add header
   if (loadingData) {
     return (
       <div className="p-2">
-
-        {/* Header */}
         <div className="d-flex justify-content-between">
-          <h4 className="fw-bold">
-            {isEditMode ? "Edit Category" : "Add Category"}
-          </h4>
-          <button
-            className="btn btn-secondary"
-            onClick={() => navigate("/admin-dash/category")}
-          >
+          <h4 className="fw-bold">{isEditMode ? "Edit Category" : "Add Category"}</h4>
+          <button className="btn btn-secondary" onClick={() => navigate("/admin-dash/category")}>
             ← Back to category
           </button>
         </div>
-
-        {/* Spinner */}
         <div className="d-flex flex-column align-items-center justify-content-center py-5 gap-3">
           <div className="spinner-border text-secondary" role="status">
             <span className="visually-hidden">Loading...</span>
           </div>
           <p className="text-muted mb-0">Loading category...</p>
         </div>
-
       </div>
     );
   }
@@ -270,13 +250,8 @@ function Add_category() {
 
       {/* HEADER */}
       <div className="d-flex justify-content-between">
-        <h4 className="fw-bold">
-          {isEditMode ? "Edit Category" : "Add Category"}
-        </h4>
-        <button
-          className="btn btn-secondary"
-          onClick={() => navigate("/admin-dash/category")}
-        >
+        <h4 className="fw-bold">{isEditMode ? "Edit Category" : "Add Category"}</h4>
+        <button className="btn btn-secondary" onClick={() => navigate("/admin-dash/category")}>
           ← Back to category
         </button>
       </div>
@@ -286,7 +261,6 @@ function Add_category() {
         {/* LEFT */}
         <div className="col-md-9 col-12 p-md-4">
 
-          {/* NAME */}
           <label className="form-label">
             Name <span className="text-danger">*</span>
           </label>
@@ -294,15 +268,10 @@ function Add_category() {
             id="name"
             className={`form-control ${errors.name ? "is-invalid" : ""}`}
             value={formData.name}
-            onChange={(e) =>
-              setFormData({ ...formData, name: e.target.value })
-            }
+            onChange={(e) => setFormData({ ...formData, name: e.target.value })}
           />
-          {errors.name && (
-            <div className="invalid-feedback">{errors.name}</div>
-          )}
+          {errors.name && <div className="invalid-feedback">{errors.name}</div>}
 
-          {/* PARENT CATEGORY */}
           <label htmlFor="parent_category" className="form-label mt-3">
             Parent Category
           </label>
@@ -310,40 +279,32 @@ function Add_category() {
             id="parent_category"
             className="form-control w-50"
             value={formData.parentCategory}
-            onChange={(e) =>
-              setFormData({ ...formData, parentCategory: e.target.value })
-            }
+            onChange={(e) => setFormData({ ...formData, parentCategory: e.target.value })}
           >
             <option value="">Choose Category</option>
             {filteredCategories.map((cat) => (
-              <option key={cat._id} value={cat._id}>
-                {cat.name}
-              </option>
+              <option key={cat._id} value={cat._id}>{cat.name}</option>
             ))}
           </select>
 
-          {/* SHORT DESC */}
           <label className="form-label mt-4">Short Description</label>
           <textarea
             className="form-control"
             value={formData.shortDescription}
-            onChange={(e) =>
-              setFormData({ ...formData, shortDescription: e.target.value })
-            }
+            onChange={(e) => setFormData({ ...formData, shortDescription: e.target.value })}
           />
-          {/* DESCRIPTION */}
+
           <div className="mt-4">
             <h6>Description</h6>
-           
+            <Suspense fallback={<div>Loading editor...</div>}>
               <ReactQuill
                 className="custom-quill"
                 value={formData.description}
-                onChange={(value) =>
-                  setFormData({ ...formData, description: value })
-                }
+                onChange={(value) => setFormData({ ...formData, description: value })}
                 modules={Modules}
                 theme="snow"
               />
+            </Suspense>
           </div>
 
         </div>
@@ -351,20 +312,16 @@ function Add_category() {
         {/* RIGHT */}
         <div className="col-md-3 col-12 p-md-4">
 
-          {/* STATUS */}
           <label className="form-label">Status</label>
           <select
             className="form-control"
             value={formData.status ? "true" : "false"}
-            onChange={(e) =>
-              setFormData({ ...formData, status: e.target.value === "true" })
-            }
+            onChange={(e) => setFormData({ ...formData, status: e.target.value === "true" })}
           >
             <option value="true">Active</option>
             <option value="false">Draft</option>
           </select>
 
-          {/* IMAGE */}
           <div className="mt-4">
             <h6>Image</h6>
             <p className="font_small text-justify">
@@ -383,7 +340,6 @@ function Add_category() {
                 onChange={(e) => {
                   const file = e.target.files?.[0];
                   if (!file) return;
-
                   setFormData((prev) => ({ ...prev, image: file }));
                   setPreviewImage(URL.createObjectURL(file));
                 }}
@@ -395,7 +351,6 @@ function Add_category() {
               </label>
             </div>
 
-            {/* Show preview image first, otherwise existing image */}
             {(previewImage || existingImages.length > 0) && (
               <div className="mt-3">
                 <img
@@ -428,7 +383,6 @@ function Add_category() {
         />
       </div>
 
-      {/* SUBMIT */}
       <div className="mt-4">
         <button
           className="btn btn-primary"

@@ -16,7 +16,7 @@ function HomePage() {
     email: "",
     password: "",
   });
-  console.log(admindata);
+ /*  console.log(admindata); */
 
   const [isLoading, setIsLoading] = useState(false);
 

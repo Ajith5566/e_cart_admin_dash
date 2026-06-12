@@ -30,7 +30,7 @@ export default function BlogAuthor() {
   const fetchAuthors = async () => {
     try {
       const res = await getAllauthorsApi();
-       console.log(res); 
+      /*  console.log(res);  */
 
       setAuthors(res.data.data);
     } catch (err) {
@@ -73,7 +73,7 @@ export default function BlogAuthor() {
         {/* PRODUCT LIST */}
         {/* HEADER + SEARCH */}
         
-          <AuthorTable data={authors} onEdit={(author) =>  navigate("/admin-dash/blogAuthor/add", {  state: { author }, }) }
+          <AuthorTable data={authors} onEdit={(author) =>  navigate(`/admin-dash/blogAuthor/edit/${author._id}`) }
         onToggle={async (id) => {
           try {
             await toggleAuthorApi(id);

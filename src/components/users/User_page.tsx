@@ -65,7 +65,7 @@ export default function Products() {
           </button>
       </div>
         <div className="card-body table-responsive" >
-          <AdminUsersTable data={users} onEdit={(user) =>  navigate("/admin-dash/user/add", {  state: { user}, }) }
+          <AdminUsersTable data={users} onEdit={(user) =>  navigate(`/admin-dash/user/edit/${user._id}`) }
         onToggle={async (id) => {
           try {
             await Admin_user_isActiveApi(id);

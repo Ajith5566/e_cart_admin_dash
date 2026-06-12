@@ -70,7 +70,7 @@ export default function Testimonials() {
         {/* PRODUCT LIST */}
         {/* HEADER + SEARCH */}
         
-          <TestimonialTable data={testimonials} onEdit={(testimonial) =>  navigate("/admin-dash/testimonials/add", {  state: { testimonial }, }) }
+          <TestimonialTable data={testimonials} onEdit={(testimonial) =>  navigate(`/admin-dash/testimonials/edit/${testimonial._id}`) }
         onToggle={async (id) => {
           try {
             await toggletestimonialApi(id);

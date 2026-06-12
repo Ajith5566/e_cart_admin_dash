@@ -70,7 +70,7 @@ export default function Product_category() {
         {/* PRODUCT LIST */}
         {/* HEADER + SEARCH */}
         
-          <CategoryTable data={categories} onEdit={(category) =>  navigate("/admin-dash/category/add", {  state: { category }, }) }
+          <CategoryTable data={categories} onEdit={(category) =>  navigate(`/admin-dash/category/edit/${category._id}`) }
         onToggle={async (id) => {
           try {
             await toggleCategoryApi(id);
