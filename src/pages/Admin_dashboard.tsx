@@ -94,6 +94,9 @@ function Admin_dashboard() {
     localStorage.getItem("adminUser") || "{}"
   );
 
+ /*  console.log(currentUser); */
+  
+
   const [isLogin, setIsLogin] = useState(false);
   const [authChecked, setAuthChecked] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
@@ -104,6 +107,15 @@ function Admin_dashboard() {
 
   const activeTab = location.pathname.split("/")[2] || "dashboard";
   const isDashboard = location.pathname === "/admin-dash";
+
+  const initials = currentUser?.name
+  ?.replace(/[^\w\s]/g, "")
+  .split(" ")
+  .filter(Boolean)
+  .slice(0, 2)
+  .map((word: string) => word[0])
+  .join("")
+  .toUpperCase() || "A";
 
   /* ── Auth check ── */
   useEffect(() => {
@@ -138,6 +150,7 @@ function Admin_dashboard() {
         : [...prev, key]
     );
   };
+  
 
   const filteredNavItems =
     currentUser.role === "super_admin"
@@ -206,8 +219,8 @@ function Admin_dashboard() {
               className="admin-pill"
               onClick={() => setDropdownOpen(v => !v)}
             >
-              <div className="avatar">SA</div>
-              <span className="name">Super Admin</span>
+              <div className="avatar">{initials}</div>
+              <span className="name">{currentUser.name}</span>
               <FontAwesomeIcon icon={faChevronDown} className="chevron" />
             </button>
 

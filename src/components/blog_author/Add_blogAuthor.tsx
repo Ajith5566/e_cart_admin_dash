@@ -299,11 +299,10 @@ function Add_blog_author() {
             <option value="true">Active</option>
             <option value="false">Draft</option>
           </select>
-
-          <div className="mt-4">
+<div className="mt-4">
             <h6>Image</h6>
             <p className="font_small text-justify">
-              Preferred dimension is 650px x 450px.
+              Preferred dimension is 300px x 450px.
               Allowed file types: jpg, jpeg, png, webp.
               Maximum file size: 2 MB.
             </p>
@@ -329,19 +328,17 @@ function Add_blog_author() {
               </label>
             </div>
 
-            {existingImages.map((img) => (
-              <div key={img} className="mt-3">
-                <img src={img} className="img-thumbnail" alt="existing" />
-                <button className="btn btn-danger btn-sm mt-2" onClick={removeExistingImage}>
-                  Remove
-                </button>
-              </div>
-            ))}
-
-            {previewImage && (
+            {(previewImage || existingImages.length > 0) && (
               <div className="mt-3">
-                <img src={previewImage} className="img-thumbnail" alt="preview" />
-                <button className="btn btn-danger btn-sm mt-2" onClick={removeImage}>
+                <img
+                  src={previewImage || existingImages[0]}
+                  className="img-thumbnail"
+                  alt="preview"
+                />
+                <button
+                  className="btn btn-danger btn-sm mt-2"
+                  onClick={previewImage ? removeImage : removeExistingImage}
+                >
                   Remove
                 </button>
               </div>

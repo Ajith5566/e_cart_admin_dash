@@ -304,19 +304,17 @@ function Add_testimonial() {
               </label>
             </div>
 
-            {existingImages.map((img) => (
-              <div key={img} className="mt-3">
-                <img src={img} className="img-thumbnail" alt="existing" />
-                <button className="btn btn-danger btn-sm mt-2" onClick={removeExistingImage}>
-                  Remove
-                </button>
-              </div>
-            ))}
-
-            {previewImage && (
+            {(previewImage || existingImages.length > 0) && (
               <div className="mt-3">
-                <img src={previewImage} className="img-thumbnail" alt="preview" />
-                <button className="btn btn-danger btn-sm mt-2" onClick={removeImage}>
+                <img
+                  src={previewImage || existingImages[0]}
+                  className="img-thumbnail"
+                  alt="preview"
+                />
+                <button
+                  className="btn btn-danger btn-sm mt-2"
+                  onClick={previewImage ? removeImage : removeExistingImage}
+                >
                   Remove
                 </button>
               </div>

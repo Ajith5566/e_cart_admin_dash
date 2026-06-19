@@ -282,13 +282,19 @@ function Add_banner() {
 
           {/* Banner IMAGE */}
           <div className="mt-4">
-            <h6>Banner Image <span className="text-danger">*</span></h6>
+            <h6>Banner Image</h6>
+            <p className="font_small text-justify">
+              Preferred dimension is 1920px x 720px.
+              Allowed file types: jpg, jpeg, png, webp.
+              Maximum file size: 2 MB.
+            </p>
+
             <div className="upload-box text-center p-5 border">
               <input
                 ref={bannerInputRef}
                 type="file"
                 className="d-none"
-                id="banner-image"
+                id="bannerUpload"
                 accept="image/*"
                 onChange={(e) => {
                   const file = e.target.files?.[0];
@@ -297,27 +303,27 @@ function Add_banner() {
                   setPreviewImage(URL.createObjectURL(file));
                 }}
               />
-              <label htmlFor="banner-image" style={{ cursor: "pointer" }}>
-                <p className="text-primary fw-semibold">Click / Drop file here to upload</p>
+              <label htmlFor="bannerUpload" style={{ cursor: "pointer" }}>
+                <p className="text-primary fw-semibold">
+                  Click / Drop file here to upload
+                </p>
               </label>
             </div>
-            {errors.banner_image && (
+             {errors.banner_image && (
               <div className="invalid-feedback d-block">{errors.banner_image}</div>
             )}
 
-            {existingImages.map((img) => (
-              <div key={img} className="mt-3">
-                <img src={img} className="img-thumbnail" alt="existing" />
-                <button className="btn btn-danger btn-sm mt-2" onClick={removeExistingImage}>
-                  Remove
-                </button>
-              </div>
-            ))}
-
-            {previewImage && (
+            {(previewImage || existingImages.length > 0) && (
               <div className="mt-3">
-                <img src={previewImage} className="img-thumbnail" alt="preview" />
-                <button className="btn btn-danger btn-sm mt-2" onClick={removeBannerImage}>
+                <img
+                  src={previewImage || existingImages[0]}
+                  className="img-thumbnail"
+                  alt="preview"
+                />
+                <button
+                  className="btn btn-danger btn-sm mt-2"
+                  onClick={previewImage ? removeBannerImage : removeExistingImage}
+                >
                   Remove
                 </button>
               </div>
@@ -326,13 +332,19 @@ function Add_banner() {
 
           {/* Mobile IMAGE */}
           <div className="mt-4">
-            <h6>Mobile Image <span className="text-danger">*</span></h6>
+            <h6>Mobile Image</h6>
+            <p className="font_small text-justify">
+              Preferred dimension is 600px x 350px.
+              Allowed file types: jpg, jpeg, png, webp.
+              Maximum file size: 2 MB.
+            </p>
+
             <div className="upload-box text-center p-5 border">
               <input
                 ref={mobileInputRef}
                 type="file"
                 className="d-none"
-                id="mobile-image"
+                id="mobileUpload"
                 accept="image/*"
                 onChange={(e) => {
                   const file = e.target.files?.[0];
@@ -341,27 +353,27 @@ function Add_banner() {
                   setpreviewMobileImage(URL.createObjectURL(file));
                 }}
               />
-              <label htmlFor="mobile-image" style={{ cursor: "pointer" }}>
-                <p className="text-primary fw-semibold">Click / Drop file here to upload</p>
+              <label htmlFor="mobileUpload" style={{ cursor: "pointer" }}>
+                <p className="text-primary fw-semibold">
+                  Click / Drop file here to upload
+                </p>
               </label>
             </div>
-            {errors.mobile_image && (
+             {errors.mobile_image && (
               <div className="invalid-feedback d-block">{errors.mobile_image}</div>
             )}
 
-            {existingMobileImages.map((img) => (
-              <div key={img} className="mt-3">
-                <img src={img} className="img-thumbnail" alt="existing" />
-                <button className="btn btn-danger btn-sm mt-2" onClick={removeExistingMobileImage}>
-                  Remove
-                </button>
-              </div>
-            ))}
-
-            {previewMobile && (
+            {(previewMobile || existingMobileImages.length > 0) && (
               <div className="mt-3">
-                <img src={previewMobile} className="img-thumbnail" alt="preview" />
-                <button className="btn btn-danger btn-sm mt-2" onClick={removeMobileImage}>
+                <img
+                  src={previewMobile || existingMobileImages[0]}
+                  className="img-thumbnail"
+                  alt="preview"
+                />
+                <button
+                  className="btn btn-danger btn-sm mt-2"
+                  onClick={previewMobile ? removeMobileImage : removeExistingMobileImage}
+                >
                   Remove
                 </button>
               </div>
