@@ -48,6 +48,11 @@ function AdminUsersTable({ data, onEdit, onToggle }: Props) {
             enableSorting: false,   // ✅ only this column sortable
         },
         {
+            header: 'Role',
+            accessorKey: "role",
+            enableSorting: false,   // ✅ only this column sortable
+        },
+        {
             header: "Edit",
             cell: ({ row }) => (
                 <button
