@@ -11,7 +11,6 @@ import Add_page from "./components/admin_pages/add_page";
 import Add_product from "./components/products/Add_product";
 import Products from "./components/products/Products";
 import User_page from "./components/users/User_page";
-import Customer_list from "./components/Customer_list";
 import Add_user from "./components/users/Add_user";
 import Settings from "./components/settings/Settings";
 import Product_category from "./components/category/Product_category"
@@ -74,8 +73,6 @@ function App() {
 
            <Route path="profile" element={<Profile />} />
 
-
-          <Route path="Customer_list" element={<Customer_list/>} />
 
           <Route path="settings" element={<RoleProtectedRoute allowedRoles={["super_admin"]} > <Settings/> </RoleProtectedRoute>} />
         </Route>

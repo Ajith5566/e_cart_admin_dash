@@ -69,8 +69,6 @@ const NAV_ITEMS: NavItem[] = [
 
   { key: "testimonials", label: "Testimonials", icon: faQuoteLeft, path: "/admin-dash/testimonials", section: "Engagement" },
 
-  { key: "Customer_list", label: "Customers", icon: faUserGroup, path: "/admin-dash/Customer_list" },
-
   { key: "settings", label: "Settings", icon: faGear, path: "/admin-dash/settings", section: "System" },
   { key: "profile", label: "Profile", icon: faGear, path: "/admin-dash/profile", section: "System" }
 ];
