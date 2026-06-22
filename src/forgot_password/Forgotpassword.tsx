@@ -19,7 +19,7 @@ function ForgotPassword() {
       setLoading(true);
 
       const response = await forgotPasswordApi(email);
-      console.log(response);
+      /* console.log(response); */
 
 
       const data = response.data as ForgotPasswordResponse;
