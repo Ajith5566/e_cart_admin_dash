@@ -211,7 +211,7 @@ function AdminUsersTable({ data, onEdit, onToggle }: Props) {
                         ) : (
                             <tr>
                                 <td colSpan={columns.length} className="text-center text-muted">
-                                    No Category found
+                                    No users found
                                 </td>
                             </tr>
                         )}

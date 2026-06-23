@@ -70,7 +70,8 @@ const NAV_ITEMS: NavItem[] = [
   { key: "testimonials", label: "Testimonials", icon: faQuoteLeft, path: "/admin-dash/testimonials", section: "Engagement" },
 
   { key: "settings", label: "Settings", icon: faGear, path: "/admin-dash/settings", section: "System" },
-  { key: "profile", label: "Profile", icon: faGear, path: "/admin-dash/profile", section: "System" }
+  { key: "profile", label: "Profile", icon: faGear, path: "/admin-dash/profile", section: "System" },
+   { key: "login history", label: "login history", icon: faGear, path: "/admin-dash/login-history", section: "System" },
 ];
 
 /* ─── Stat card data ─────────────────────────────────── */

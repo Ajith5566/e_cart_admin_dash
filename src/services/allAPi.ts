@@ -3,6 +3,7 @@ import type { AuthorApiResponse, AuthorResponse } from "../types/author_types";
 import type { BannerApiResponse, BannerResponse } from "../types/bannerTypes";
 import type { BlogApiResponse, BlogResponse } from "../types/blogTypes";
 import type { CategoryApiResponse, CategoryResponse } from "../types/categoryTypes";
+import type { LoginHistoryResponse } from "../types/login_history";
 import type { TestimonialApiResponse, TestimonialResponse } from "../types/testimonialTypes";
 import type { AdminUserPayload,  FetchedAdminUser,  fetchedProducts, GetPagesResponse, PageType} from "../types/types";
 import { BASE_URL } from "./baseURL";
@@ -32,7 +33,14 @@ export const adminLogoutApi = () => {
 };
 
 /* ================= USERS ================= */
-
+//login history
+// services/allAPi.ts
+export const getLoginHistoryApi = () => {
+  return commonApi<LoginHistoryResponse>(
+    "GET",
+    `${BASE_URL}/admin/login-history`
+  );
+};
 //get profile
 export const getProfileApi = () => {
   return commonApi(

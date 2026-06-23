@@ -26,6 +26,7 @@ import Add_banner from "./components/banner/Add_Banner";
 import Profile from "./components/profile/profile";
 import BlogAuthor from "./components/blog_author/Blog_author";
 import Add_blog_author from "./components/blog_author/Add_blogAuthor";
+import LoginHistory from "./components/login_history/Login_history";
 
 function App() {
   return (
@@ -72,6 +73,7 @@ function App() {
           <Route path="banner/edit/:id" element={<Add_banner/>} />
 
            <Route path="profile" element={<Profile />} />
+           <Route path="login-history" element={<RoleProtectedRoute allowedRoles={["super_admin"]}>  <LoginHistory /> </RoleProtectedRoute>}  />
 
 
           <Route path="settings" element={<RoleProtectedRoute allowedRoles={["super_admin"]} > <Settings/> </RoleProtectedRoute>} />
