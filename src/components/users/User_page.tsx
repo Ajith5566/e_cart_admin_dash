@@ -24,7 +24,7 @@ export default function Products() {
     try {
 
       const res = await getAdmin_UserApi();
-      console.log(res);
+     /*  console.log(res); */
       setUsers(res.data);
 
 
