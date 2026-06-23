@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 // LoginHistoryTable.tsx
-import { useMemo, useState } from 'react'
+import { useMemo, useState, useRef, useEffect } from 'react'
 import {
   useReactTable, getCoreRowModel, flexRender,
   getPaginationRowModel, getSortedRowModel, getFilteredRowModel,
@@ -9,7 +9,7 @@ import type { ColumnDef, SortingState, ColumnFiltersState } from "@tanstack/reac
 import '../common/common_toggle.css'
 import '../common/common_styels.css'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faAngleLeft, faAngleRight, faAnglesLeft, faAnglesRight } from '@fortawesome/free-solid-svg-icons';
+import { faAngleLeft, faAngleRight, faAnglesLeft, faAnglesRight, faXmark } from '@fortawesome/free-solid-svg-icons';
 import type { LoginHistoryEntry } from '../../types/login_history';
 
 
@@ -28,7 +28,73 @@ function LoginHistoryTable({ data }: Props) {
   const [fromDate, setFromDate] = useState('');
   const [toDate, setToDate] = useState('');
 
+  // ---- Name typeahead state ----
+  const [nameQuery, setNameQuery] = useState('');
+  const [selectedName, setSelectedName] = useState<string | null>(null);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const nameWrapperRef = useRef<HTMLDivElement>(null);
+
+  const uniqueNames = useMemo(() => {
+    const names = new Set<string>();
+    data.forEach((entry) => {
+      if (entry.name) names.add(entry.name);
+    });
+    return Array.from(names).sort();
+  }, [data]);
+
+  const nameSuggestions = useMemo(() => {
+    if (!nameQuery.trim()) return [];
+    const q = nameQuery.toLowerCase();
+    return uniqueNames.filter((n) => n.toLowerCase().includes(q)).slice(0, 8);
+  }, [nameQuery, uniqueNames]);
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (nameWrapperRef.current && !nameWrapperRef.current.contains(e.target as Node)) {
+        setShowSuggestions(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const handleSelectName = (name: string) => {
+    setSelectedName(name);
+    setNameQuery(name);
+    setShowSuggestions(false);
+    setPagination((prev) => ({ ...prev, pageIndex: 0 }));
+  };
+
+  const handleClearNameFilter = () => {
+    setSelectedName(null);
+    setNameQuery('');
+    setShowSuggestions(false);
+  };
+  // ---- end name typeahead state ----
+
   const columns = useMemo<ColumnDef<LoginHistoryEntry>[]>(() => [
+     {
+      header: 'Name',
+      accessorKey: 'name',
+      cell: ({ row }) => row.original.name || '-',
+      enableSorting: false,
+      // exact-match filter, driven by selectedName
+      filterFn: (row, columnId, _filterValue) => {
+        if (!selectedName) return true;
+        return row.getValue(columnId) === selectedName;
+      },
+    },
+    {
+      header: 'Email',
+      accessorKey: 'email',
+      enableSorting: false,
+    },
+    
+    {
+      header: 'IP Address',
+      accessorKey: 'ip',
+      enableSorting: false,
+    },
     {
       header: 'Timestamp',
       accessorKey: 'timestamp',
@@ -43,12 +109,7 @@ function LoginHistoryTable({ data }: Props) {
         return true;
       },
     },
-    {
-      header: 'Email',
-      accessorKey: 'email',
-      enableSorting: false,
-    },
-    {
+     {
       header: 'Status',
       accessorKey: 'status',
       cell: ({ row }) => (
@@ -60,17 +121,12 @@ function LoginHistoryTable({ data }: Props) {
       filterFn: 'equals',
     },
     {
-      header: 'IP Address',
-      accessorKey: 'ip',
-      enableSorting: false,
-    },
-    {
       header: 'Reason',
       accessorKey: 'reason',
       cell: ({ row }) => row.original.reason || '-',
       enableSorting: false,
     },
-  ], [fromDate, toDate]);
+  ], [fromDate, toDate, selectedName]);
 
   // eslint-disable-next-line react-hooks/incompatible-library
   const table = useReactTable({
@@ -93,6 +149,11 @@ function LoginHistoryTable({ data }: Props) {
     autoResetPageIndex: false,
   });
 
+  // re-run the "name" column's filter whenever selectedName changes
+  useEffect(() => {
+    table.getColumn('name')?.setFilterValue(selectedName ?? undefined);
+  }, [selectedName, table]);
+
   const statusColumn = table.getColumn('status');
   const timestampColumn = table.getColumn('timestamp');
 
@@ -105,6 +166,7 @@ function LoginHistoryTable({ data }: Props) {
     setFiltering('');
     setFromDate('');
     setToDate('');
+    handleClearNameFilter();
     statusColumn?.setFilterValue(undefined);
   };
 
@@ -112,73 +174,138 @@ function LoginHistoryTable({ data }: Props) {
     <div className='container px-2 w-100'>
 
       {/* Filters */}
-      <div className="d-flex flex-wrap justify-content-between gap-3 mb-3 mt-2 p-2">
+      <div className="d-flex flex-wrap justify-content-between gap-1 mb-3 mt-2 p-2">
 
-        <div>
-          <label className="form-label d-block mb-1">entries per page</label>
-          <select
-            className="form-select"
-            style={{ minWidth: "90px" }}
-            value={limit}
-            onChange={(e) => {
-              const v = Number(e.target.value);
-              setLimit(v);
-              setPagination((prev) => ({ ...prev, pageIndex: 0, pageSize: v }));
-            }}
-          >
-            <option value={10}>10</option>
-            <option value={25}>25</option>
-            <option value={50}>50</option>
-            <option value={100}>100</option>
-          </select>
-        </div>
-
-        
-
-        <div>
-          <label className="form-label d-block mb-1">Status</label>
-          <select
-            className="form-select"
-            value={(statusColumn?.getFilterValue() as string) ?? ''}
-            onChange={(e) => statusColumn?.setFilterValue(e.target.value || undefined)}
-          >
-            <option value="">All</option>
-            <option value="success">Success</option>
-            <option value="failed">Failed</option>
-          </select>
-        </div>
-
-      <div className='d-block d-md-flex gap-md-3'>
+        <div className='d-flex gap-md-1 flex-wrap'>
           <div>
-            <label className="form-label d-block mb-1">From</label>
-            <input
-              type="date"
-              className="form-control"
-              value={fromDate}
+            <label className="form-label d-block mb-1">per page</label>
+            <select
+              className="form-select"
+              style={{ minWidth: "90px" }}
+              value={limit}
               onChange={(e) => {
-                setFromDate(e.target.value);
-                timestampColumn?.setFilterValue(e.target.value); // triggers re-filter
+                const v = Number(e.target.value);
+                setLimit(v);
+                setPagination((prev) => ({ ...prev, pageIndex: 0, pageSize: v }));
               }}
-            />
+            >
+              <option value={10}>10</option>
+              <option value={25}>25</option>
+              <option value={50}>50</option>
+              <option value={100}>100</option>
+            </select>
           </div>
-  
+
+          {/* Name typeahead */}
+          <div ref={nameWrapperRef} style={{ position: 'relative', minWidth: "200px" }}>
+            <label className="form-label d-block mb-1">Search name</label>
+            <div className="d-flex">
+              <input
+                type="text"
+                className="form-control "
+                value={nameQuery}
+                onChange={(e) => {
+                  setNameQuery(e.target.value);
+                  setShowSuggestions(true);
+                  if (selectedName && e.target.value !== selectedName) {
+                    setSelectedName(null); // typing again clears a locked-in filter
+                  }
+                }}
+                onFocus={() => { if (nameQuery) setShowSuggestions(true); }}
+                placeholder="Type a name..."
+              />
+              {selectedName && (
+                <button
+                  className="btn btn-outline-secondary border-0 position-absolute "
+                  style={{ marginLeft: '4px' ,right:'0' }}
+                  onClick={handleClearNameFilter}
+                  title="Clear name filter"
+                >
+                  <FontAwesomeIcon icon={faXmark} />
+                </button>
+              )}
+            </div>
+
+            {showSuggestions && nameSuggestions.length > 0 && (
+              <ul
+                className="list-group"
+                style={{
+                  position: 'absolute',
+                  zIndex: 1000,
+                  width: '100%',
+                  maxHeight: '220px',
+                  overflowY: 'auto',
+                  boxShadow: '0 4px 10px rgba(0,0,0,0.15)',
+                }}
+              >
+                {nameSuggestions.map((name) => (
+                  <li
+                    key={name}
+                    className="list-group-item list-group-item-action"
+                    style={{ cursor: 'pointer' }}
+                    onClick={() => handleSelectName(name)}
+                  >
+                    {name}
+                  </li>
+                ))}
+              </ul>
+            )}
+
+            {showSuggestions && nameQuery.trim() && nameSuggestions.length === 0 && (
+              <ul
+                className="list-group"
+                style={{ position: 'absolute', zIndex: 1000, width: '100%', boxShadow: '0 4px 10px rgba(0,0,0,0.15)' }}
+              >
+                <li className="list-group-item text-muted">No matching names</li>
+              </ul>
+            )}
+          </div>
+
           <div>
-            <label className="form-label d-block mb-1">To</label>
-            <input
-              type="date"
-              className="form-control"
-              value={toDate}
-              onChange={(e) => {
-                setToDate(e.target.value);
-                timestampColumn?.setFilterValue(e.target.value);
-              }}
-            />
+            <label className="form-label d-block mb-1">status</label>
+            <select
+              className="form-select"
+              value={(statusColumn?.getFilterValue() as string) ?? ''}
+              onChange={(e) => statusColumn?.setFilterValue(e.target.value || undefined)}
+            >
+              <option value="">All</option>
+              <option value="success">Success</option>
+              <option value="failed">Failed</option>
+            </select>
           </div>
-  
-          <button className="btn btn-secondary btn-md align-self-end" onClick={handleResetFilters}>
-            Reset
-          </button>
-      </div>
+
+        <div className='d-block d-md-flex gap-md-3'>
+            <div>
+              <label className="form-label d-block mb-1">From</label>
+              <input
+                type="date"
+                className="form-control"
+                value={fromDate}
+                onChange={(e) => {
+                  setFromDate(e.target.value);
+                  timestampColumn?.setFilterValue(e.target.value); // triggers re-filter
+                }}
+              />
+            </div>
+    
+            <div>
+              <label className="form-label d-block mb-1">To</label>
+              <input
+                type="date"
+                className="form-control"
+                value={toDate}
+                onChange={(e) => {
+                  setToDate(e.target.value);
+                  timestampColumn?.setFilterValue(e.target.value);
+                }}
+              />
+            </div>
+    
+            <button className="btn btn-secondary btn-md align-self-end" onClick={handleResetFilters}>
+              Reset
+            </button>
+        </div>
+        </div>
 
         <div>
           <label className="form-label d-block mb-1">Search email</label>
