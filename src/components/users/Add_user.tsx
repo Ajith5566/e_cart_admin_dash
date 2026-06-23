@@ -186,7 +186,7 @@ function Add_user() {
 
         <div className="row">
           <div className="col-md-6 mb-3">
-            <label className="form-label">User Name <span className="text-danger">*</span></label>
+            <label className="form-label">Name <span className="text-danger">*</span></label>
             <input
               className={`form-control ${errors.name ? "is-invalid" : ""}`}
               value={formData.name}

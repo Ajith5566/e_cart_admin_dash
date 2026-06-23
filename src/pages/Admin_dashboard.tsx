@@ -157,7 +157,8 @@ function Admin_dashboard() {
       : NAV_ITEMS.filter(
         item =>
           item.key !== "user" &&
-          item.key !== "settings"
+          item.key !== "settings"&&
+          item.key !== "login history"
       );
 
   /* ── Close sidebar on route change (mobile) ── */
