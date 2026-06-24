@@ -27,6 +27,8 @@ import Profile from "./components/profile/profile";
 import BlogAuthor from "./components/blog_author/Blog_author";
 import Add_blog_author from "./components/blog_author/Add_blogAuthor";
 import LoginHistory from "./components/login_history/Login_history";
+import RolePermissions from "./pages/RolePermissions";
+import { AuthProvider } from "./context/AuthContext";
 
 function App() {
   return (
@@ -37,7 +39,7 @@ function App() {
          <Route path="/reset-password/:token" element={<ResetPassword />} />
 
         {/* ADMIN LAYOUT */}
-        <Route path="/admin-dash" element={<Admin_dashboard />}>
+        <Route path="/admin-dash" element={ <AuthProvider><Admin_dashboard /></AuthProvider>}>
           <Route path="pages" element={<PageEditor />} />
           <Route path="pages/add" element={<Add_page />} />
           <Route path="pages/edit/:id" element={<Add_page />} />
@@ -77,6 +79,7 @@ function App() {
 
 
           <Route path="settings" element={<RoleProtectedRoute allowedRoles={["super_admin"]} > <Settings/> </RoleProtectedRoute>} />
+          <Route path="/admin-dash/role-permissions" element={<RolePermissions />} />
         </Route>
       </Routes>
 

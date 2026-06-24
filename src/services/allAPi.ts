@@ -4,6 +4,7 @@ import type { BannerApiResponse, BannerResponse } from "../types/bannerTypes";
 import type { BlogApiResponse, BlogResponse } from "../types/blogTypes";
 import type { CategoryApiResponse, CategoryResponse } from "../types/categoryTypes";
 import type { LoginHistoryResponse } from "../types/login_history";
+import type { AuthCheckResponse, ModulePermission, ModulesResponse, PermissionResponse } from "../types/permissionTypes";
 import type { TestimonialApiResponse, TestimonialResponse } from "../types/testimonialTypes";
 import type { AdminUserPayload,  FetchedAdminUser,  fetchedProducts, GetPagesResponse, PageType} from "../types/types";
 import { BASE_URL } from "./baseURL";
@@ -486,3 +487,18 @@ export const getAuthorByIdApi = (id: string) => {
     `${BASE_URL}/authorByid/${id}`
   );
 };
+
+//permission apis
+// services/allAPi.ts
+export const getPermissionModulesApi = () =>
+  commonApi<ModulesResponse>("GET", `${BASE_URL}/admin/permissions/modules`);
+
+export const getPermissionsByRoleApi = (role: "admin" | "staff") =>
+  commonApi<PermissionResponse>("GET", `${BASE_URL}/admin/permissions/${role}`);
+
+export const updatePermissionsByRoleApi = (role: "admin" | "staff", permissions: ModulePermission[]) =>
+  commonApi<PermissionResponse>("PUT", `${BASE_URL}/admin/permissions/${role}`, { permissions });
+
+//permission checker
+export const checkAdminPermissionAuthApi = () =>
+  commonApi<AuthCheckResponse>("GET", `${BASE_URL}/admin/permission/me`);

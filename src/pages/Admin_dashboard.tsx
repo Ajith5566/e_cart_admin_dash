@@ -71,7 +71,8 @@ const NAV_ITEMS: NavItem[] = [
 
   { key: "settings", label: "Settings", icon: faGear, path: "/admin-dash/settings", section: "System" },
   { key: "profile", label: "Profile", icon: faGear, path: "/admin-dash/profile", section: "System" },
-   { key: "login history", label: "login history", icon: faGear, path: "/admin-dash/login-history", section: "System" },
+   { key: "login history", label: "Login history", icon: faGear, path: "/admin-dash/login-history", section: "System" },
+   { key: "RolePermissions", label: "Role", icon: faGear, path: "/admin-dash/role-permissions", section: "System" },
 ];
 
 /* ─── Stat card data ─────────────────────────────────── */

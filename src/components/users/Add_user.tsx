@@ -18,6 +18,7 @@ function Add_user() {
 
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
+  const [currentUserRole, setCurrentUserRole] = useState("");
 
   const [formData, setFormData] = useState<AdminUser>({
     name: "",
@@ -46,7 +47,7 @@ function Add_user() {
       try {
         const res = await getuserByIdApi(id);
         console.log(res.data);
-
+  setCurrentUserRole(res.data.data.role);
         // adjust based on your backend response shape
         const user = res.data.data ?? res.data;
 
@@ -250,19 +251,22 @@ function Add_user() {
         </div>
 
         <div className="mb-3 w-50">
-          <label className="form-label">User Type <span className="text-danger">*</span></label>
-          <select
-            name="role"
-            className={`form-select ${errors.role ? "is-invalid" : ""}`}
-            value={formData.role}
-            onChange={(e) => setFormData({ ...formData, role: e.target.value })}
-          >
-            <option value="">Select Role</option>
-            <option value="super_admin">Super Admin</option>
-            <option value="staff">Staff</option>
-          </select>
-          {errors.role && <div className="invalid-feedback">{errors.role}</div>}
-        </div>
+  <label className="form-label">User Type <span className="text-danger">*</span></label>
+  <select
+    name="role"
+    className={`form-select ${errors.role ? "is-invalid" : ""}`}
+    value={formData.role}
+    onChange={(e) => setFormData({ ...formData, role: e.target.value })}
+  >
+    <option value="">Select Role</option>
+    <option value="staff">Staff</option>
+    <option value="admin">Admin</option>
+    {currentUserRole === "super_admin" && (
+      <option value="super_admin">Super Admin</option>
+    )}
+  </select>
+  {errors.role && <div className="invalid-feedback">{errors.role}</div>}
+</div>
 
         <div className="mt-3 d-flex gap-2">
           <button type="submit" className="btn btn-primary" disabled={loading}>
