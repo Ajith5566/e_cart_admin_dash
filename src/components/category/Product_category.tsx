@@ -11,11 +11,11 @@ import type { CategoryResponse } from "../../types/categoryTypes";
 /* import Pagination from "../Pagination"; */
 /* import PaginationLimit from "../PaginationLimit"; */
 /* import Pagination from "./Pagination"; */
-
+import { useAuth } from "../../context/useAuth";
 export default function Product_category() {
 
   const navigate = useNavigate();
-
+ const { can } = useAuth();
   const [categories, setCategories] = useState<CategoryResponse[]>([]);
 
   //pagination
@@ -57,12 +57,14 @@ export default function Product_category() {
         <h4 className="  fw-bold text-dark">
           Category
         </h4>
+         {can("category", "create") && (
         <button
           className="btn btn-success"
           onClick={() => navigate("/admin-dash/category/add")}
         >
           + Add Category
         </button>
+        )}
       </div>
 
 
@@ -71,6 +73,9 @@ export default function Product_category() {
         {/* HEADER + SEARCH */}
         
           <CategoryTable data={categories} onEdit={(category) =>  navigate(`/admin-dash/category/edit/${category._id}`) }
+          canEdit={can("category", "update")}
+        canToggle={can("category", "status")}
+        
         onToggle={async (id) => {
           try {
             await toggleCategoryApi(id);

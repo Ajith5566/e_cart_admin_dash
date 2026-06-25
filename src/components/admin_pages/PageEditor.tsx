@@ -10,9 +10,9 @@ import { useNavigate } from "react-router-dom";
 /* import Pagination from "../Pagination"; */
 import '../common/common_toggle.css'
 import '../common/common_styels.css'
-
 import type { PageType } from "../../types/types";
  import PageTable from "./PageTable"; 
+ import { useAuth } from "../../context/useAuth"; // ← adjust path to match your structure
 
 
 
@@ -20,6 +20,7 @@ import type { PageType } from "../../types/types";
 
 export default function PageEditor() {
   const navigate = useNavigate();
+const { can } = useAuth();
 
   const [pages, setPages] = useState<PageType[]>([]);
   /* console.log(pages); */
@@ -50,17 +51,23 @@ export default function PageEditor() {
         <h4 className="  fw-bold text-dark">
           Page
         </h4>
+        {can("pages", "create") && (
         <button
           className="btn btn-success"
           onClick={() => navigate("/admin-dash/pages/add")}
         >
           + Add Page
         </button>
+        )}
       </div>
 
       {/* ---------- PAGE LIST ---------- */}
       <div style={{ minHeight: "420px" }}>
-            <PageTable data={pages} onEdit={(page) =>  navigate(`/admin-dash/pages/edit/${page._id}`) }
+            <PageTable data={pages}
+            canEdit={can("pages", "update")}
+        canToggle={can("pages", "status")}
+        canDelete={can("pages", "delete")}
+             onEdit={(page) =>  navigate(`/admin-dash/pages/edit/${page._id}`) }
                onToggle={async (id) => {
                  try {
                    await togglePageApi(id);

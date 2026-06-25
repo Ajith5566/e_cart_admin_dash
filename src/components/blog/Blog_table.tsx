@@ -13,8 +13,11 @@ type Props = {
     onEdit: (blog: BlogResponse) => void;
     onToggle: (id: string) => void;
      onDelete:(id:string)=>void;
+      canEdit: boolean;
+    canToggle: boolean;
+    canDelete: boolean;
 };
-function BlogTable({ data, onEdit, onToggle,onDelete }: Props) {
+function BlogTable({ data, onEdit, onToggle,onDelete, canEdit, canToggle, canDelete  }: Props) {
 
 
     const [limit, setLimit] = useState(5)
@@ -56,6 +59,8 @@ function BlogTable({ data, onEdit, onToggle,onDelete }: Props) {
                 <button
                     className="btn btn-sm btn-warning"
                     onClick={() => onEdit(row.original)}
+                    disabled={!canEdit}
+                    title={!canEdit ? "You don't have permission to edit" : undefined}
                 >
                     Edit
                 </button>
@@ -69,6 +74,7 @@ function BlogTable({ data, onEdit, onToggle,onDelete }: Props) {
                         className="toggle-input"
                         type="checkbox"
                         checked={!!row.original.isActive}
+                        disabled={!canToggle}
                         onChange={() => onToggle(row.original._id)}
                     />
                     <span className="toggle-slider"></span>
@@ -81,6 +87,8 @@ function BlogTable({ data, onEdit, onToggle,onDelete }: Props) {
                 <button
                     className="btn btn-sm btn-danger"
                     onClick={() => onDelete(row.original._id)}
+                     disabled={!canDelete}
+                    title={!canDelete ? "You don't have permission to delete" : undefined}
                 >
                     delete
                 </button>

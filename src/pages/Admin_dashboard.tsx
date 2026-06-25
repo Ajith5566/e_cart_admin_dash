@@ -159,7 +159,8 @@ function Admin_dashboard() {
         item =>
           item.key !== "user" &&
           item.key !== "settings"&&
-          item.key !== "login history"
+          item.key !== "login history"&&
+          item.key !== "RolePermissions"
       );
 
   /* ── Close sidebar on route change (mobile) ── */

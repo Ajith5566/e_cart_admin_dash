@@ -8,6 +8,7 @@ import '../common/common_styels.css'
 import { toast } from "react-toastify";
 import BlogTable from "./Blog_table";
 import type { BlogResponse } from "../../types/blogTypes";
+import { useAuth } from "../../context/useAuth"; 
 /* import Pagination from "../Pagination"; */
 /* import PaginationLimit from "../PaginationLimit"; */
 /* import Pagination from "./Pagination"; */
@@ -15,7 +16,7 @@ import type { BlogResponse } from "../../types/blogTypes";
 export default function Blog() {
 
   const navigate = useNavigate();
-
+ const { can } = useAuth();
   const [blogs, setBlogs] = useState<BlogResponse[]>([]);
 
   //pagination
@@ -57,12 +58,14 @@ export default function Blog() {
         <h4 className="  fw-bold text-dark">
           Blog
         </h4>
+         {can("blog", "create") && (
         <button
           className="btn btn-success"
           onClick={() => navigate("/admin-dash/blog/add")}
         >
           + Add blog
         </button>
+         )}
       </div>
 
 
@@ -71,6 +74,9 @@ export default function Blog() {
         {/* HEADER + SEARCH */}
         
           <BlogTable data={blogs} onEdit={(blog) =>  navigate(`/admin-dash/blog/edit/${blog._id}`) }
+           canEdit={can("blog", "update")}
+        canToggle={can("blog", "status")}
+        canDelete={can("blog", "delete")}
         onToggle={async (id) => {
           try {
             await toggleBlogApi(id);

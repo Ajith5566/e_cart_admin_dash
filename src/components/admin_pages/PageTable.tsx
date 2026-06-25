@@ -13,8 +13,11 @@ type Props = {
     onEdit: (page: PageType) => void;
     onToggle: (id: string) => void;
     onDelete:(id:string)=>void;
+    canEdit: boolean;
+    canToggle: boolean;
+    canDelete: boolean;
 };
-function PageTable({ data, onEdit, onToggle ,onDelete}: Props) {
+function PageTable({ data, onEdit, onToggle ,onDelete,canEdit, canToggle, canDelete}: Props) {
 
 
     const [limit, setLimit] = useState(5)
@@ -54,6 +57,8 @@ function PageTable({ data, onEdit, onToggle ,onDelete}: Props) {
                 <button
                     className="btn btn-sm btn-warning"
                     onClick={() => onEdit(row.original)}
+                    disabled={!canEdit}
+                    title={!canEdit ? "You don't have permission to edit" : undefined}
                 >
                     Edit
                 </button>
@@ -66,6 +71,7 @@ function PageTable({ data, onEdit, onToggle ,onDelete}: Props) {
                     <input
                         className="toggle-input"
                         type="checkbox"
+                        disabled={!canToggle}
                         checked={!!row.original.isActive}
                         onChange={() => onToggle(row.original._id)}
                     />
@@ -79,6 +85,8 @@ function PageTable({ data, onEdit, onToggle ,onDelete}: Props) {
                 <button
                     className="btn btn-sm btn-danger"
                     onClick={() => onDelete(row.original._id)}
+                    disabled={!canDelete}
+                    title={!canDelete ? "You don't have permission to delete" : undefined}
                 >
                     delete
                 </button>

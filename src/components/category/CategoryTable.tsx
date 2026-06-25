@@ -13,8 +13,10 @@ type Props = {
     data: CategoryResponse[];
     onEdit: (category: CategoryResponse) => void;
     onToggle: (id: string) => void;
+    canEdit: boolean;
+    canToggle: boolean;
 };
-function CategoryTable({ data, onEdit, onToggle }: Props) {
+function CategoryTable({ data, onEdit, onToggle,canEdit, canToggle }: Props) {
 
 
     const [limit, setLimit] = useState(5)
@@ -56,6 +58,8 @@ function CategoryTable({ data, onEdit, onToggle }: Props) {
                 <button
                     className="btn btn-sm btn-warning"
                     onClick={() => onEdit(row.original)}
+                    disabled={!canEdit}
+                    title={!canEdit ? "You don't have permission to edit" : undefined}
                 >
                     Edit
                 </button>
@@ -69,6 +73,7 @@ function CategoryTable({ data, onEdit, onToggle }: Props) {
                         className="toggle-input"
                         type="checkbox"
                         checked={!!row.original.isActive}
+                         disabled={!canToggle}
                         onChange={() => onToggle(row.original._id)}
                     />
                     <span className="toggle-slider"></span>

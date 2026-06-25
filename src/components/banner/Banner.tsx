@@ -11,11 +11,11 @@ import BannerTable from "./Banner_table";
 /* import Pagination from "../Pagination"; */
 /* import PaginationLimit from "../PaginationLimit"; */
 /* import Pagination from "./Pagination"; */
-
+import { useAuth } from "../../context/useAuth";
 export default function Banner() {
 
   const navigate = useNavigate();
-
+  const { can } = useAuth();
   const [banners, setBanners] = useState<BannerResponse[]>([]);
 
   //pagination
@@ -57,12 +57,14 @@ export default function Banner() {
         <h4 className="  fw-bold text-dark">
           Banner
         </h4>
+        {can("banner", "create") && (
         <button
           className="btn btn-success"
           onClick={() => navigate("/admin-dash/banner/add")}
         >
           + Add banner
         </button>
+        )}
       </div>
 
 
@@ -71,6 +73,9 @@ export default function Banner() {
         {/* HEADER + SEARCH */}
         
           <BannerTable data={banners} onEdit={(banner) =>  navigate(`/admin-dash/banner/edit/${banner._id}`) }
+          canEdit={can("banner", "update")}
+        canToggle={can("banner", "status")}
+        canDelete={can("banner", "delete")}
         onToggle={async (id) => {
           try {
             await togglebannerApi(id);

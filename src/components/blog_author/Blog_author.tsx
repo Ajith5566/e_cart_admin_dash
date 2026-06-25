@@ -6,10 +6,9 @@ import { deleteAuthorApi, getAllauthorsApi, toggleAuthorApi } from "../../servic
 import '../common/common_toggle.css'
 import '../common/common_styels.css'
 import { toast } from "react-toastify";
-
-
 import type { AuthorResponse } from "../../types/author_types";
 import AuthorTable from "./Author_table";
+import { useAuth } from "../../context/useAuth";
 
 /* import Pagination from "../Pagination"; */
 /* import PaginationLimit from "../PaginationLimit"; */
@@ -18,6 +17,8 @@ import AuthorTable from "./Author_table";
 export default function BlogAuthor() {
 
   const navigate = useNavigate();
+   const { can } = useAuth();
+
 
   const [authors, setAuthors] = useState<AuthorResponse[]>([]);
 
@@ -60,12 +61,14 @@ export default function BlogAuthor() {
         <h4 className="  fw-bold text-dark">
           Author's
         </h4>
+        {can("author", "create") && (
         <button
           className="btn btn-success"
           onClick={() => navigate("/admin-dash/blogAuthor/add")}
         >
           + Add Author
         </button>
+         )}
       </div>
 
 
@@ -74,6 +77,9 @@ export default function BlogAuthor() {
         {/* HEADER + SEARCH */}
         
           <AuthorTable data={authors} onEdit={(author) =>  navigate(`/admin-dash/blogAuthor/edit/${author._id}`) }
+          canEdit={can("author", "update")}
+        canToggle={can("author", "status")}
+        canDelete={can("author", "delete")}
         onToggle={async (id) => {
           try {
             await toggleAuthorApi(id);

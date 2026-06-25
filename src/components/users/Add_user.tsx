@@ -12,13 +12,16 @@ function Add_user() {
   const navigate = useNavigate()
   const { id } = useParams();               // ✅ get id from URL
   const isEditMode = !!id
+const currentUser = JSON.parse(
+  localStorage.getItem("adminUser") || "{}"
+);
 
+const currentUserRole = currentUser?.role;
   const [loading, setLoading] = useState(false)
   const [loadingData, setLoadingData] = useState(!!id) // ✅ based on id
 
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
-  const [currentUserRole, setCurrentUserRole] = useState("");
 
   const [formData, setFormData] = useState<AdminUser>({
     name: "",
@@ -47,7 +50,6 @@ function Add_user() {
       try {
         const res = await getuserByIdApi(id);
         console.log(res.data);
-  setCurrentUserRole(res.data.data.role);
         // adjust based on your backend response shape
         const user = res.data.data ?? res.data;
 

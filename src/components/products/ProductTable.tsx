@@ -14,8 +14,11 @@ type Props = {
     onEdit: (product: fetchedProducts) => void;
     onDelete:(id:string)=>void;
     onToggle: (id: string) => void;
+    canEdit: boolean;
+    canToggle: boolean;
+    canDelete: boolean;
 };
-function ProductTable({ data, onEdit ,onDelete,onToggle}: Props) {
+function ProductTable({ data, onEdit ,onDelete,onToggle, canEdit, canToggle, canDelete}: Props) {
 
 
     const [limit, setLimit] = useState(5)
@@ -86,6 +89,7 @@ function ProductTable({ data, onEdit ,onDelete,onToggle}: Props) {
                         className="toggle-input"
                         type="checkbox"
                         checked={!!row.original.isActive}
+                        disabled={!canToggle}
                         onChange={() => onToggle(row.original._id)}
                     />
                     <span className="toggle-slider"></span>
@@ -99,6 +103,8 @@ function ProductTable({ data, onEdit ,onDelete,onToggle}: Props) {
                 <button
                     className="btn btn-sm btn-warning"
                     onClick={() => onEdit(row.original)}
+                    disabled={!canEdit}
+                    title={!canEdit ? "You don't have permission to edit" : undefined}
                 >
                     Edit
                 </button>
@@ -110,6 +116,8 @@ function ProductTable({ data, onEdit ,onDelete,onToggle}: Props) {
                 <button
                     className="btn btn-sm btn-danger"
                     onClick={() => onDelete(row.original._id)}
+                    disabled={!canDelete}
+                    title={!canDelete ? "You don't have permission to delete" : undefined}
                 >
                     delete
                 </button>
