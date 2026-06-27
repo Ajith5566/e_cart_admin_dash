@@ -1,10 +1,10 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
-import { resetPasswordApi } from "../services/allAPi";
+import { resetPasswordApi, verifyResetTokenApi } from "../services/allAPi";
 import "./ResetPassword.css";
 import axios from "axios";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faEye, faEyeSlash, faCheckCircle } from "@fortawesome/free-solid-svg-icons";
+import { faEye, faEyeSlash, faCheckCircle, faTimesCircle } from "@fortawesome/free-solid-svg-icons";
 
 type ResetPasswordResponse = {
   message?: string;
@@ -20,6 +20,21 @@ function ResetPassword() {
   const [isSuccess, setIsSuccess] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
+  // null = checking, true = valid, false = expired/invalid
+  const [tokenValid, setTokenValid] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    const checkToken = async () => {
+      try {
+        await verifyResetTokenApi(token!);
+        setTokenValid(true);
+      } catch {
+        setTokenValid(false);
+      }
+    };
+    checkToken();
+  }, [token]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -32,10 +47,12 @@ function ResetPassword() {
 
     try {
       const res = await resetPasswordApi(token!, password);
+      console.log(res);
+      
       const data = res.data as ResetPasswordResponse;
 
       setMessage(data.message || "Password updated successfully");
-      setIsSuccess(true); // ✅ flip success flag
+      setIsSuccess(true);
 
     } catch (error: unknown) {
       if (axios.isAxiosError(error)) {
@@ -51,7 +68,31 @@ function ResetPassword() {
     }
   };
 
-  // ✅ Replace the whole form on success
+  // Still checking token validity
+  if (tokenValid === null) {
+    return (
+      <div className="reset-wrapper">
+        <div className="reset-card">
+          <p className="subtitle">Checking link...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Token expired/invalid — show this immediately, no form
+  if (tokenValid === false) {
+    return (
+      <div className="reset-wrapper">
+        <div className="reset-card success-card">
+          <FontAwesomeIcon icon={faTimesCircle} className="error-icon" />
+          <h2>Link Expired</h2>
+          <p className="subtitle">This reset link has expired. Please request a new one.</p>
+          <a href="/forgot-password" className="login-link">Request New Link</a>
+        </div>
+      </div>
+    );
+  }
+
   if (isSuccess) {
     return (
       <div className="reset-wrapper">
@@ -90,10 +131,9 @@ function ResetPassword() {
             type={showPassword ? "text" : "password"}
             placeholder="Confirm Password"
             required
-            onChange={(e) => setConfirmPassword(e.target.value)}  
+            onChange={(e) => setConfirmPassword(e.target.value)}
           />
 
-          {/* ✅ Shows loading state while request is in flight */}
           <button type="submit" disabled={isLoading}>
             {isLoading ? "Resetting..." : "Reset Password"}
           </button>

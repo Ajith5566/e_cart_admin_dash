@@ -263,8 +263,13 @@ export const resetPasswordApi = (
     { password }
   );
 };
-
-
+export const verifyResetTokenApi = (token: string) => {
+  return commonApi(
+    "GET",
+    `${BASE_URL}/admin/reset-password/${token}/verify`,
+    {}
+  );
+};
 //category
 //add 
 export const add_category_Api =async (reqBody:unknown)=>{
