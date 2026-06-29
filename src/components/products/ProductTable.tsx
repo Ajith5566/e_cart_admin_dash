@@ -14,9 +14,9 @@ type Props = {
     onEdit: (product: fetchedProducts) => void;
     onDelete:(id:string)=>void;
     onToggle: (id: string) => void;
-    canEdit: boolean;
-    canToggle: boolean;
-    canDelete: boolean;
+    canEdit: (product: fetchedProducts) => boolean;
+    canToggle: (product: fetchedProducts) => boolean;
+    canDelete: (product: fetchedProducts) => boolean;
 };
 function ProductTable({ data, onEdit ,onDelete,onToggle, canEdit, canToggle, canDelete}: Props) {
 
@@ -83,48 +83,57 @@ function ProductTable({ data, onEdit ,onDelete,onToggle, canEdit, canToggle, can
             enableSorting: false,   // ✅ only this column sortable
         },{
             header: "Status",
-            cell: ({ row }) => (
-                <label className="toggle-switch">
-                    <input
-                        className="toggle-input"
-                        type="checkbox"
-                        checked={!!row.original.isActive}
-                        disabled={!canToggle}
-                        onChange={() => onToggle(row.original._id)}
-                    />
-                    <span className="toggle-slider"></span>
-                </label>
-            ),
+            cell: ({ row }) => {
+                const allowed = canToggle(row.original);
+                return (
+                    <label className="toggle-switch">
+                        <input
+                            className="toggle-input"
+                            type="checkbox"
+                            checked={!!row.original.isActive}
+                            disabled={!allowed}
+                            onChange={() => onToggle(row.original._id)}
+                        />
+                        <span className="toggle-slider"></span>
+                    </label>
+                );
+            },
             enableSorting: false,
         },
         {
             header: "Edit",
-            cell: ({ row }) => (
-                <button
-                    className="btn btn-sm btn-warning"
-                    onClick={() => onEdit(row.original)}
-                    disabled={!canEdit}
-                    title={!canEdit ? "You don't have permission to edit" : undefined}
-                >
-                    Edit
-                </button>
-            ),
+            cell: ({ row }) => {
+                const allowed = canEdit(row.original);
+                return (
+                    <button
+                        className="btn btn-sm btn-warning"
+                        onClick={() => onEdit(row.original)}
+                        disabled={!allowed}
+                        title={!allowed ? "You don't have permission to edit this product" : undefined}
+                    >
+                        Edit
+                    </button>
+                );
+            },
             enableSorting: false,
         },{
             header: "Delete",
-            cell: ({ row }) => (
-                <button
-                    className="btn btn-sm btn-danger"
-                    onClick={() => onDelete(row.original._id)}
-                    disabled={!canDelete}
-                    title={!canDelete ? "You don't have permission to delete" : undefined}
-                >
-                    delete
-                </button>
-            ),
+            cell: ({ row }) => {
+                const allowed = canDelete(row.original);
+                return (
+                    <button
+                        className="btn btn-sm btn-danger"
+                        onClick={() => onDelete(row.original._id)}
+                        disabled={!allowed}
+                        title={!allowed ? "You don't have permission to delete this product" : undefined}
+                    >
+                        delete
+                    </button>
+                );
+            },
             enableSorting: false,
         },
-    ], [onEdit,onDelete,onToggle])
+    ], [onEdit,onDelete,onToggle,canEdit,canToggle,canDelete])
     /*  {
   {
   adminId: "...",

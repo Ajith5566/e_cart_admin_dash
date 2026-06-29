@@ -72,6 +72,7 @@ export type fetchedProducts={
   isActive: boolean;
   images:string[]; // image URL
    meta?: MetaFields;    // ✅ add this
+   adminId:string;
 }
 
 

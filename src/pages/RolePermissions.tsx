@@ -2,16 +2,25 @@
 import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
 
-import type { ModulePermission } from "../types/permissionTypes";
 import { getPermissionModulesApi, getPermissionsByRoleApi, updatePermissionsByRoleApi } from "../services/allAPi";
-
-
+import type { ModulePermission, ScopeValue } from "../types/permissionTypes";
+import { OWNERSHIP_MODULES } from "../types/permissionTypes";
 const ACTIONS: (keyof Omit<ModulePermission, "module">)[] = ["view", "create", "update", "status", "delete"];
+
+const BLANK_PERMISSION = (module: string): ModulePermission => ({
+  module,
+  view: "none",
+  create: "none",
+  update: "none",
+  status: "none",
+  delete: "none",
+});
 
 export default function RolePermissions() {
   const [activeRole, setActiveRole] = useState<"admin" | "staff">("admin");
   const [permissions, setPermissions] = useState<ModulePermission[]>([]);
   const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     const load = async () => {
@@ -27,7 +36,7 @@ export default function RolePermissions() {
         // ensure every current module shows up, even if added after the doc was seeded
         const merged = modules.map((m) => {
           const found = saved.find((p) => p.module === m);
-          return found || { module: m, view: false, create: false, update: false, status: false, delete: false };
+          return found || BLANK_PERMISSION(m);
         });
 
         setPermissions(merged);
@@ -41,19 +50,26 @@ export default function RolePermissions() {
     load();
   }, [activeRole]);
 
-  const toggleCheckbox = (module: string, action: keyof Omit<ModulePermission, "module">) => {
+  const updateCell = (
+    module: string,
+    action: keyof Omit<ModulePermission, "module">,
+    value: string
+  ) => {
     setPermissions((prev) =>
-      prev.map((p) => (p.module === module ? { ...p, [action]: !p[action] } : p))
+      prev.map((p) => (p.module === module ? { ...p, [action]: value } : p))
     );
   };
 
   const handleSave = async () => {
+    setSaving(true);
     try {
       await updatePermissionsByRoleApi(activeRole, permissions);
       toast.success(`${activeRole === "admin" ? "Admin" : "Staff"} permissions updated`);
     } catch (error) {
       console.error(error);
       toast.error("Failed to save permissions");
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -95,26 +111,40 @@ export default function RolePermissions() {
                 </tr>
               </thead>
               <tbody>
-                {permissions.map((perm) => (
-                  <tr key={perm.module}>
-                    <td className="text-capitalize">{perm.module}</td>
-                    {ACTIONS.map((action) => (
-                      <td key={action} className="text-center">
-                        <input
-                          type="checkbox"
-                          checked={perm[action]}
-                          onChange={() => toggleCheckbox(perm.module, action)}
-                        />
-                      </td>
-                    ))}
-                  </tr>
-                ))}
+                {permissions.map((perm) => {
+                  const supportsOwn = OWNERSHIP_MODULES.includes(perm.module);
+
+                  return (
+                    <tr key={perm.module}>
+                      <td className="text-capitalize">{perm.module}</td>
+                      {ACTIONS.map((action) => {
+                        const isCreate = action === "create";
+                        const showOwnOption = supportsOwn && !isCreate;
+
+                        return (
+                          <td key={action} className="text-center">
+                            <select
+                              className="form-select form-select-sm"
+                              style={{ minWidth: "90px" }}
+                              value={perm[action] as ScopeValue}
+                              onChange={(e) => updateCell(perm.module, action, e.target.value)}
+                            >
+                              <option value="all">All</option>
+                              {showOwnOption && <option value="own">Own</option>}
+                              <option value="none">✕ None</option>
+                            </select>
+                          </td>
+                        );
+                      })}
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
 
-          <button className="btn btn-primary mt-3" onClick={handleSave}>
-            Save {activeRole === "admin" ? "Admin" : "Staff"} Permissions
+          <button className="btn btn-primary mt-3" onClick={handleSave} disabled={saving}>
+            {saving ? "Saving..." : `Save ${activeRole === "admin" ? "Admin" : "Staff"} Permissions`}
           </button>
         </>
       )}
