@@ -1,11 +1,29 @@
 // pages/RolePermissions.tsx
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { toast } from "react-toastify";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import {
+  faGlobe, faUserCheck, faBan, faCircleInfo, faFloppyDisk,
+  faUserTie, faUsers,
+} from "@fortawesome/free-solid-svg-icons";
 
 import { getPermissionModulesApi, getPermissionsByRoleApi, updatePermissionsByRoleApi } from "../services/allAPi";
 import type { ModulePermission, ScopeValue } from "../types/permissionTypes";
 import { OWNERSHIP_MODULES } from "../types/permissionTypes";
+import "./RolePermissions.css";
+
 const ACTIONS: (keyof Omit<ModulePermission, "module">)[] = ["view", "create", "update", "status", "delete"];
+
+const SCOPE_META: Record<ScopeValue, { label: string; icon: typeof faGlobe; className: string }> = {
+  all:  { label: "All",  icon: faGlobe,     className: "rp2-scope-all" },
+  own:  { label: "Own",  icon: faUserCheck, className: "rp2-scope-own" },
+  none: { label: "None", icon: faBan,       className: "rp2-scope-none" },
+};
+
+const ROLE_META = {
+  admin: { label: "Admin", icon: faUserTie },
+  staff: { label: "Staff", icon: faUsers },
+} as const;
 
 const BLANK_PERMISSION = (module: string): ModulePermission => ({
   module,
@@ -15,6 +33,10 @@ const BLANK_PERMISSION = (module: string): ModulePermission => ({
   status: "none",
   delete: "none",
 });
+
+// guarantees a valid ScopeValue even if the saved data has a stray/legacy value
+const safeScope = (value: unknown): ScopeValue =>
+  value === "all" || value === "own" || value === "none" ? value : "none";
 
 export default function RolePermissions() {
   const [activeRole, setActiveRole] = useState<"admin" | "staff">("admin");
@@ -73,38 +95,95 @@ export default function RolePermissions() {
     }
   };
 
-  return (
-    <div className="container p-md-3">
-      <h4 className="fw-bold text-dark mb-3">Role Permissions</h4>
+  const summary = useMemo(() => {
+    let allCount = 0, ownCount = 0, noneCount = 0;
+    permissions.forEach((p) => {
+      ACTIONS.forEach((a) => {
+        const v = safeScope(p[a]);
+        if (v === "all") allCount++;
+        else if (v === "own") ownCount++;
+        else noneCount++;
+      });
+    });
+    return { allCount, ownCount, noneCount };
+  }, [permissions]);
 
-      <ul className="nav nav-tabs mb-4">
-        <li className="nav-item">
-          <button
-            className={`nav-link ${activeRole === "admin" ? "active" : ""}`}
-            onClick={() => setActiveRole("admin")}
-          >
-            Admin
-          </button>
-        </li>
-        <li className="nav-item">
-          <button
-            className={`nav-link ${activeRole === "staff" ? "active" : ""}`}
-            onClick={() => setActiveRole("staff")}
-          >
-            Staff
-          </button>
-        </li>
-      </ul>
+  return (
+    <div className="rp2-wrapper">
+      <div className="mb-1">
+        <h4 className="fw-bold text-dark mb-1">Role Permissions</h4>
+        <p className="text-muted mb-0">
+          Decide what each role can see and do across every part of the system.
+        </p>
+      </div>
+
+      {/* ROLE SWITCHER */}
+      <div className="rp2-role-switch">
+        <button
+          type="button"
+          className={`rp2-role-pill ${activeRole === "admin" ? "rp2-role-pill-active" : ""}`}
+          onClick={() => setActiveRole("admin")}
+        >
+          <FontAwesomeIcon icon={ROLE_META.admin.icon} />
+          Admin
+        </button>
+        <button
+          type="button"
+          className={`rp2-role-pill ${activeRole === "staff" ? "rp2-role-pill-active" : ""}`}
+          onClick={() => setActiveRole("staff")}
+        >
+          <FontAwesomeIcon icon={ROLE_META.staff.icon} />
+          Staff
+        </button>
+      </div>
+
+      {/* LEGEND */}
+      <div className="rp2-legend">
+        <div className="rp2-legend-item">
+          <span className={`rp2-scope-badge ${SCOPE_META.all.className}`}>
+            <FontAwesomeIcon icon={SCOPE_META.all.icon} />
+            All
+          </span>
+          <span className="rp2-legend-text">
+            Can act on <strong>every record</strong>, created by anyone.
+          </span>
+        </div>
+        <div className="rp2-legend-item">
+          <span className={`rp2-scope-badge ${SCOPE_META.own.className}`}>
+            <FontAwesomeIcon icon={SCOPE_META.own.icon} />
+            Own
+          </span>
+          <span className="rp2-legend-text">
+            Can only act on records <strong>they personally created</strong>.
+          </span>
+        </div>
+        <div className="rp2-legend-item">
+          <span className={`rp2-scope-badge ${SCOPE_META.none.className}`}>
+            <FontAwesomeIcon icon={SCOPE_META.none.icon} />
+            None
+          </span>
+          <span className="rp2-legend-text">
+            <strong>No access</strong> to this action.
+          </span>
+        </div>
+      </div>
 
       {loading ? (
-        <p>Loading...</p>
+        <div className="rp2-loading">Loading {activeRole === "admin" ? "Admin" : "Staff"} permissions…</div>
       ) : (
         <>
-          <div className="table-responsive">
-            <table className="table table-bordered align-middle">
-              <thead className="table-light">
+          {/* SUMMARY STRIP */}
+          <div className="rp2-summary">
+            <span><FontAwesomeIcon icon={SCOPE_META.all.icon} className="rp2-summary-icon rp2-text-all" /> {summary.allCount} set to All</span>
+            <span><FontAwesomeIcon icon={SCOPE_META.own.icon} className="rp2-summary-icon rp2-text-own" /> {summary.ownCount} set to Own</span>
+            <span><FontAwesomeIcon icon={SCOPE_META.none.icon} className="rp2-summary-icon rp2-text-none" /> {summary.noneCount} set to None</span>
+          </div>
+
+          <div className="rp2-table-wrap">
+            <table className="rp2-table">
+              <thead>
                 <tr>
-                  <th>Module Permission</th>
+                  <th className="rp2-th-module">Module</th>
                   {ACTIONS.map((action) => (
                     <th key={action} className="text-capitalize text-center">{action}</th>
                   ))}
@@ -116,23 +195,28 @@ export default function RolePermissions() {
 
                   return (
                     <tr key={perm.module}>
-                      <td className="text-capitalize">{perm.module}</td>
+                      <td className="rp2-module-name text-capitalize">{perm.module}</td>
                       {ACTIONS.map((action) => {
                         const isCreate = action === "create";
                         const showOwnOption = supportsOwn && !isCreate;
+                        const value = safeScope(perm[action]);
+                        const meta = SCOPE_META[value];
 
                         return (
                           <td key={action} className="text-center">
-                            <select
-                              className="form-select form-select-sm"
-                              style={{ minWidth: "90px" }}
-                              value={perm[action] as ScopeValue}
-                              onChange={(e) => updateCell(perm.module, action, e.target.value)}
-                            >
-                              <option value="all">All</option>
-                              {showOwnOption && <option value="own">Own</option>}
-                              <option value="none">✕ None</option>
-                            </select>
+                            <div className={`rp2-select-wrap ${meta.className}`}>
+                              <FontAwesomeIcon icon={meta.icon} className="rp2-select-icon" />
+                              <select
+                                className="rp2-select"
+                                value={value}
+                                onChange={(e) => updateCell(perm.module, action, e.target.value)}
+                                aria-label={`${action} permission for ${perm.module}`}
+                              >
+                                <option value="all">All</option>
+                                {showOwnOption && <option value="own">Own</option>}
+                                <option value="none">None</option>
+                              </select>
+                            </div>
                           </td>
                         );
                       })}
@@ -143,7 +227,13 @@ export default function RolePermissions() {
             </table>
           </div>
 
-          <button className="btn btn-primary mt-3" onClick={handleSave} disabled={saving}>
+          <div className="rp2-footnote">
+            <FontAwesomeIcon icon={faCircleInfo} className="me-2" />
+            "Own" is only available where the system tracks who created each record. Other modules offer All or None only.
+          </div>
+
+          <button type="button" className="rp2-save-btn" onClick={handleSave} disabled={saving}>
+            <FontAwesomeIcon icon={faFloppyDisk} />
             {saving ? "Saving..." : `Save ${activeRole === "admin" ? "Admin" : "Staff"} Permissions`}
           </button>
         </>

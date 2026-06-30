@@ -13,9 +13,9 @@ type Props = {
     onEdit: (blog: BlogResponse) => void;
     onToggle: (id: string) => void;
      onDelete:(id:string)=>void;
-      canEdit: boolean;
-    canToggle: boolean;
-    canDelete: boolean;
+      canEdit: (product: BlogResponse) => boolean;
+          canToggle: (product: BlogResponse) => boolean;
+          canDelete: (product: BlogResponse) => boolean;
 };
 function BlogTable({ data, onEdit, onToggle,onDelete, canEdit, canToggle, canDelete  }: Props) {
 
@@ -55,47 +55,56 @@ function BlogTable({ data, onEdit, onToggle,onDelete, canEdit, canToggle, canDel
         },
         {
             header: "Edit",
-            cell: ({ row }) => (
+            cell: ({ row }) => {
+                  const allowed = canEdit(row.original);
+                return(
                 <button
                     className="btn btn-sm btn-warning"
                     onClick={() => onEdit(row.original)}
-                    disabled={!canEdit}
-                    title={!canEdit ? "You don't have permission to edit" : undefined}
+                     disabled={!allowed}
+                    title={!allowed ? "You don't have permission to edit" : undefined}
                 >
                     Edit
                 </button>
-            ),
+            );
+        },
             enableSorting: false,
         }, {
             header: "Status",
-            cell: ({ row }) => (
+            cell: ({ row }) => {
+                 const allowed = canToggle(row.original);
+                return(
                 <label className="toggle-switch">
                     <input
                         className="toggle-input"
                         type="checkbox"
                         checked={!!row.original.isActive}
-                        disabled={!canToggle}
+                        disabled={!allowed}
                         onChange={() => onToggle(row.original._id)}
                     />
                     <span className="toggle-slider"></span>
                 </label>
-            ),
+            );
+        },
             enableSorting: false,
         },{
             header: "Delete",
-            cell: ({ row }) => (
+            cell: ({ row }) =>{
+                 const allowed = canDelete(row.original);
+                return(
                 <button
                     className="btn btn-sm btn-danger"
                     onClick={() => onDelete(row.original._id)}
-                     disabled={!canDelete}
-                    title={!canDelete ? "You don't have permission to delete" : undefined}
+                     disabled={!allowed}
+                    title={!allowed ? "You don't have permission to delete" : undefined}
                 >
                     delete
                 </button>
-            ),
+            );
+            },
             enableSorting: false,
         },
-    ], [onEdit, onToggle,onDelete])
+    ], [onEdit, onToggle,onDelete,canEdit,canToggle,canDelete])
     /*     [
       {
         adminId: "694a3c3be6be07cb5c80a762",

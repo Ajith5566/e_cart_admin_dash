@@ -21,7 +21,9 @@ export type BlogResponse = {
   isActive: boolean;
   image: string; // URL from Cloudinary / server
    meta?: MetaFields; 
+   adminId:string;
 };
+
 export type BlogApiResponse = {
   success: boolean;
   count: number;

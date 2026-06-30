@@ -1,0 +1,263 @@
+/* pages/RolePermissions.css */
+
+.rp2-wrapper {
+  max-width: 1020px;
+  margin: 0 auto;
+  padding: 24px 16px 48px;
+}
+
+.rp2-role-switch {
+  display: flex;
+  gap: 8px;
+  margin: 20px 0 18px;
+}
+
+.rp2-role-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 18px;
+  border-radius: 24px;
+  border: 1px solid #e3e5ec;
+  background: #fff;
+  font-size: 0.86rem;
+  font-weight: 600;
+  color: #6b6e80;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.rp2-role-pill:hover {
+  border-color: #c9cce0;
+  color: #3a3d52;
+}
+
+.rp2-role-pill-active {
+  background: #232336;
+  border-color: #232336;
+  color: #fff;
+}
+
+.rp2-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 24px;
+  padding: 16px 20px;
+  background: #f8f9fc;
+  border: 1px solid #eaecf2;
+  border-radius: 12px;
+  margin-bottom: 20px;
+}
+
+.rp2-legend-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 1 1 240px;
+}
+
+.rp2-legend-text {
+  font-size: 0.83rem;
+  color: #5a5d70;
+  line-height: 1.4;
+}
+
+.rp2-legend-text strong {
+  color: #2c2c3a;
+}
+
+.rp2-scope-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  padding: 6px 12px;
+  border-radius: 20px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.rp2-scope-all  { background: #e3f6ec; color: #1d7a4c; }
+.rp2-scope-own  { background: #fdf2dc; color: #9a6a08; }
+.rp2-scope-none { background: #fbe9e9; color: #b13030; }
+
+.rp2-summary {
+  display: flex;
+  gap: 24px;
+  font-size: 0.82rem;
+  color: #6b6e80;
+  font-weight: 500;
+  margin-bottom: 14px;
+  padding: 0 4px;
+}
+
+.rp2-summary-icon {
+  margin-right: 6px;
+  font-size: 0.78rem;
+}
+
+.rp2-text-all  { color: #1d7a4c; }
+.rp2-text-own  { color: #9a6a08; }
+.rp2-text-none { color: #b13030; }
+
+.rp2-table-wrap {
+  border: 1px solid #eaecf2;
+  border-radius: 12px;
+  overflow: hidden;
+  background: #fff;
+  box-shadow: 0 1px 2px rgba(20, 20, 43, 0.03);
+}
+
+.rp2-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.88rem;
+}
+
+.rp2-table thead th {
+  background: #fafbfd;
+  border-bottom: 1px solid #eaecf2;
+  padding: 12px 6px;
+  font-weight: 700;
+  color: #6b6e80;
+  font-size: 0.74rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  text-align: center;
+}
+
+.rp2-th-module {
+  text-align: left !important;
+  padding-left: 18px !important;
+}
+
+.rp2-table tbody tr {
+  border-bottom: 1px solid #f1f2f6;
+}
+
+.rp2-table tbody tr:last-child {
+  border-bottom: none;
+}
+
+.rp2-table tbody tr:hover {
+  background: #fafbff;
+}
+
+.rp2-module-name {
+  padding: 12px 12px 12px 18px;
+  font-weight: 600;
+  color: #232336;
+  font-size: 0.86rem;
+}
+
+.rp2-select-wrap {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  padding: 0 10px 0 28px;
+  min-width: 100px;
+  height: 34px;
+  border: 1px solid transparent;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.rp2-select-icon {
+  position: absolute;
+  left: 11px;
+  font-size: 12px;
+  pointer-events: none;
+}
+
+.rp2-select {
+  border: none;
+  background: transparent;
+  font-size: 0.82rem;
+  font-weight: 700;
+  width: 100%;
+  height: 100%;
+  cursor: pointer;
+  appearance: none;
+  -webkit-appearance: none;
+  color: inherit;
+  text-align: center;
+  text-align-last: center;
+}
+
+.rp2-select:focus {
+  outline: none;
+}
+
+.rp2-select-wrap.rp2-scope-all {
+  background: #e3f6ec;
+  border-color: #b7e4cb;
+  color: #1d7a4c;
+}
+
+.rp2-select-wrap.rp2-scope-own {
+  background: #fdf2dc;
+  border-color: #f3dca0;
+  color: #9a6a08;
+}
+
+.rp2-select-wrap.rp2-scope-none {
+  background: #fbe9e9;
+  border-color: #f3c0c0;
+  color: #b13030;
+}
+
+.rp2-footnote {
+  font-size: 0.8rem;
+  color: #8a8da3;
+  margin-top: 14px;
+}
+
+.rp2-save-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 20px;
+  padding: 10px 22px;
+  border-radius: 8px;
+  border: none;
+  background: #232336;
+  color: #fff;
+  font-size: 0.88rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.15s ease;
+}
+
+.rp2-save-btn:hover {
+  opacity: 0.9;
+}
+
+.rp2-save-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.rp2-loading {
+  padding: 40px 0;
+  text-align: center;
+  color: #8a8da3;
+  font-size: 0.9rem;
+}
+
+@media (max-width: 768px) {
+  .rp2-legend {
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  .rp2-summary {
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  .rp2-table {
+    font-size: 0.8rem;
+  }
+}

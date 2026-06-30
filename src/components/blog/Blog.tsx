@@ -16,7 +16,7 @@ import { useAuth } from "../../context/useAuth";
 export default function Blog() {
 
   const navigate = useNavigate();
- const { can } = useAuth();
+ const { can,getScope,adminId } = useAuth();
   const [blogs, setBlogs] = useState<BlogResponse[]>([]);
 
   //pagination
@@ -42,7 +42,14 @@ export default function Blog() {
   }, []);
 
 
-
+  // builds a per-row checker for a given action: respects "all" vs "own" vs "none"
+  const buildRowCheck = (action: "update" | "status" | "delete") => (blog: BlogResponse) => {
+    const scope = getScope("blog", action);
+    if (scope === "none") return false;
+    if (scope === "all") return true;
+    // scope === "own" — only allowed if this admin created this specific product
+    return blog.adminId === adminId;
+  };
 
 
   /* ---------- SEARCH FILTER ---------- */
@@ -74,9 +81,9 @@ export default function Blog() {
         {/* HEADER + SEARCH */}
         
           <BlogTable data={blogs} onEdit={(blog) =>  navigate(`/admin-dash/blog/edit/${blog._id}`) }
-           canEdit={can("blog", "update")}
-        canToggle={can("blog", "status")}
-        canDelete={can("blog", "delete")}
+           canEdit={buildRowCheck("update")}
+          canToggle={buildRowCheck("status")}
+          canDelete={buildRowCheck("delete")}
         onToggle={async (id) => {
           try {
             await toggleBlogApi(id);

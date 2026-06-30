@@ -43,7 +43,7 @@ function App() {
         <Route path="/admin-dash" element={ <AuthProvider><Admin_dashboard /></AuthProvider>}>
           <Route path="pages" element={<PageEditor />} />
           <Route path="pages/add" element={<PermissionProtectedRoute module="pages" action="create"><Add_page /></PermissionProtectedRoute>} />
-          <Route path="pages/edit/:id" element={<PermissionProtectedRoute module="pages" action="create"><Add_page /></PermissionProtectedRoute>} />
+          <Route path="pages/edit/:id" element={<PermissionProtectedRoute module="pages" action="update"><Add_page /></PermissionProtectedRoute>} />
 
           <Route path="products" element={<Products />} />
           <Route path="product/add" element={<PermissionProtectedRoute module="products" action="create"><Add_product/></PermissionProtectedRoute>} />
