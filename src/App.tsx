@@ -30,12 +30,13 @@ import LoginHistory from "./components/login_history/Login_history";
 import RolePermissions from "./pages/RolePermissions";
 import { AuthProvider } from "./context/AuthContext";
 import PermissionProtectedRoute from "./routes/PermissionProtectedRoute";
+import GuestRoute from "./routes/GuestRoute";
 
 function App() {
   return (
     <>
       <Routes>
-        <Route path="/" element={<HomePage />} />
+        <Route path="/" element={ <GuestRoute><HomePage /></GuestRoute>} />
          <Route path="/forgot-password" element={<ForgotPassword />} />
          <Route path="/reset-password/:token" element={<ResetPassword />} />
 

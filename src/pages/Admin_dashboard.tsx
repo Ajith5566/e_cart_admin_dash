@@ -167,16 +167,19 @@ function Admin_dashboard() {
   useEffect(() => { setSidebarOpen(false); }, [location.pathname]);
 
   /* ── Logout ── */
-  const logout = async () => {
-    try {
-      await adminLogoutApi();
-      toast.success("Logged out successfully");
-      localStorage.removeItem("adminUser");
-      navigate("/");
-    } catch {
-      toast.error("Logout failed");
-    }
-  };
+const logout = async () => {
+  try {
+    await adminLogoutApi();
+    toast.success("Logged out successfully");
+    localStorage.removeItem("adminUser");
+    // ✅ tell the interceptor we intentionally logged out
+    // so it skips the refresh attempt and doesn't loop
+    sessionStorage.setItem("logged_out", "true");
+    navigate("/");
+  } catch {
+    toast.error("Logout failed");
+  }
+};
 
   /* ── Navigate helper ── */
   const goTo = (path: string) => {

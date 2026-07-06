@@ -1,33 +1,240 @@
-/* Custom Focus Ring */
-.focus-ring:focus {
-  box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
-  border-color: #86b7fe;
+/* home_page.css */
+
+.lp-page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f1f0eb;
+  padding: 24px 16px;
 }
 
-/* Lift Effect for Button */
-.lift-effect {
-  transition: all 0.2s ease-in-out;
+.lp-card {
+  width: 100%;
+  max-width: 400px;
+  background: #ffffff;
+  border-radius: 16px;
+  border: 0.5px solid #e3e3e0;
+  overflow: hidden;
 }
 
-.lift-effect:hover:not(:disabled) {
-  transform: translateY(-2px);
-  box-shadow: 0 0.5rem 1rem rgba(13, 110, 253, 0.3) !important;
+/* ---- Header ---- */
+.lp-header {
+  background: #1a1a2e;
+  padding: 32px 32px 28px;
+  text-align: center;
 }
 
-/* Hover effects for links */
-.hover-text-primary:hover {
-  color: #0d6efd !important;
-  text-decoration: underline !important;
+.lp-icon-wrap {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 16px;
 }
 
-/* Background gradient */
-.bg-gradient {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+.lp-icon {
+  font-size: 22px;
+  color: #ffffff;
 }
 
-/* Responsive adjustments */
-@media (max-width: 576px) {
-  .card-body {
-    padding: 1.5rem !important;
+.lp-title {
+  color: #ffffff;
+  font-size: 20px;
+  font-weight: 500;
+  margin: 0 0 4px;
+}
+
+.lp-subtitle {
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 13px;
+  margin: 0;
+}
+
+/* ---- Body ---- */
+.lp-body {
+  padding: 28px 32px 32px;
+}
+
+/* ---- Fields ---- */
+.lp-field-group {
+  margin-bottom: 16px;
+}
+
+.lp-label {
+  display: block;
+  font-size: 11px;
+  font-weight: 600;
+  color: #6b6e80;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  margin-bottom: 6px;
+}
+
+.lp-input {
+  width: 100%;
+  box-sizing: border-box;
+  height: 42px;
+  border: 1px solid #e3e3e0;
+  border-radius: 8px;
+  padding: 0 12px;
+  font-size: 14px;
+  color: #1a1a2e;
+  background: #fafaf9;
+  outline: none;
+  transition: border-color 0.15s ease;
+}
+
+.lp-input:focus {
+  border-color: #1a1a2e;
+  background: #ffffff;
+}
+
+.lp-input:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.lp-input-wrap {
+  position: relative;
+}
+
+.lp-input-wrap .lp-input {
+  padding-right: 42px;
+}
+
+.lp-eye-btn {
+  position: absolute;
+  right: 0;
+  top: 0;
+  height: 42px;
+  width: 42px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  color: #aaa;
+  cursor: pointer;
+  font-size: 15px;
+  transition: color 0.15s ease;
+}
+
+.lp-eye-btn:hover {
+  color: #1a1a2e;
+}
+
+/* ---- Options row ---- */
+.lp-options-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.lp-check-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: #6b6e80;
+  cursor: pointer;
+  user-select: none;
+}
+
+.lp-checkbox {
+  width: 15px;
+  height: 15px;
+  accent-color: #1a1a2e;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.lp-forgot-link {
+  font-size: 13px;
+  color: #185fa5;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.lp-forgot-link:hover {
+  text-decoration: underline;
+}
+
+/* ---- Submit button ---- */
+.lp-submit-btn {
+  width: 100%;
+  height: 44px;
+  background: #1a1a2e;
+  color: #ffffff;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: opacity 0.15s ease;
+}
+
+.lp-submit-btn:hover:not(:disabled) {
+  opacity: 0.88;
+}
+
+.lp-submit-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* ---- Spinner ---- */
+.lp-spinner {
+  width: 14px;
+  height: 14px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top-color: #ffffff;
+  border-radius: 50%;
+  animation: lp-spin 0.7s linear infinite;
+  flex-shrink: 0;
+}
+
+@keyframes lp-spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ---- Footer ---- */
+.lp-divider {
+  border: none;
+  border-top: 0.5px solid #ebebeb;
+  margin: 24px 0 20px;
+}
+
+.lp-security-note {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  font-size: 12px;
+  color: #b0b0b0;
+}
+
+/* ---- Responsive ---- */
+@media (max-width: 480px) {
+  .lp-header {
+    padding: 24px 24px 20px;
+  }
+
+  .lp-body {
+    padding: 22px 24px 28px;
+  }
+
+  .lp-options-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
   }
 }
