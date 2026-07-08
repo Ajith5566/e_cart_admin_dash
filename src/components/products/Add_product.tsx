@@ -1,3 +1,4 @@
+// components/products/Add_product.tsx
 import React, { useEffect, useRef, useState } from "react";
 import { toast } from "react-toastify";
 import type { AdminProduct, fetchedProducts, MetaFields } from "../../types/types";
@@ -12,7 +13,6 @@ import slugify from "slugify";
 import type { CategoryResponse } from "../../types/categoryTypes";
 import Select from "react-select";
 
-// ✅ dnd-kit imports
 import {
   DndContext,
   closestCenter,
@@ -29,7 +29,6 @@ import {
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 
-// ✅ Sortable image item component
 function SortableImage({
   id,
   src,
@@ -63,7 +62,6 @@ function SortableImage({
         style={{ width: "150px", height: "150px", objectFit: "cover", display: "block" }}
         draggable={false}
       />
-      {/* ✅ stopPropagation prevents drag conflict on remove button */}
       <button
         type="button"
         className="btn btn-danger btn-sm position-absolute"
@@ -86,7 +84,6 @@ export default function Add_product() {
   const nameRef = useRef<HTMLInputElement | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
-  // ✅ Each image has a unique id for dnd-kit tracking
   const [existingImages, setExistingImages] = useState<{ id: string; url: string }[]>([]);
   const [previewImages, setPreviewImages] = useState<{ id: string; url: string; file: File }[]>([]);
 
@@ -97,6 +94,12 @@ export default function Add_product() {
   const [metaDescManuallyEdited, setMetaDescManuallyEdited] = useState(false);
   const [meta, setMeta] = useState<MetaFields>({});
   const [loadingData, setLoadingData] = useState(!!id);
+
+  // ✅ slug-change prompt state
+  const [originalSlug, setOriginalSlug] = useState("");
+  const [proposedSlug, setProposedSlug] = useState("");
+  const [showSlugPrompt, setShowSlugPrompt] = useState(false);
+  const [slugDecisionMade, setSlugDecisionMade] = useState(false);
 
   const [formData, setFormData] = useState<AdminProduct>({
     name: "",
@@ -119,24 +122,66 @@ export default function Add_product() {
     category: "",
   });
 
-  // ✅ dnd-kit sensors
   const sensors = useSensors(useSensor(PointerSensor, {
-    activationConstraint: { distance: 5 }, // prevents accidental drag on click
+    activationConstraint: { distance: 5 },
   }));
 
+  // ✅ slug / meta auto-fill + slug-change detection
   useEffect(() => {
     if (!formData.name) return;
+
+    const generatedSlug = slugify(formData.name, { lower: true, strict: true, trim: true });
+
+    // EDIT MODE: never silently change the slug — ask instead
+    if (isEditMode && originalSlug && !slugDecisionMade) {
+      if (generatedSlug !== originalSlug) {
+        setProposedSlug(generatedSlug);
+        setShowSlugPrompt(true);
+      } else {
+        // name typed back to original → dismiss prompt
+        setShowSlugPrompt(false);
+        setProposedSlug("");
+      }
+    }
+
     setMeta((prev) => ({
       ...prev,
-      slug: slugManuallyEdited
-        ? prev.slug
-        : slugify(formData.name, { lower: true, strict: true, trim: true }),
+      // ADD MODE: auto-slug. EDIT MODE: slug only changes via the prompt buttons.
+      slug: isEditMode || slugManuallyEdited ? prev.slug : generatedSlug,
       meta_title: metaTitleManuallyEdited ? prev.meta_title : formData.name,
       meta_description: metaDescManuallyEdited
         ? prev.meta_description
         : formData.shortDescription,
     }));
-  }, [formData.name, formData.shortDescription, slugManuallyEdited, metaTitleManuallyEdited, metaDescManuallyEdited]);
+  }, [
+    formData.name,
+    formData.shortDescription,
+    slugManuallyEdited,
+    metaTitleManuallyEdited,
+    metaDescManuallyEdited,
+    isEditMode,
+    originalSlug,
+    slugDecisionMade,
+  ]);
+
+  // ✅ user chose to KEEP the old slug
+  const handleKeepOldSlug = () => {
+    setMeta((prev) => ({ ...prev, slug: originalSlug }));
+    setShowSlugPrompt(false);
+    setSlugDecisionMade(true);
+    setSlugManuallyEdited(true);
+    toast.info("Old URL will be kept");
+  };
+
+  // ✅ user chose to UPDATE the slug
+  // (backend updateProduct archives the old slug to SlugHistory → 301 redirect)
+  const handleUpdateSlug = () => {
+    setMeta((prev) => ({ ...prev, slug: proposedSlug }));
+    setShowSlugPrompt(false);
+    setSlugDecisionMade(true);
+    setSlugManuallyEdited(true);
+    toast.info("URL will be updated. Old links will redirect automatically.");
+  };
 
   const isEditorEmpty = (html: string) => {
     const text = html.replace(/<[^>]+>/g, "").trim();
@@ -196,13 +241,13 @@ export default function Add_product() {
           images: [],
         });
 
-        // ✅ give each existing image a unique id
         setExistingImages(
           (product.images || []).map((url, i) => ({ id: `existing-${i}-${url}`, url }))
         );
 
         if (product.meta && Object.keys(product.meta).length > 0) {
           setMeta(product.meta);
+          setOriginalSlug(product.meta.slug || "");   // ✅ remember the live slug
           setSlugManuallyEdited(true);
           setMetaTitleManuallyEdited(true);
           setMetaDescManuallyEdited(true);
@@ -218,7 +263,6 @@ export default function Add_product() {
     fetchProduct();
   }, [id]);
 
-  // ✅ Drag end handler for existing images
   const handleExistingDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
     if (!over || active.id === over.id) return;
@@ -229,7 +273,6 @@ export default function Add_product() {
     });
   };
 
-  // ✅ Drag end handler for new preview images
   const handlePreviewDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
     if (!over || active.id === over.id) return;
@@ -253,6 +296,13 @@ export default function Add_product() {
     const { name, price, description, shortDescription, quantity, status, category } = formData;
     if (!validateForm()) return;
 
+    // ✅ block submit while the slug question is unanswered
+    if (showSlugPrompt) {
+      toast.warning("Please choose whether to keep or update the product URL");
+      document.getElementById("slug-prompt")?.scrollIntoView({ behavior: "smooth", block: "center" });
+      return;
+    }
+
     const metaWithoutImages = { ...meta };
     delete metaWithoutImages.og_image;
     delete metaWithoutImages.twitter_image;
@@ -267,7 +317,6 @@ export default function Add_product() {
     fd.append("category", category);
     fd.append("meta", JSON.stringify(metaWithoutImages));
 
-    // ✅ send files in reordered order
     previewImages.forEach((img) => fd.append("images", img.file));
 
     if (meta.og_image instanceof File) fd.append("og_image", meta.og_image);
@@ -275,7 +324,6 @@ export default function Add_product() {
 
     try {
       if (id) {
-        // ✅ send existing image URLs in reordered order
         fd.append("existingImages", JSON.stringify(existingImages.map((img) => img.url)));
         await updateProductApi(id, fd);
         toast.success("Product updated");
@@ -349,6 +397,37 @@ export default function Add_product() {
                 />
                 {errors.name && <div className="invalid-feedback">{errors.name}</div>}
               </div>
+
+              {/* ✅ SLUG CHANGE PROMPT */}
+              {showSlugPrompt && (
+                <div id="slug-prompt" className="alert alert-info mt-2">
+                  <p className="mb-2 fw-semibold">
+                    The name change affects this product's URL. What would you like to do?
+                  </p>
+                  <p className="mb-1 small">
+                    Current URL: <code>/{originalSlug}</code>
+                  </p>
+                  <p className="mb-3 small">
+                    New URL: <code>/{proposedSlug}</code>
+                  </p>
+                  <div className="d-flex gap-2 flex-wrap">
+                    <button
+                      type="button"
+                      className="btn btn-sm btn-outline-secondary"
+                      onClick={handleKeepOldSlug}
+                    >
+                      Keep old URL
+                    </button>
+                    <button
+                      type="button"
+                      className="btn btn-sm btn-primary"
+                      onClick={handleUpdateSlug}
+                    >
+                      Update URL (old link will redirect)
+                    </button>
+                  </div>
+                </div>
+              )}
 
               <div className="row mt-1">
                 <div className="col-md-6">
@@ -457,7 +536,6 @@ export default function Add_product() {
                   const totalImages = previewImages.length + existingImages.length + files.length;
                   if (totalImages > 5) { toast.error("Maximum 5 images allowed"); return; }
 
-                  // ✅ each file gets a unique id
                   const newPreviews = files.map((file) => ({
                     id: `preview-${Date.now()}-${file.name}`,
                     url: URL.createObjectURL(file),
@@ -478,7 +556,6 @@ export default function Add_product() {
 
             {errors.images && <div className="invalid-feedback d-block">{errors.images}</div>}
 
-            {/* ✅ Sortable existing images */}
             {existingImages.length > 0 && (
               <>
                 <p className="text-muted small mt-3 mb-1">Existing images — drag to reorder</p>
@@ -499,7 +576,6 @@ export default function Add_product() {
               </>
             )}
 
-            {/* ✅ Sortable new preview images */}
             {previewImages.length > 0 && (
               <>
                 <p className="text-muted small mt-3 mb-1">New images — drag to reorder</p>
@@ -523,7 +599,14 @@ export default function Add_product() {
 
           <SeoPreview
             value={meta}
-            onChange={setMeta}
+            onChange={(next) => {
+              setMeta(next);
+              // ✅ manual slug edit in SeoPreview counts as a decision
+              if (next.slug !== meta.slug) {
+                setSlugDecisionMade(true);
+                setShowSlugPrompt(false);
+              }
+            }}
             baseUrl="https://test.boilerplate.pbsmokeup.in/"
             onManualEdit={(field) => {
               if (field === "slug") setSlugManuallyEdited(true);
