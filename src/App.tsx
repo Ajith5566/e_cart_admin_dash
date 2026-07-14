@@ -31,8 +31,8 @@ import RolePermissions from "./pages/RolePermissions";
 import { AuthProvider } from "./context/AuthContext";
 import PermissionProtectedRoute from "./routes/PermissionProtectedRoute";
 import GuestRoute from "./routes/GuestRoute";
-import Enquiry from "./components/enquiry/enquiry";
 import EnquiryView from "./components/enquiry/EnquiryView";
+import Enquiry from "./components/enquiry/Enquiry";
 
 
 function App() {
