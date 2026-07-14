@@ -42,7 +42,7 @@ function App() {
         <Route path="/" element={ <GuestRoute><HomePage /></GuestRoute>} />
          <Route path="/forgot-password" element={<ForgotPassword />} />
          <Route path="/reset-password/:token" element={<ResetPassword />} />
-
+          {/* code */}
         {/* ADMIN LAYOUT */}
         <Route path="/admin-dash" element={ <AuthProvider><Admin_dashboard /></AuthProvider>}>
           <Route path="pages" element={<PageEditor />} />
