@@ -3,6 +3,7 @@ import type { AuthorApiResponse, AuthorResponse } from "../types/author_types";
 import type { BannerApiResponse, BannerResponse } from "../types/bannerTypes";
 import type { BlogApiResponse, BlogResponse } from "../types/blogTypes";
 import type { CategoryApiResponse, CategoryResponse } from "../types/categoryTypes";
+import type { EnquiryApiResponse, EnquiryResponse} from "../types/enquiryType";
 import type { LoginHistoryResponse } from "../types/login_history";
 import type { AuthCheckResponse, ModulePermission, ModulesResponse, PermissionResponse } from "../types/permissionTypes";
 import type { TestimonialApiResponse, TestimonialResponse } from "../types/testimonialTypes";
@@ -507,3 +508,24 @@ export const updatePermissionsByRoleApi = (role: "admin" | "staff", permissions:
 //permission checker
 export const checkAdminPermissionAuthApi = () =>
   commonApi<AuthCheckResponse>("GET", `${BASE_URL}/admin/permission/me`);
+
+
+//get in touch
+export const getAllcontactusApi = () => {
+  return commonApi<EnquiryApiResponse>(
+    "GET",`${BASE_URL}/admin/contactsus`
+  );
+};
+export const deleteEnquiriesApi = (id: string) => {
+  return commonApi(
+    "DELETE",
+    `${BASE_URL}/admin/contacts/delete/${id}`
+  );
+};
+
+export const getEnquiryByIdApi = (id: string) => {
+  return commonApi<{ success: boolean; data: EnquiryResponse}>(
+    "GET",
+    `${BASE_URL}/enquiryByid/${id}`
+  );
+};

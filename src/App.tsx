@@ -31,6 +31,9 @@ import RolePermissions from "./pages/RolePermissions";
 import { AuthProvider } from "./context/AuthContext";
 import PermissionProtectedRoute from "./routes/PermissionProtectedRoute";
 import GuestRoute from "./routes/GuestRoute";
+import Enquiry from "./components/enquiry/enquiry";
+import EnquiryView from "./components/enquiry/EnquiryView";
+
 
 function App() {
   return (
@@ -82,6 +85,9 @@ function App() {
 
           <Route path="settings" element={<RoleProtectedRoute allowedRoles={["super_admin"]} > <Settings/> </RoleProtectedRoute>} />
           <Route path="/admin-dash/role-permissions" element={<RoleProtectedRoute allowedRoles={["super_admin"]}><RolePermissions /></RoleProtectedRoute>} />
+
+           <Route path="enquiry" element={<Enquiry/>}  />
+             <Route path="enquiry/view/:id" element={<EnquiryView />} />  {/* ✅ new */}
         </Route>
       </Routes>
 

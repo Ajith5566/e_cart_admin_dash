@@ -24,6 +24,8 @@ import {
   faUsers,
   faArrowTrendUp,
   faArrowTrendDown,
+  faQuestionCircle,
+  faAddressBook,
 } from "@fortawesome/free-solid-svg-icons";
 
 /* ─── Types ──────────────────────────────────────────── */
@@ -68,6 +70,17 @@ const NAV_ITEMS: NavItem[] = [
   { key: "category", label: "Category", icon: faTags, path: "/admin-dash/category" },
 
   { key: "testimonials", label: "Testimonials", icon: faQuoteLeft, path: "/admin-dash/testimonials", section: "Engagement" },
+
+   {
+    key: "Enquiries", label: "Enquiry Listing", icon: faQuestionCircle, section: "Enquiries", children: [
+      {
+        key: "enquiry",
+        label: "Enquiry",
+        icon: faAddressBook,
+        path: "enquiry"
+      }
+    ]
+  },
 
   { key: "settings", label: "Settings", icon: faGear, path: "/admin-dash/settings", section: "System" },
   { key: "profile", label: "Profile", icon: faGear, path: "/admin-dash/profile", section: "System" },
