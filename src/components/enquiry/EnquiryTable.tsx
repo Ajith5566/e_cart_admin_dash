@@ -206,7 +206,7 @@ function EnquiryTable({ data, onView,onDelete,  }: Props) {
                         ) : (
                             <tr>
                                 <td colSpan={columns.length} className="text-center text-muted">
-                                    No banners found
+                                    No enquiries found
                                 </td>
                             </tr>
                         )}
