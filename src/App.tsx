@@ -33,6 +33,8 @@ import PermissionProtectedRoute from "./routes/PermissionProtectedRoute";
 import GuestRoute from "./routes/GuestRoute";
 import EnquiryView from "./components/enquiry/EnquiryView";
 import Enquiry from "./components/enquiry/Enquiry";
+import Careers from "./components/career/Career";
+import CareerView from "./components/career/CareerView";
 
 
 function App() {
@@ -88,7 +90,11 @@ function App() {
 
            <Route path="enquiry" element={<Enquiry/>}  />
              <Route path="enquiry/view/:id" element={<EnquiryView />} />  {/* ✅ new */}
-        </Route>
+
+              <Route path="career" element={<Careers/>}  /> 
+                <Route path="careers/view/:id" element={<CareerView />} />
+              </Route>
+      
       </Routes>
 
       <ToastContainer

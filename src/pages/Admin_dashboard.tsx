@@ -78,6 +78,12 @@ const NAV_ITEMS: NavItem[] = [
         label: "Enquiry",
         icon: faAddressBook,
         path: "enquiry"
+      },
+      {
+        key: "career",
+        label: "Careers",
+        icon: faAddressBook,
+        path: "career"
       }
     ]
   },

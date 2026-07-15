@@ -2,6 +2,7 @@
 import type { AuthorApiResponse, AuthorResponse } from "../types/author_types";
 import type { BannerApiResponse, BannerResponse } from "../types/bannerTypes";
 import type { BlogApiResponse, BlogResponse } from "../types/blogTypes";
+import type { CareerApiResponse, CareerResponse, CareerStatus } from "../types/careerTypes";
 import type { CategoryApiResponse, CategoryResponse } from "../types/categoryTypes";
 import type { EnquiryApiResponse, EnquiryResponse} from "../types/enquiryType";
 import type { LoginHistoryResponse } from "../types/login_history";
@@ -529,3 +530,30 @@ export const getEnquiryByIdApi = (id: string) => {
     `${BASE_URL}/enquiryByid/${id}`
   );
 };
+
+ 
+// list all applications (admin)
+export const getAllCareersApi = () => {
+  return commonApi<CareerApiResponse>("GET", `${BASE_URL}/careers`);
+};
+ 
+// single application (admin) — also marks it as read on the backend
+export const getCareerByIdApi = (id: string) => {
+  return commonApi<{ success: boolean; data: CareerResponse }>(
+    "GET",
+    `${BASE_URL}/careers/${id}`
+  );
+};
+ 
+// update workflow status (admin)
+export const updateCareerStatusApi = (id: string, status: CareerStatus) => {
+  return commonApi("PATCH", `${BASE_URL}/careers/${id}/status`, { status });
+};
+ 
+// delete application (admin)
+export const deleteCareerApi = (id: string) => {
+  return commonApi("DELETE", `${BASE_URL}/careers/${id}`);
+};
+
+ 
+ 
