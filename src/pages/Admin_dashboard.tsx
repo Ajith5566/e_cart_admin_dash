@@ -72,18 +72,28 @@ const NAV_ITEMS: NavItem[] = [
   { key: "testimonials", label: "Testimonials", icon: faQuoteLeft, path: "/admin-dash/testimonials", section: "Engagement" },
 
    {
-    key: "Enquiries", label: "Enquiry Listing", icon: faQuestionCircle, section: "Enquiries", children: [
+    key: "Enquiries", label: "Enquiry Listing", icon: faQuestionCircle, section: "Engagement", children: [
       {
         key: "enquiry",
-        label: "Enquiry",
+        label: "Contact Enquiry",
         icon: faAddressBook,
         path: "enquiry"
       },
       {
         key: "career",
-        label: "Careers",
+        label: "Careers Appications",
         icon: faAddressBook,
         path: "career"
+      }
+    ]
+  },
+  {
+    key: "Careers", label: "Careers", icon: faQuestionCircle, section: "Content", children: [
+      {
+        key: "job",
+        label: "Job Posting",
+        icon: faAddressBook,
+        path: "job"
       }
     ]
   },

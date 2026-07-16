@@ -35,6 +35,8 @@ import EnquiryView from "./components/enquiry/EnquiryView";
 import Enquiry from "./components/enquiry/Enquiry";
 import Careers from "./components/career/Career";
 import CareerView from "./components/career/CareerView";
+import Jobs from "./components/job_openings/Jobs";
+import Add_job from "./components/job_openings/Add_job";
 
 
 function App() {
@@ -93,6 +95,10 @@ function App() {
 
               <Route path="career" element={<Careers/>}  /> 
                 <Route path="careers/view/:id" element={<CareerView />} />
+
+                <Route path="job" element={<Jobs/>}  /> 
+                <Route path="jobs/add" element={<Add_job />} />
+                <Route path="jobs/edit/:id" element={<Add_job />} />
               </Route>
       
       </Routes>

@@ -5,6 +5,7 @@ import type { BlogApiResponse, BlogResponse } from "../types/blogTypes";
 import type { CareerApiResponse, CareerResponse, CareerStatus } from "../types/careerTypes";
 import type { CategoryApiResponse, CategoryResponse } from "../types/categoryTypes";
 import type { EnquiryApiResponse, EnquiryResponse} from "../types/enquiryType";
+import type { JobResponse } from "../types/jobTypes";
 import type { LoginHistoryResponse } from "../types/login_history";
 import type { AuthCheckResponse, ModulePermission, ModulesResponse, PermissionResponse } from "../types/permissionTypes";
 import type { TestimonialApiResponse, TestimonialResponse } from "../types/testimonialTypes";
@@ -556,4 +557,24 @@ export const deleteCareerApi = (id: string) => {
 };
 
  
+
+export const getActiveJobsApi = () =>
+  commonApi<{ success: boolean; data: JobResponse[] }>("GET", `${BASE_URL}/jobs/active`);
  
+export const getAllJobsApi = () =>
+  commonApi<{ success: boolean; data: JobResponse[] }>("GET", `${BASE_URL}/jobs`);
+ 
+export const getJobByIdApi = (id: string) =>
+  commonApi<{ success: boolean; data: JobResponse }>("GET", `${BASE_URL}/jobs/${id}`);
+ 
+export const addJobApi = (body: Partial<JobResponse>) =>
+  commonApi("POST", `${BASE_URL}/jobs`, body);
+ 
+export const updateJobApi = (id: string, body: Partial<JobResponse>) =>
+  commonApi("PUT", `${BASE_URL}/jobs/${id}`, body);
+ 
+export const toggleJobApi = (id: string) =>
+  commonApi("PATCH", `${BASE_URL}/jobs/${id}/toggle`);
+ 
+export const deleteJobApi = (id: string) =>
+  commonApi("DELETE", `${BASE_URL}/jobs/${id}`);
