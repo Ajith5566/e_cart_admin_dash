@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { useReactTable, getCoreRowModel, flexRender, getPaginationRowModel, getSortedRowModel, getFilteredRowModel } from '@tanstack/react-table'
 import type { ColumnDef, SortingState } from "@tanstack/react-table";
-import type {  PageType } from '../../types/types';
+import type { PageType } from '../../types/types';
 import '../common/common_toggle.css'
 import '../common/common_styels.css'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -12,12 +12,12 @@ type Props = {
     data: PageType[];
     onEdit: (page: PageType) => void;
     onToggle: (id: string) => void;
-    onDelete:(id:string)=>void;
+    onDelete: (id: string) => void;
     canEdit: boolean;
     canToggle: boolean;
     canDelete: boolean;
 };
-function PageTable({ data, onEdit, onToggle ,onDelete,canEdit, canToggle, canDelete}: Props) {
+function PageTable({ data, onEdit, onToggle, onDelete, canEdit, canToggle, canDelete }: Props) {
 
 
     const [limit, setLimit] = useState(5)
@@ -41,6 +41,13 @@ function PageTable({ data, onEdit, onToggle ,onDelete,canEdit, canToggle, canDel
     }, [limit]);
 
     const columns = useMemo<ColumnDef<PageType>[]>(() => [
+        {
+            header: "#",
+            id: "serialNumber",
+            enableSorting: false,
+            cell: ({ row }) =>
+                pagination.pageIndex * pagination.pageSize + row.index + 1,
+        },
         {
             header: 'Title',
             accessorKey: 'title',
@@ -79,7 +86,7 @@ function PageTable({ data, onEdit, onToggle ,onDelete,canEdit, canToggle, canDel
                 </label>
             ),
             enableSorting: false,
-        },{
+        }, {
             header: "Delete",
             cell: ({ row }) => (
                 <button
@@ -93,7 +100,7 @@ function PageTable({ data, onEdit, onToggle ,onDelete,canEdit, canToggle, canDel
             ),
             enableSorting: false,
         },
-    ], [onEdit, onToggle,onDelete])
+    ], [onEdit, onToggle, onDelete, pagination.pageIndex, pagination.pageSize])
     /*  {
   "_id": "696dc7a4caa9df61301b6686",
   "title": "Rental policy",
@@ -235,7 +242,7 @@ function PageTable({ data, onEdit, onToggle ,onDelete,canEdit, canToggle, canDel
                 </table>
             </div>
             <div className='d-flex flex-column flex-md-row justify-content-between align-items-center gap-3 mt-3'>
-                <span  className="text-center text-md-start">
+                <span className="text-center text-md-start">
                     Showing {startRow} to {endRow} of {totalRows} entries
                 </span>
                 <div className="d-flex justify-content-center align-items-center mb-2 gap-2 flex-wrap">

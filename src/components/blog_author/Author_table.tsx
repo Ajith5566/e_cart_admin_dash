@@ -42,6 +42,13 @@ function AuthorTable({ data, onEdit, onToggle,onDelete, canEdit, canToggle, canD
 
     const columns = useMemo<ColumnDef<AuthorResponse>[]>(() => [
         {
+  header: "#",
+  id: "serialNumber",
+  enableSorting: false,
+  cell: ({ row }) =>
+    pagination.pageIndex * pagination.pageSize + row.index + 1,
+},
+        {
             header: 'Name',
             accessorKey: 'name',
             enableSorting: true,   // ✅ only this column sortable
@@ -88,7 +95,7 @@ function AuthorTable({ data, onEdit, onToggle,onDelete, canEdit, canToggle, canD
             ),
             enableSorting: false,
         },
-    ], [onEdit, onToggle,onDelete])
+    ], [onEdit, onToggle,onDelete, pagination.pageIndex, pagination.pageSize])
     /*     [
       {
         adminId: "694a3c3be6be07cb5c80a762",

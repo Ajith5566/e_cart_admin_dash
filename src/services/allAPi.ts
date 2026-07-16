@@ -547,10 +547,17 @@ export const getCareerByIdApi = (id: string) => {
 };
  
 // update workflow status (admin)
-export const updateCareerStatusApi = (id: string, status: CareerStatus) => {
-  return commonApi("PATCH", `${BASE_URL}/careers/${id}/status`, { status });
+export const updateCareerStatusApi = (
+  id: string,
+  status: CareerStatus,
+  reason: string
+) => {
+  return commonApi<{ success: boolean; data: CareerResponse }>(
+    "PATCH",
+    `${BASE_URL}/careers/${id}/status`,
+    { status, reason }
+  );
 };
- 
 // delete application (admin)
 export const deleteCareerApi = (id: string) => {
   return commonApi("DELETE", `${BASE_URL}/careers/${id}`);

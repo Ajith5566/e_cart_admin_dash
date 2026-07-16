@@ -55,6 +55,13 @@ function CareerTable({ data, onView, onDelete }: Props) {
 
   const columns = useMemo<ColumnDef<CareerResponse>[]>(
     () => [
+        {
+  header: "#",
+  id: "serialNumber",
+  enableSorting: false,
+  cell: ({ row }) =>
+    pagination.pageIndex * pagination.pageSize + row.index + 1,
+},
       {
         header: "Name",
         accessorKey: "name",
@@ -114,7 +121,7 @@ function CareerTable({ data, onView, onDelete }: Props) {
         enableSorting: false,
       },
     ],
-    [onView, onDelete]
+    [onView, onDelete, pagination.pageIndex, pagination.pageSize]
   );
 
   // eslint-disable-next-line react-hooks/incompatible-library

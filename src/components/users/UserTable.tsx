@@ -38,6 +38,13 @@ function AdminUsersTable({ data, onEdit, onToggle }: Props) {
 
     const columns = useMemo<ColumnDef<FetchedAdminUser>[]>(() => [
         {
+  header: "#",
+  id: "serialNumber",
+  enableSorting: false,
+  cell: ({ row }) =>
+    pagination.pageIndex * pagination.pageSize + row.index + 1,
+},
+        {
             header: 'Name',
             accessorKey: 'name',
             enableSorting: true,   // ✅ only this column sortable
@@ -78,7 +85,7 @@ function AdminUsersTable({ data, onEdit, onToggle }: Props) {
             ),
             enableSorting: false,
         },
-    ], [onEdit, onToggle])
+    ], [onEdit, onToggle, pagination.pageIndex, pagination.pageSize])
     /*    {
   _id: "698ad0c996d144213c1a6616",
   name: "test12",

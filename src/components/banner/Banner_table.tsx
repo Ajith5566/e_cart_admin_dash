@@ -42,6 +42,13 @@ function BannerTable({ data, onEdit, onToggle,onDelete, canEdit, canToggle, canD
 
     const columns = useMemo<ColumnDef<BannerResponse>[]>(() => [
         {
+  header: "#",
+  id: "serialNumber",
+  enableSorting: false,
+  cell: ({ row }) =>
+    pagination.pageIndex * pagination.pageSize + row.index + 1,
+},
+        {
             header: 'Title',
             accessorKey: 'title',
             enableSorting: true,   // ✅ only this column sortable
@@ -88,7 +95,7 @@ function BannerTable({ data, onEdit, onToggle,onDelete, canEdit, canToggle, canD
             ),
             enableSorting: false,
         },
-    ], [onEdit, onToggle,onDelete])
+    ], [onEdit, onToggle,onDelete, pagination.pageIndex, pagination.pageSize])
     /*     [
       {
         adminId: "694a3c3be6be07cb5c80a762",

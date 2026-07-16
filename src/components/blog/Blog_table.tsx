@@ -42,6 +42,13 @@ function BlogTable({ data, onEdit, onToggle,onDelete, canEdit, canToggle, canDel
 
     const columns = useMemo<ColumnDef<BlogResponse>[]>(() => [
         {
+  header: "#",
+  id: "serialNumber",
+  enableSorting: false,
+  cell: ({ row }) =>
+    pagination.pageIndex * pagination.pageSize + row.index + 1,
+},
+        {
             header: 'Title',
             accessorKey: 'title',
             enableSorting: true,   // ✅ only this column sortable
@@ -104,7 +111,7 @@ function BlogTable({ data, onEdit, onToggle,onDelete, canEdit, canToggle, canDel
             },
             enableSorting: false,
         },
-    ], [onEdit, onToggle,onDelete,canEdit,canToggle,canDelete])
+    ], [onEdit, onToggle,onDelete, pagination.pageIndex, pagination.pageSize,canEdit,canToggle,canDelete])
     /*     [
       {
         adminId: "694a3c3be6be07cb5c80a762",

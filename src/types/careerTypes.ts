@@ -12,9 +12,17 @@ export type CareerResponse = {
   isRead: boolean;
   createdAt: string;
   updatedAt: string;
+   statusHistory?: StatusHistoryEntry[];
 };
  
 export type CareerApiResponse = {
   success: boolean;
   data: CareerResponse[];
+};
+
+export type StatusHistoryEntry = {
+  status: CareerStatus;
+  reason: string;
+  changedAt: string;
+  _id?: string;
 };

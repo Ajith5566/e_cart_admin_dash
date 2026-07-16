@@ -30,6 +30,13 @@ function TestimonialTable({ data, onEdit, onToggle, onDelete, canEdit, canToggle
 
     const columns = useMemo<ColumnDef<TestimonialResponse>[]>(() => [
         {
+  header: "#",
+  id: "serialNumber",
+  enableSorting: false,
+  cell: ({ row }) =>
+    pagination.pageIndex * pagination.pageSize + row.index + 1,
+},
+        {
             header: 'Author',
             accessorKey: 'name',
             enableSorting: true,
@@ -87,7 +94,7 @@ function TestimonialTable({ data, onEdit, onToggle, onDelete, canEdit, canToggle
             ),
             enableSorting: false,
         },
-    ], [onEdit, onToggle, onDelete, canEdit, canToggle, canDelete])
+    ], [onEdit, onToggle, onDelete, pagination.pageIndex, pagination.pageSize, canEdit, canToggle, canDelete])
 
     const table = useReactTable({
         data,

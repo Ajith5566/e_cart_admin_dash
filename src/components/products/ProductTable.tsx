@@ -42,6 +42,13 @@ function ProductTable({ data, onEdit ,onDelete,onToggle, canEdit, canToggle, can
     }, [limit]);
 
     const columns = useMemo<ColumnDef<fetchedProducts>[]>(() => [
+        {
+  header: "#",
+  id: "serialNumber",
+  enableSorting: false,
+  cell: ({ row }) =>
+    pagination.pageIndex * pagination.pageSize + row.index + 1,
+},
          {
     header: "Image",
     cell: ({ row }) => {
@@ -133,7 +140,7 @@ function ProductTable({ data, onEdit ,onDelete,onToggle, canEdit, canToggle, can
             },
             enableSorting: false,
         },
-    ], [onEdit,onDelete,onToggle,canEdit,canToggle,canDelete])
+    ], [onEdit,onDelete,onToggle, pagination.pageIndex, pagination.pageSize,canEdit,canToggle,canDelete])
     /*  {
   {
   adminId: "...",

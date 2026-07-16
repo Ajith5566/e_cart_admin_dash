@@ -41,6 +41,13 @@ function CategoryTable({ data, onEdit, onToggle,canEdit, canToggle }: Props) {
 
     const columns = useMemo<ColumnDef<CategoryResponse>[]>(() => [
         {
+  header: "#",
+  id: "serialNumber",
+  enableSorting: false,
+  cell: ({ row }) =>
+    pagination.pageIndex * pagination.pageSize + row.index + 1,
+},
+        {
             header: 'Category',
             accessorKey: 'name',
             enableSorting: true,   // ✅ only this column sortable
@@ -81,7 +88,7 @@ function CategoryTable({ data, onEdit, onToggle,canEdit, canToggle }: Props) {
             ),
             enableSorting: false,
         },
-    ], [onEdit, onToggle])
+    ], [onEdit, onToggle, pagination.pageIndex, pagination.pageSize])
     /*     [
       {
         adminId: "694a3c3be6be07cb5c80a762",
