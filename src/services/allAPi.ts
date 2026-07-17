@@ -585,3 +585,17 @@ export const toggleJobApi = (id: string) =>
  
 export const deleteJobApi = (id: string) =>
   commonApi("DELETE", `${BASE_URL}/jobs/${id}`);
+
+export const bulkToggleJobsApi = (ids: string[], isActive: boolean) =>
+  commonApi<{ success: boolean; message: string; modified: number }>(
+    "PATCH",
+    `${BASE_URL}/jobs/bulk-status`,
+    { ids, isActive }
+  );
+
+export const bulkDeleteJobsApi = (ids: string[]) =>
+  commonApi<{ success: boolean; message: string; deleted: number }>(
+    "POST",
+    `${BASE_URL}/jobs/bulk-delete`,
+    { ids }
+  );

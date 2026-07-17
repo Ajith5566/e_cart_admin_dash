@@ -1,6 +1,5 @@
-// components/jobs/JobTable.tsx
-import { useEffect, useMemo, useState } from "react";
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
+// components/jobs/JobTable.tsx — with selection + bulk action bar
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   useReactTable,
   getCoreRowModel,
@@ -9,7 +8,7 @@ import {
   getSortedRowModel,
   getFilteredRowModel,
 } from "@tanstack/react-table";
-import type { ColumnDef, SortingState } from "@tanstack/react-table";
+import type { ColumnDef, SortingState, RowSelectionState } from "@tanstack/react-table";
 import "../common/common_toggle.css";
 import "../common/common_styels.css";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -21,7 +20,6 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import type { JobResponse } from "../../types/jobTypes";
 
-
 type Props = {
   data: JobResponse[];
   onEdit: (job: JobResponse) => void;
@@ -30,9 +28,47 @@ type Props = {
   canEdit: boolean;
   canToggle: boolean;
   canDelete: boolean;
+  // ✅ bulk actions — receive the selected ids
+  onBulkDelete: (ids: string[]) => Promise<void> | void;
+  onBulkToggle: (ids: string[], isActive: boolean) => Promise<void> | void;
 };
 
-function JobTable({ data, onEdit, onToggle, onDelete, canEdit, canToggle, canDelete }: Props) {
+// header checkbox needs the indeterminate ("some selected") state,
+// which is only settable via a ref
+function IndeterminateCheckbox({
+  indeterminate,
+  ...rest
+}: { indeterminate?: boolean } & React.InputHTMLAttributes<HTMLInputElement>) {
+  const ref = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (ref.current) {
+      ref.current.indeterminate = !rest.checked && !!indeterminate;
+    }
+  }, [indeterminate, rest.checked]);
+
+  return (
+    <input
+      type="checkbox"
+      ref={ref}
+      className="form-check-input"
+      style={{ cursor: "pointer" }}
+      {...rest}
+    />
+  );
+}
+
+function JobTable({
+  data,
+  onEdit,
+  onToggle,
+  onDelete,
+  canEdit,
+  canToggle,
+  canDelete,
+  onBulkDelete,
+  onBulkToggle,
+}: Props) {
   const [limit, setLimit] = useState(5);
 
   const [pagination, setPagination] = useState({
@@ -43,27 +79,54 @@ function JobTable({ data, onEdit, onToggle, onDelete, canEdit, canToggle, canDel
   const [sorting, setSorting] = useState<SortingState>([]);
   const [filtering, setFiltering] = useState("");
 
+  // ✅ selection keys are job _ids (getRowId below)
+  const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
+  const [bulkBusy, setBulkBusy] = useState(false);
+
   useEffect(() => {
     setPagination((prev) => ({
       ...prev,
-      pageIndex: 0, // reset to first page (important)
+      pageIndex: 0,
       pageSize: limit,
     }));
   }, [limit]);
 
   const columns = useMemo<ColumnDef<JobResponse>[]>(
     () => [
-         {
-      header: "#",
-      id: "serialNumber",
-      enableSorting: false,
-      cell: ({ row }) =>
-        pagination.pageIndex * pagination.pageSize + row.index + 1,
-    },
+      // ✅ SELECTION COLUMN
+      {
+        id: "select",
+        enableSorting: false,
+        header: ({ table }) => (
+          <div className="d-flex align-items-center gap-1">
+            <IndeterminateCheckbox
+              checked={table.getIsAllRowsSelected()}
+              indeterminate={table.getIsSomeRowsSelected()}
+              onChange={table.getToggleAllRowsSelectedHandler()}
+              aria-label="Select all jobs"
+            />
+            <span>All</span>
+          </div>
+        ),
+        cell: ({ row }) => (
+          <IndeterminateCheckbox
+            checked={row.getIsSelected()}
+            onChange={row.getToggleSelectedHandler()}
+            aria-label={`Select ${row.original.title}`}
+          />
+        ),
+      },
+      {
+        header: "#",
+        id: "serialNumber",
+        enableSorting: false,
+        cell: ({ row }) =>
+          pagination.pageIndex * pagination.pageSize + row.index + 1,
+      },
       {
         header: "Title",
         accessorKey: "title",
-        enableSorting: true, // ✅ sortable
+        enableSorting: true,
       },
       {
         header: "Type",
@@ -78,7 +141,7 @@ function JobTable({ data, onEdit, onToggle, onDelete, canEdit, canToggle, canDel
       {
         header: "Posted",
         accessorKey: "createdAt",
-        enableSorting: true, // ✅ sortable — newest/oldest
+        enableSorting: true,
         cell: ({ row }) =>
           new Date(row.original.createdAt).toLocaleDateString("en-IN", {
             day: "2-digit",
@@ -138,19 +201,46 @@ function JobTable({ data, onEdit, onToggle, onDelete, canEdit, canToggle, canDel
   const table = useReactTable({
     data,
     columns,
+    getRowId: (row) => row._id, // ✅ selection keys = Mongo _ids
     getCoreRowModel: getCoreRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
-    state: { pagination, sorting, globalFilter: filtering },
+    state: { pagination, sorting, globalFilter: filtering, rowSelection },
     onPaginationChange: setPagination,
     pageCount: Math.ceil(data.length / pagination.pageSize),
     getSortedRowModel: getSortedRowModel(),
     onSortingChange: setSorting,
     getFilteredRowModel: getFilteredRowModel(),
     onGlobalFilterChange: setFiltering,
-    autoResetPageIndex: false, // ⭐ THIS FIXES IT
+    enableRowSelection: true,
+    onRowSelectionChange: setRowSelection,
+    autoResetPageIndex: false,
   });
 
-  // showing part
+  // ✅ drop selections whose rows no longer exist (after delete/refetch)
+  useEffect(() => {
+    setRowSelection((prev) => {
+      const validIds = new Set(data.map((d) => d._id));
+      const next: RowSelectionState = {};
+      for (const id of Object.keys(prev)) {
+        if (validIds.has(id)) next[id] = true;
+      }
+      return Object.keys(next).length === Object.keys(prev).length ? prev : next;
+    });
+  }, [data]);
+
+  const selectedIds = Object.keys(rowSelection);
+  const selectedCount = selectedIds.length;
+
+  const runBulk = async (fn: () => Promise<void> | void) => {
+    try {
+      setBulkBusy(true);
+      await fn();
+      table.resetRowSelection();
+    } finally {
+      setBulkBusy(false);
+    }
+  };
+
   const { pageIndex, pageSize } = table.getState().pagination;
   const totalRows = table.getFilteredRowModel().rows.length;
   const startRow = totalRows === 0 ? 0 : pageIndex * pageSize + 1;
@@ -189,6 +279,55 @@ function JobTable({ data, onEdit, onToggle, onDelete, canEdit, canToggle, canDel
         </div>
       </div>
 
+      {/* ✅ BULK ACTION BAR — appears when rows are selected */}
+      {selectedCount > 0 && (
+        <div
+          className="d-flex align-items-center gap-2 px-3 py-2 mb-2 flex-wrap"
+          style={{ background: "#eef2ff", borderRadius: "10px" }}
+        >
+          <span className="fw-medium me-1" style={{ fontSize: "14px" }}>
+            {selectedCount} selected
+          </span>
+
+          {canToggle && (
+            <>
+              <button
+                className="btn btn-sm btn-outline-dark"
+                disabled={bulkBusy}
+                onClick={() => runBulk(() => onBulkToggle(selectedIds, false))}
+              >
+                Deactivate selected
+              </button>
+              <button
+                className="btn btn-sm btn-outline-success"
+                disabled={bulkBusy}
+                onClick={() => runBulk(() => onBulkToggle(selectedIds, true))}
+              >
+                Activate selected
+              </button>
+            </>
+          )}
+
+          {canDelete && (
+            <button
+              className="btn btn-sm btn-danger"
+              disabled={bulkBusy}
+              onClick={() => runBulk(() => onBulkDelete(selectedIds))}
+            >
+              Delete selected
+            </button>
+          )}
+
+          <button
+            className="btn btn-sm btn-outline-secondary ms-auto"
+            disabled={bulkBusy}
+            onClick={() => table.resetRowSelection()}
+          >
+            Clear
+          </button>
+        </div>
+      )}
+
       <div
         className="card-body table-responsive px-0"
         style={{ minHeight: "520px", overflowX: "auto" }}
@@ -224,7 +363,11 @@ function JobTable({ data, onEdit, onToggle, onDelete, canEdit, canToggle, canDel
           <tbody>
             {table.getRowModel().rows.length > 0 ? (
               table.getRowModel().rows.map((row) => (
-                <tr key={row.id} className="tableRowHeight">
+                <tr
+                  key={row.id}
+                  className="tableRowHeight"
+                  style={row.getIsSelected() ? { background: "#f0f4ff" } : undefined}
+                >
                   {row.getVisibleCells().map((cell) => (
                     <td key={cell.id}>
                       {flexRender(cell.column.columnDef.cell, cell.getContext())}
@@ -248,7 +391,6 @@ function JobTable({ data, onEdit, onToggle, onDelete, canEdit, canToggle, canDel
           Showing {startRow} to {endRow} of {totalRows} entries
         </span>
         <div className="d-flex justify-content-center align-items-center mb-2 gap-2 flex-wrap">
-          {/* First */}
           <button
             className="btn btn-outline-secondary btn-sm"
             onClick={() => table.setPageIndex(0)}
@@ -264,7 +406,6 @@ function JobTable({ data, onEdit, onToggle, onDelete, canEdit, canToggle, canDel
             <FontAwesomeIcon icon={faAngleLeft} />
           </button>
 
-          {/* Page Numbers */}
           <button className="btn btn-secondary btn-sm">
             {table.getState().pagination.pageIndex + 1}
           </button>
@@ -276,7 +417,6 @@ function JobTable({ data, onEdit, onToggle, onDelete, canEdit, canToggle, canDel
           >
             <FontAwesomeIcon icon={faAngleRight} />
           </button>
-          {/* Last */}
           <button
             className="btn btn-outline-secondary btn-sm"
             onClick={() => table.setPageIndex(table.getPageCount() - 1)}
