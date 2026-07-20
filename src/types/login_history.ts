@@ -15,3 +15,13 @@ export type LoginHistoryResponse = {
   success: boolean;
   data: LoginHistoryEntry[];
 };
+
+export type LoginHistoryParams = {
+  page?: number;
+  limit?: number;
+  email?: string;
+  name?: string;
+  status?: string;
+  fromDate?: string;
+  toDate?: string;
+};

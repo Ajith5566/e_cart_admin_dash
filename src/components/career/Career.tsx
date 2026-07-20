@@ -1,7 +1,7 @@
 // components/careers/Careers.tsx — filter icon + filter panel
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { deleteCareerApi, getAllCareersApi } from "../../services/allAPi";
+import { bulkDeleteCareersApi, deleteCareerApi, getAllCareersApi } from "../../services/allAPi";
 import "../common/common_toggle.css";
 import "../common/common_styels.css";
 import { toast } from "react-toastify";
@@ -238,22 +238,38 @@ export default function Careers() {
       )}
 
       <CareerTable
-        data={filtered}
-        onView={(application) =>
-          navigate(`/admin-dash/careers/view/${application._id}`)
-        }
-        onDelete={async (id) => {
-          if (!window.confirm("Delete this application? The CV file will also be removed.")) return;
-
-          try {
-            await deleteCareerApi(id);
-            fetchApplications();
-            toast.success("Application deleted");
-          } catch {
-            toast.error("Delete failed");
-          }
-        }}
-      />
+  data={filtered}
+  onView={(application) =>
+    navigate(`/admin-dash/careers/view/${application._id}`)
+  }
+  onDelete={async (id) => {
+    if (!window.confirm("Delete this application? The CV file will also be removed.")) return;
+    try {
+      await deleteCareerApi(id);
+      fetchApplications();
+      toast.success("Application deleted");
+    } catch {
+      toast.error("Delete failed");
+    }
+  }}
+  // ✅ BULK DELETE
+  onBulkDelete={async (ids) => {
+    if (
+      !window.confirm(
+        `Delete ${ids.length} application(s)? Their CV files will also be removed. This cannot be undone.`
+      )
+    )
+      return;
+ 
+    try {
+      const res = await bulkDeleteCareersApi(ids);
+      toast.success(res.data.message);
+      fetchApplications();
+    } catch {
+      toast.error("Bulk delete failed");
+    }
+  }}
+/>
     </div>
   );
 }

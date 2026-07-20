@@ -37,12 +37,21 @@ function AdminUsersTable({ data, onEdit, onToggle }: Props) {
     }, [limit]);
 
     const columns = useMemo<ColumnDef<FetchedAdminUser>[]>(() => [
-        {
+{
   header: "#",
   id: "serialNumber",
   enableSorting: false,
-  cell: ({ row }) =>
-    pagination.pageIndex * pagination.pageSize + row.index + 1,
+  cell: ({ row, table }) => {
+    // rows as currently displayed (after sort/filter/pagination)
+    const visibleRows = table.getRowModel().rows;
+    const indexOnPage = visibleRows.findIndex((r) => r.id === row.id);
+    return (
+      table.getState().pagination.pageIndex *
+        table.getState().pagination.pageSize +
+      indexOnPage +
+      1
+    );
+  },
 },
         {
             header: 'Name',

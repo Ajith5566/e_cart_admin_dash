@@ -9,23 +9,30 @@ export type BlogTypes = {
   status: boolean;
    image: File | null;
 };
+
+
+
+ 
 export type BlogResponse = {
   _id: string;
   title: string;
-  description: string;
   shortDescription: string;
+  description: string;
+
   author?: {
     _id: string;
     name: string;
   } | null;
-  isActive: boolean;
-  image: string; // URL from Cloudinary / server
-   meta?: MetaFields; 
-   adminId:string;
-};
 
+  image: string;
+  isActive: boolean;
+  adminId?: string;
+  createdAt: string;
+  updatedAt: string;
+  meta?: MetaFields;
+};
+ 
 export type BlogApiResponse = {
   success: boolean;
-  count: number;
   data: BlogResponse[];
 };

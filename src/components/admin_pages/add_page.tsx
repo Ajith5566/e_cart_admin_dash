@@ -1,9 +1,11 @@
+// components/pages/Add_page.tsx — with keep/update slug prompt
+// (pairs with the fixed pageController: backend uses meta.slug as the decision)
 import { useEffect, useState, lazy, Suspense } from 'react'
 import "react-quill-new/dist/quill.snow.css";
 import { toast } from 'react-toastify';
-import { addPageApi, getPageByIdApi, updatePageApi } from '../../services/allAPi'; // ✅ add getPageByIdApi
+import { addPageApi, getPageByIdApi, updatePageApi } from '../../services/allAPi';
 import { Modules } from '../quillmodule';
-import { useNavigate, useParams } from "react-router-dom"; // ✅ removed useLocation
+import { useNavigate, useParams } from "react-router-dom";
 import type { MetaFields } from '../../types/types';
 import SeoPreview from '../seo/Seo';
 import slugify from "slugify";
@@ -22,7 +24,7 @@ const ReactQuill = lazy(() => import("react-quill-new"));
 
 function Add_page() {
 
-  const { id } = useParams();               // ✅ get id from URL
+  const { id } = useParams();
   const isEditMode = !!id;
   const navigate = useNavigate();
 
@@ -36,6 +38,12 @@ function Add_page() {
   const [metaTitleManuallyEdited, setMetaTitleManuallyEdited] = useState(false);
   const [metaDescManuallyEdited, setMetaDescManuallyEdited] = useState(false);
   const [meta, setMeta] = useState<MetaFields>({});
+
+  // ✅ slug-change prompt state
+  const [originalSlug, setOriginalSlug] = useState("");       // slug live in DB
+  const [proposedSlug, setProposedSlug] = useState("");       // slug the new title generates
+  const [showSlugPrompt, setShowSlugPrompt] = useState(false);
+  const [slugDecisionMade, setSlugDecisionMade] = useState(false);
 
   const [loadingData, setLoadingData] = useState(!!id);
 
@@ -58,9 +66,17 @@ function Add_page() {
 
         if (page.meta && Object.keys(page.meta).length > 0) {
           setMeta(page.meta);
+          // ✅ prefer meta.slug; fall back to the page's own slug field
+          setOriginalSlug(page.meta.slug || page.slug || "");
           setSlugManuallyEdited(true);
           setMetaTitleManuallyEdited(true);
           setMetaDescManuallyEdited(true);
+        } else {
+          // ✅ page exists but has no meta yet — the page slug is still
+          // the live URL and must be protected by the prompt
+          setMeta({ slug: page.slug });
+          setOriginalSlug(page.slug || "");
+          setSlugManuallyEdited(true);
         }
       } catch {
         toast.error("Failed to load page");
@@ -76,18 +92,53 @@ function Add_page() {
   useEffect(() => {
     if (!title) return;
 
+    const generatedSlug = slugify(title, { lower: true, strict: true, trim: true });
+
+    // ✅ EDIT MODE: never silently change the slug — ask instead
+    if (isEditMode && originalSlug && !slugDecisionMade) {
+      if (generatedSlug !== originalSlug) {
+        setProposedSlug(generatedSlug);
+        setShowSlugPrompt(true);
+      } else {
+        // title typed back to the original → dismiss prompt
+        setShowSlugPrompt(false);
+        setProposedSlug("");
+      }
+    }
+
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setMeta((prev) => ({
       ...prev,
-      slug: slugManuallyEdited
+      // ADD MODE: auto-slug as before. EDIT MODE: slug only changes
+      // through the prompt buttons or a manual SeoPreview edit.
+      slug: isEditMode || slugManuallyEdited
         ? prev.slug
-        : slugify(title, { lower: true, strict: true, trim: true }),
+        : generatedSlug,
       meta_title: metaTitleManuallyEdited ? prev.meta_title : title,
       meta_description: metaDescManuallyEdited
         ? prev.meta_description
         : shortDesc,
     }));
-  }, [title, shortDesc, slugManuallyEdited, metaTitleManuallyEdited, metaDescManuallyEdited]);
+  }, [title, shortDesc, slugManuallyEdited, metaTitleManuallyEdited, metaDescManuallyEdited, isEditMode, originalSlug, slugDecisionMade]);
+
+  // ✅ user chose to KEEP the old slug
+  const handleKeepOldSlug = () => {
+    setMeta((prev) => ({ ...prev, slug: originalSlug }));
+    setShowSlugPrompt(false);
+    setSlugDecisionMade(true);
+    setSlugManuallyEdited(true);
+    toast.info("Old URL will be kept");
+  };
+
+  // ✅ user chose to UPDATE the slug
+  // (backend archives the old slug to SlugHistory → old links redirect)
+  const handleUpdateSlug = () => {
+    setMeta((prev) => ({ ...prev, slug: proposedSlug }));
+    setShowSlugPrompt(false);
+    setSlugDecisionMade(true);
+    setSlugManuallyEdited(true);
+    toast.info("URL will be updated. Old links will redirect automatically.");
+  };
 
   const isEditorEmpty = (html: string) => {
     const text = html.replace(/<[^>]+>/g, "").trim();
@@ -142,6 +193,13 @@ function Add_page() {
   const handleSubmit = async () => {
     if (!validateForm()) return;
 
+    // ✅ block submit while the slug question is unanswered
+    if (showSlugPrompt) {
+      toast.warning("Please choose whether to keep or update the page URL");
+      document.getElementById("slug-prompt")?.scrollIntoView({ behavior: "smooth", block: "center" });
+      return;
+    }
+
     const metaWithoutImages = { ...meta };
     delete metaWithoutImages.og_image;
     delete metaWithoutImages.twitter_image;
@@ -170,7 +228,8 @@ function Add_page() {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
       if (err?.response?.status === 409) {
-        toast.error("Page title already exists");
+        // backend sends 409 both for duplicate titles and taken slugs
+        toast.error(err?.response?.data?.message || "Page title or slug already exists");
       } else {
         toast.error("Action failed");
       }
@@ -228,6 +287,37 @@ function Add_page() {
         />
         {errors.title && <div className="invalid-feedback">{errors.title}</div>}
 
+        {/* ✅ SLUG CHANGE PROMPT */}
+        {showSlugPrompt && (
+          <div id="slug-prompt" className="alert alert-info mt-2">
+            <p className="mb-2 fw-semibold">
+              The title change affects this page's URL. What would you like to do?
+            </p>
+            <p className="mb-1 small">
+              Current URL: <code>/{originalSlug}</code>
+            </p>
+            <p className="mb-3 small">
+              New URL: <code>/{proposedSlug}</code>
+            </p>
+            <div className="d-flex gap-2 flex-wrap">
+              <button
+                type="button"
+                className="btn btn-sm btn-outline-secondary"
+                onClick={handleKeepOldSlug}
+              >
+                Keep old URL
+              </button>
+              <button
+                type="button"
+                className="btn btn-sm btn-primary"
+                onClick={handleUpdateSlug}
+              >
+                Update URL (old link will redirect)
+              </button>
+            </div>
+          </div>
+        )}
+
         <label htmlFor="shortDesc" className="form-label mt-3">
           Short description <span className="text-danger">*</span>
         </label>
@@ -259,7 +349,14 @@ function Add_page() {
         <div className="mt-5">
           <SeoPreview
             value={meta}
-            onChange={setMeta}
+            onChange={(next) => {
+              setMeta(next);
+              // ✅ manual slug edit in SeoPreview counts as the decision
+              if (next.slug !== meta.slug) {
+                setSlugDecisionMade(true);
+                setShowSlugPrompt(false);
+              }
+            }}
             baseUrl="https://test.boilerplate.pbsmokeup.in/"
             onManualEdit={(field) => {
               if (field === "slug") setSlugManuallyEdited(true);

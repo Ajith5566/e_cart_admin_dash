@@ -1,71 +1,76 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
-import { useEffect, useState, lazy, Suspense, useRef } from "react";
+/* eslint-disable @typescript-eslint/no-explicit-any */
+// components/blogs/Add_blog.tsx
+import { useEffect, useRef, useState, lazy, Suspense } from "react";
 import "react-quill-new/dist/quill.snow.css";
 import { toast } from "react-toastify";
-import { useNavigate, useParams } from "react-router-dom"; // ✅ removed useLocation
-import { Modules } from "../quillmodule";
-import type { MetaFields } from "../../types/types";
 import {
   add_blog_Api,
   getAllauthorsApi,
-  getBlogByIdApi,  // ✅ add this
+  getBlogByIdApi,
   updateBlogApi,
 } from "../../services/allAPi";
+import { Modules } from "../quillmodule";
+import { useNavigate, useParams } from "react-router-dom";
+import type { MetaFields } from "../../types/types";
+import type { AuthorResponse } from "../../types/author_types";
 import SeoPreview from "../seo/Seo";
 import slugify from "slugify";
-import type { BlogResponse, BlogTypes } from "../../types/blogTypes";
-import type { AuthorResponse } from "../../types/author_types";
+import { imgSrc } from "../../utils/imgSrc";
 import Select from "react-select";
 
 const ReactQuill = lazy(() => import("react-quill-new"));
 
-function Add_blog() {
-  const [loading, setLoading] = useState(false);
-  const [authors, setAuthors] = useState<AuthorResponse[]>([]);
-
-  const fileInputRef = useRef<HTMLInputElement | null>(null);
-
-  const { id } = useParams();               // ✅ get id from URL
+export default function Add_blog() {
+  const { id } = useParams();
   const isEditMode = !!id;
   const navigate = useNavigate();
 
-  const [previewImage, setPreviewImage] = useState<string | null>(null);
-  const [existingImages, setExistingImages] = useState<string[]>([]);
+  const [title, setTitle] = useState("");
+  const [author, setAuthor] = useState("");
+  const [authors, setAuthors] = useState<AuthorResponse[]>([]);
+  const [shortDesc, setShortDesc] = useState("");
+  const [description, setDescription] = useState("");
+  const [status, setStatus] = useState(true);
+  const [loading, setLoading] = useState(false);
+  const [loadingData, setLoadingData] = useState(!!id);
+
+  const [existingImage, setExistingImage] = useState("");
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState("");
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   const [slugManuallyEdited, setSlugManuallyEdited] = useState(false);
   const [metaTitleManuallyEdited, setMetaTitleManuallyEdited] = useState(false);
   const [metaDescManuallyEdited, setMetaDescManuallyEdited] = useState(false);
   const [meta, setMeta] = useState<MetaFields>({});
 
-  const [loadingData, setLoadingData] = useState(!!id); // ✅ based on id
+  const [originalSlug, setOriginalSlug] = useState("");
+  const [proposedSlug, setProposedSlug] = useState("");
+  const [showSlugPrompt, setShowSlugPrompt] = useState(false);
+  const [slugDecisionMade, setSlugDecisionMade] = useState(false);
 
-  const [formData, setFormData] = useState<BlogTypes>({
+  const [errors, setErrors] = useState({
     title: "",
     author: "",
-    shortDescription: "",
+    shortDesc: "",
     description: "",
-    status: true,
-    image: null,
+    image: "",
   });
 
-  const [errors, setErrors] = useState({ name: "", author: "" });
-
   useEffect(() => {
-    if (!formData.title) return;
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setMeta((prev) => ({
-      ...prev,
-      slug: slugManuallyEdited
-        ? prev.slug
-        : slugify(formData.title, { lower: true, strict: true, trim: true }),
-      meta_title: metaTitleManuallyEdited ? prev.meta_title : formData.title,
-      meta_description: metaDescManuallyEdited
-        ? prev.meta_description
-        : formData.shortDescription,
-    }));
-  }, [formData.title, formData.shortDescription, slugManuallyEdited, metaTitleManuallyEdited, metaDescManuallyEdited]);
+    const fetchAuthors = async () => {
+      try {
+        const res = await getAllauthorsApi();
+        setAuthors(res.data.data ?? []);
+      } catch (err) {
+        console.error(err);
+        toast.error("Failed to load authors");
+      }
+    };
 
-  // ✅ Fetch blog by ID from API (refresh-safe)
+    fetchAuthors();
+  }, []);
+
   useEffect(() => {
     if (!id) {
       setLoadingData(false);
@@ -75,28 +80,18 @@ function Add_blog() {
     const fetchBlog = async () => {
       try {
         const res = await getBlogByIdApi(id);
-        console.log(res.data);
+        const blog = res.data.data ?? res.data;
 
-        // ✅ adjust based on your backend response shape
-        // if { success: true, data: {...} } → use res.data.data
-        // if blog object directly           → use res.data
-        const blog: BlogResponse = res.data.data ?? res.data;
-
-        setFormData({
-          title: blog.title,
-          author: blog.author?._id || "",
-          shortDescription: blog.shortDescription || "",
-          description: blog.description || "",
-          status: blog.isActive,
-          image: null,
-        });
-
-        if (blog.image) {
-          setExistingImages([blog.image]);
-        }
+        setTitle(blog.title ?? "");
+        setAuthor(blog.author?._id ??"");
+        setShortDesc(blog.shortDescription ?? "");
+        setDescription(blog.description ?? "");
+        setStatus(blog.isActive);
+        setExistingImage(blog.image ?? "");
 
         if (blog.meta && Object.keys(blog.meta).length > 0) {
           setMeta(blog.meta);
+          setOriginalSlug(blog.meta.slug ?? "");
           setSlugManuallyEdited(true);
           setMetaTitleManuallyEdited(true);
           setMetaDescManuallyEdited(true);
@@ -110,115 +105,193 @@ function Add_blog() {
     };
 
     fetchBlog();
-  }, [id]);
+  }, [id, navigate]);
+
+  useEffect(() => {
+    if (!title) return;
+
+    const generatedSlug = slugify(title, {
+      lower: true,
+      strict: true,
+      trim: true,
+    });
+
+    if (isEditMode && originalSlug && !slugDecisionMade) {
+      if (generatedSlug !== originalSlug) {
+        setProposedSlug(generatedSlug);
+        setShowSlugPrompt(true);
+      } else {
+        setShowSlugPrompt(false);
+        setProposedSlug("");
+      }
+    }
+
+    setMeta((prev) => ({
+      ...prev,
+      slug: isEditMode || slugManuallyEdited ? prev.slug : generatedSlug,
+      meta_title: metaTitleManuallyEdited ? prev.meta_title : title,
+      meta_description: metaDescManuallyEdited
+        ? prev.meta_description
+        : shortDesc,
+    }));
+  }, [
+    title,
+    shortDesc,
+    slugManuallyEdited,
+    metaTitleManuallyEdited,
+    metaDescManuallyEdited,
+    isEditMode,
+    originalSlug,
+    slugDecisionMade,
+  ]);
+
+  const handleKeepOldSlug = () => {
+    setMeta((prev) => ({ ...prev, slug: originalSlug }));
+    setShowSlugPrompt(false);
+    setSlugDecisionMade(true);
+    setSlugManuallyEdited(true);
+    toast.info("Old URL will be kept");
+  };
+
+  const handleUpdateSlug = () => {
+    setMeta((prev) => ({ ...prev, slug: proposedSlug }));
+    setShowSlugPrompt(false);
+    setSlugDecisionMade(true);
+    setSlugManuallyEdited(true);
+    toast.info("URL will be updated. Old links will redirect automatically.");
+  };
+
+  const pickImage = (file: File | undefined | null) => {
+    if (!file) return;
+
+    const allowed = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
+
+    if (!allowed.includes(file.type)) {
+      setErrors((prev) => ({
+        ...prev,
+        image: "Only JPG, PNG, or WebP images are accepted",
+      }));
+      return;
+    }
+
+    if (file.size > 2 * 1024 * 1024) {
+      setErrors((prev) => ({
+        ...prev,
+        image: "Image must be under 2 MB",
+      }));
+      return;
+    }
+
+    setErrors((prev) => ({ ...prev, image: "" }));
+    setImageFile(file);
+    setImagePreview(URL.createObjectURL(file));
+  };
+
+  const isEditorEmpty = (html: string) =>
+    html.replace(/<[^>]+>/g, "").trim().length === 0;
 
   const validateForm = () => {
-    const newErrors = { name: "", author: "" };
-    let isValid = true;
+    const next = {
+      title: "",
+      author: "",
+      shortDesc: "",
+      description: "",
+      image: "",
+    };
+    let ok = true;
 
-    if (!formData.title.trim()) {
-      newErrors.name = "Blog title is required";
-      isValid = false;
+    if (!title.trim()) {
+      next.title = "Title is required";
+      ok = false;
     }
 
-    if (!formData.author.trim()) {
-      newErrors.author = "Author name is required";
-      isValid = false;
+    if (!author) {
+      next.author = "Author is required";
+      ok = false;
     }
 
-    setErrors(newErrors);
-    if (!isValid) scrollToFirstError(newErrors);
-    return isValid;
-  };
-
-  const scrollToFirstError = (newErrors: typeof errors) => {
-    const firstErrorKey = Object.keys(newErrors).find(
-      (key) => newErrors[key as keyof typeof newErrors] !== ""
-    );
-    if (!firstErrorKey) return;
-    const element = document.getElementById(firstErrorKey);
-    if (element) {
-      element.scrollIntoView({ behavior: "smooth", block: "center" });
-      setTimeout(() => (element as HTMLElement).focus(), 300);
+    if (!shortDesc.trim()) {
+      next.shortDesc = "Short description is required";
+      ok = false;
     }
+
+    if (
+      !description.trim() ||
+      description === "<p><br></p>" ||
+      isEditorEmpty(description)
+    ) {
+      next.description = "Description is required";
+      ok = false;
+    }
+
+    if (!imageFile && !existingImage) {
+      next.image = "Blog image is required";
+      ok = false;
+    }
+
+    setErrors(next);
+    return ok;
   };
 
-  const removeImage = () => {
-    setPreviewImage(null);
-    setFormData((prev) => ({ ...prev, image: null }));
-  };
-
-  const removeExistingImage = () => {
-    setExistingImages([]);
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = async () => {
     if (!validateForm()) return;
+
+    if (showSlugPrompt) {
+      toast.warning("Please choose whether to keep or update the blog URL");
+      document
+        .getElementById("slug-prompt")
+        ?.scrollIntoView({ behavior: "smooth", block: "center" });
+      return;
+    }
 
     const metaWithoutImages = { ...meta };
     delete metaWithoutImages.og_image;
     delete metaWithoutImages.twitter_image;
 
+    const fd = new FormData();
+    fd.append("title", title.trim());
+    fd.append("author", author);
+    fd.append("shortDescription", shortDesc);
+    fd.append("description", description);
+    fd.append("status", String(status));
+    fd.append("existingImage", existingImage);
+    fd.append("meta", JSON.stringify(metaWithoutImages));
+
+    if (imageFile) fd.append("image", imageFile);
+    if (meta.og_image instanceof File) fd.append("og_image", meta.og_image);
+    if (meta.twitter_image instanceof File) {
+      fd.append("twitter_image", meta.twitter_image);
+    }
+
     try {
       setLoading(true);
 
-      const payload = new FormData();
-      payload.append("title", formData.title.trim());
-      payload.append("shortDescription", formData.shortDescription);
-      payload.append("description", formData.description);
-      payload.append("author", formData.author || "");
-      payload.append("status", String(formData.status));
-      payload.append("existingImage", existingImages[0] || "");
-      payload.append("meta", JSON.stringify(metaWithoutImages));
-
-      if (formData.image) payload.append("image", formData.image);
-      if (meta.og_image instanceof File) payload.append("og_image", meta.og_image);
-      if (meta.twitter_image instanceof File) payload.append("twitter_image", meta.twitter_image);
-
-      if (isEditMode) {
-        await updateBlogApi(id!, payload); // ✅ use id from URL
+      if (isEditMode && id) {
+        await updateBlogApi(id, fd);
         toast.success("Blog updated");
       } else {
-        await add_blog_Api(payload);
+        await add_blog_Api(fd);
         toast.success("Blog added");
       }
 
       navigate("/admin-dash/blog");
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
       if (err?.response?.status === 409) {
-        toast.error("Blog already exists");
+        toast.error(
+          err?.response?.data?.message ||
+            "A blog with this slug already exists"
+        );
       } else {
-        toast.error("Action failed");
+        toast.error(err?.response?.data?.message || "Action failed");
       }
     } finally {
       setLoading(false);
     }
   };
 
-  useEffect(() => {
-    const fetchAuthors = async () => {
-      try {
-        const res = await getAllauthorsApi();
-        setAuthors(res.data.data);
-      } catch (err) {
-        console.error(err);
-        toast.error("Failed to load authors");
-      }
-    };
-    fetchAuthors();
-  }, []);
-
   if (loadingData) {
     return (
       <div className="p-2">
-        <div className="d-flex justify-content-between">
-          <h4 className="fw-bold">{isEditMode ? "Edit blog" : "Add blog"}</h4>
-          <button className="btn btn-secondary" onClick={() => navigate("/admin-dash/blog")}>
-            ← Back to blogs
-          </button>
-        </div>
         <div className="d-flex flex-column align-items-center justify-content-center py-5 gap-3">
           <div className="spinner-border text-secondary" role="status">
             <span className="visually-hidden">Loading...</span>
@@ -229,166 +302,270 @@ function Add_blog() {
     );
   }
 
+  const authorOptions = authors.map((item) => ({
+    value: item._id,
+    label: item.name,
+  }));
+
+  const selectedAuthor =
+    authorOptions.find((option) => option.value === author) ?? null;
+
+  const shownImage = imagePreview || (existingImage ? imgSrc(existingImage) : "");
+
   return (
     <div className="p-2">
-
-      {/* HEADER */}
       <div className="d-flex justify-content-between">
-        <h4 className="fw-bold">{isEditMode ? "Edit blog" : "Add blog"}</h4>
-        <button className="btn btn-secondary" onClick={() => navigate("/admin-dash/blog")}>
-          ← Back to blogs
+        <h4 className="fw-bold">{isEditMode ? "Edit Blog" : "Add Blog"}</h4>
+
+        <button
+          className="btn btn-secondary mb-3"
+          onClick={() => navigate("/admin-dash/blog")}
+        >
+          ← Back to Blogs
         </button>
       </div>
 
-      <div className="row mt-2">
+      <div className="p-md-2 mb-4">
+        <div className="row">
+          <div className="col-md-6">
+            <label htmlFor="title" className="form-label">
+              Title <span className="text-danger">*</span>
+            </label>
 
-        {/* LEFT */}
-        <div className="col-md-9 col-12 p-4">
+            <input
+              id="title"
+              className={`form-control mb-1 ${
+                errors.title ? "is-invalid" : ""
+              }`}
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+            />
 
-          <label className="form-label">
-            Title <span className="text-danger">*</span>
-          </label>
-          <input
-            id="name"
-            className={`form-control ${errors.name ? "is-invalid" : ""}`}
-            value={formData.title}
-            onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-          />
-          {errors.name && <div className="invalid-feedback">{errors.name}</div>}
-
-          <div className="row">
-            <div className="col-12 col-md-6">
-              <label htmlFor="author" className="form-label mt-3">
-                Author <span className="text-danger">*</span>
-              </label>
-              <Select
-                options={authors.map(author => ({
-                  value: author._id,
-                  label: author.name,
-                }))}
-                value={
-                  authors
-                    .map(author => ({ value: author._id, label: author.name }))
-                    .find(option => option.value === formData.author)
-                }
-                onChange={(selected) =>
-                  setFormData({ ...formData, author: selected?.value || "" })
-                }
-                isSearchable
-                className={`form-control mb-1 ${errors.author ? "is-invalid" : ""}`}
-              />
-              {errors.author && <div className="invalid-feedback">{errors.author}</div>}
-            </div>
-          </div>
-
-          <label className="form-label mt-4">Short Description</label>
-          <textarea
-            className="form-control"
-            value={formData.shortDescription}
-            onChange={(e) => setFormData({ ...formData, shortDescription: e.target.value })}
-          />
-
-          <div className="mt-4">
-            <h6>Description</h6>
-            <Suspense fallback={<div>Loading editor...</div>}>
-              <ReactQuill
-                className="custom-quill"
-                value={formData.description}
-                onChange={(value) => setFormData({ ...formData, description: value })}
-                modules={Modules}
-                theme="snow"
-              />
-            </Suspense>
-          </div>
-
-        </div>
-
-        {/* RIGHT */}
-        <div className="col-md-3 col-12 p-md-4 p-2">
-
-          <label className="form-label">Status</label>
-          <select
-            className="form-control"
-            value={formData.status ? "true" : "false"}
-            onChange={(e) => setFormData({ ...formData, status: e.target.value === "true" })}
-          >
-            <option value="true">Active</option>
-            <option value="false">Draft</option>
-          </select>
-
-          <div className="mt-4">
-            <h6>Image</h6>
-            <p className="font_small text-justify">
-              Preferred dimension is 300px x 450px.
-              Allowed file types: jpg, jpeg, png, webp.
-              Maximum file size: 2 MB.
-            </p>
-
-            <div className="upload-box text-center p-5 border">
-              <input
-                ref={fileInputRef}
-                type="file"
-                className="d-none"
-                id="imageUpload"
-                accept="image/*"
-                onChange={(e) => {
-                  const file = e.target.files?.[0];
-                  if (!file) return;
-                  setFormData((prev) => ({ ...prev, image: file }));
-                  setPreviewImage(URL.createObjectURL(file));
-                }}
-              />
-              <label htmlFor="imageUpload" style={{ cursor: "pointer" }}>
-                <p className="text-primary fw-semibold">
-                  Click / Drop file here to upload
-                </p>
-              </label>
-            </div>
-
-            {(previewImage || existingImages.length > 0) && (
-              <div className="mt-3">
-                <img
-                  src={previewImage || existingImages[0]}
-                  className="img-thumbnail"
-                  alt="preview"
-                />
-                <button
-                  className="btn btn-danger btn-sm mt-2"
-                  onClick={previewImage ? removeImage : removeExistingImage}
-                >
-                  Remove
-                </button>
-              </div>
+            {errors.title && (
+              <div className="invalid-feedback">{errors.title}</div>
             )}
           </div>
+
+          <div className="col-md-3">
+            <label htmlFor="author" className="form-label">
+              Author <span className="text-danger">*</span>
+            </label>
+
+            <Select
+              inputId="author"
+              options={authorOptions}
+              value={selectedAuthor}
+              onChange={(selected) => setAuthor(selected?.value ?? "")}
+              isSearchable
+              placeholder="Select author"
+              classNamePrefix="react-select"
+            />
+
+            {errors.author && (
+              <div className="text-danger mt-1 small">{errors.author}</div>
+            )}
+          </div>
+
+          <div className="col-md-3">
+            <label className="form-label">Status</label>
+
+            <select
+              className="form-control"
+              value={status ? "true" : "false"}
+              onChange={(e) => setStatus(e.target.value === "true")}
+            >
+              <option value="true">Active</option>
+              <option value="false">Draft</option>
+            </select>
+          </div>
+        </div>
+
+        {showSlugPrompt && (
+          <div id="slug-prompt" className="alert alert-info mt-2">
+            <p className="mb-2 fw-semibold">
+              The title change affects this blog&apos;s URL. What would you like
+              to do?
+            </p>
+
+            <p className="mb-1 small">
+              Current URL: <code>/{originalSlug}</code>
+            </p>
+
+            <p className="mb-3 small">
+              New URL: <code>/{proposedSlug}</code>
+            </p>
+
+            <div className="d-flex gap-2 flex-wrap">
+              <button
+                type="button"
+                className="btn btn-sm btn-outline-secondary"
+                onClick={handleKeepOldSlug}
+              >
+                Keep old URL
+              </button>
+
+              <button
+                type="button"
+                className="btn btn-sm btn-primary"
+                onClick={handleUpdateSlug}
+              >
+                Update URL
+              </button>
+            </div>
+          </div>
+        )}
+
+        <label htmlFor="shortDesc" className="form-label mt-3">
+          Short description <span className="text-danger">*</span>
+        </label>
+
+        <textarea
+          id="shortDesc"
+          className={`form-control mb-1 ${
+            errors.shortDesc ? "is-invalid" : ""
+          }`}
+          value={shortDesc}
+          rows={3}
+          onChange={(e) => setShortDesc(e.target.value)}
+        />
+
+        {errors.shortDesc && (
+          <div className="invalid-feedback">{errors.shortDesc}</div>
+        )}
+
+        <div className="mt-3">
+          <h6>
+            Blog Image <span className="text-danger">*</span>
+          </h6>
+
+          <p className="text-muted" style={{ fontSize: "13px" }}>
+            Allowed types: jpg, jpeg, png, webp · Max 2 MB
+          </p>
+
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*"
+            className="d-none"
+            onChange={(e) => {
+              pickImage(e.target.files?.[0]);
+              e.target.value = "";
+            }}
+          />
+
+          {shownImage ? (
+            <div className="d-flex align-items-center gap-3">
+              <img
+                src={shownImage}
+                alt="Blog"
+                className="img-thumbnail"
+                style={{ width: "180px", height: "120px", objectFit: "cover" }}
+              />
+
+              <div className="d-flex flex-column gap-2">
+                <button
+                  type="button"
+                  className="btn btn-sm btn-outline-dark"
+                  onClick={() => fileInputRef.current?.click()}
+                >
+                  Change image
+                </button>
+
+                {imageFile && (
+                  <button
+                    type="button"
+                    className="btn btn-sm btn-outline-secondary"
+                    onClick={() => {
+                      setImageFile(null);
+                      setImagePreview("");
+                    }}
+                  >
+                    Remove new image
+                  </button>
+                )}
+              </div>
+            </div>
+          ) : (
+            <div
+              className={`upload-box text-center p-5 border ${
+                errors.image ? "border-danger" : ""
+              }`}
+              style={{ cursor: "pointer" }}
+              onClick={() => fileInputRef.current?.click()}
+            >
+              <p className="mb-1">Click to select image</p>
+              <h4>+</h4>
+            </div>
+          )}
+
+          {errors.image && (
+            <div className="text-danger mt-1">{errors.image}</div>
+          )}
+        </div>
+
+        <div className="mt-3" id="description">
+          <h6>
+            Description <span className="text-danger">*</span>
+          </h6>
+
+          <Suspense fallback={<div>Loading editor...</div>}>
+            <ReactQuill
+              className="custom-quill"
+              value={description}
+              onChange={setDescription}
+              modules={Modules}
+              theme="snow"
+            />
+          </Suspense>
+
+          {errors.description && (
+            <div className="text-danger mt-1">{errors.description}</div>
+          )}
+        </div>
+
+        <div className="mt-5">
+          <SeoPreview
+            value={meta}
+            onChange={(next) => {
+              setMeta(next);
+
+              if (next.slug !== meta.slug) {
+                setSlugDecisionMade(true);
+                setShowSlugPrompt(false);
+              }
+            }}
+            baseUrl="https://test.boilerplate.pbsmokeup.in/"
+            onManualEdit={(field) => {
+              if (field === "slug") setSlugManuallyEdited(true);
+              if (field === "meta_title") setMetaTitleManuallyEdited(true);
+              if (field === "meta_description") {
+                setMetaDescManuallyEdited(true);
+              }
+            }}
+          />
+        </div>
+
+        <div className="mt-3 d-flex gap-2">
+          <button
+            className="btn btn-primary"
+            onClick={handleSubmit}
+            disabled={loading}
+          >
+            {loading ? "Saving..." : isEditMode ? "Update Blog" : "Add Blog"}
+          </button>
+
+          {isEditMode && (
+            <button
+              className="btn btn-secondary"
+              type="button"
+              onClick={() => navigate("/admin-dash/blogs")}
+              disabled={loading}
+            >
+              Cancel Edit
+            </button>
+          )}
         </div>
       </div>
-
-      <div className="mt-5 w-100 w-md-100">
-        <SeoPreview
-          value={meta}
-          onChange={setMeta}
-          baseUrl="https://test.boilerplate.pbsmokeup.in/"
-          onManualEdit={(field) => {
-            if (field === "slug") setSlugManuallyEdited(true);
-            if (field === "meta_title") setMetaTitleManuallyEdited(true);
-            if (field === "meta_description") setMetaDescManuallyEdited(true);
-          }}
-        />
-      </div>
-
-      <div className="mt-4">
-        <button
-          className="btn btn-primary"
-          onClick={handleSubmit}
-          disabled={loading}
-        >
-          {isEditMode ? "Update blog" : "Add blog"}
-        </button>
-      </div>
-
     </div>
   );
 }
-
-export default Add_blog;

@@ -1,5 +1,5 @@
-// components/careers/CareerTable.tsx
-import { useEffect, useMemo, useState } from "react";
+// components/careers/CareerTable.tsx — selection + bulk delete + fixed # column
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   useReactTable,
   getCoreRowModel,
@@ -8,7 +8,7 @@ import {
   getSortedRowModel,
   getFilteredRowModel,
 } from "@tanstack/react-table";
-import type { ColumnDef, SortingState } from "@tanstack/react-table";
+import type { ColumnDef, SortingState, RowSelectionState } from "@tanstack/react-table";
 import "../common/common_toggle.css";
 import "../common/common_styels.css";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -24,9 +24,10 @@ type Props = {
   data: CareerResponse[];
   onView: (application: CareerResponse) => void;
   onDelete: (id: string) => void;
+  // ✅ bulk delete — receives the selected ids
+  onBulkDelete: (ids: string[]) => Promise<void> | void;
 };
 
-// bootstrap badge color per status
 const STATUS_BADGE: Record<CareerStatus, string> = {
   new: "bg-primary",
   shortlisted: "bg-warning text-dark",
@@ -34,7 +35,30 @@ const STATUS_BADGE: Record<CareerStatus, string> = {
   rejected: "bg-secondary",
 };
 
-function CareerTable({ data, onView, onDelete }: Props) {
+function IndeterminateCheckbox({
+  indeterminate,
+  ...rest
+}: { indeterminate?: boolean } & React.InputHTMLAttributes<HTMLInputElement>) {
+  const ref = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (ref.current) {
+      ref.current.indeterminate = !rest.checked && !!indeterminate;
+    }
+  }, [indeterminate, rest.checked]);
+
+  return (
+    <input
+      type="checkbox"
+      ref={ref}
+      className="form-check-input"
+      style={{ cursor: "pointer" }}
+      {...rest}
+    />
+  );
+}
+
+function CareerTable({ data, onView, onDelete, onBulkDelete }: Props) {
   const [limit, setLimit] = useState(5);
 
   const [pagination, setPagination] = useState({
@@ -44,6 +68,9 @@ function CareerTable({ data, onView, onDelete }: Props) {
 
   const [sorting, setSorting] = useState<SortingState>([]);
   const [filtering, setFiltering] = useState("");
+
+  const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
+  const [bulkBusy, setBulkBusy] = useState(false);
 
   useEffect(() => {
     setPagination((prev) => ({
@@ -55,18 +82,51 @@ function CareerTable({ data, onView, onDelete }: Props) {
 
   const columns = useMemo<ColumnDef<CareerResponse>[]>(
     () => [
-        {
-  header: "#",
-  id: "serialNumber",
-  enableSorting: false,
-  cell: ({ row }) =>
-    pagination.pageIndex * pagination.pageSize + row.index + 1,
-},
+      // ✅ SELECTION COLUMN
+      {
+        id: "select",
+        enableSorting: false,
+        header: ({ table }) => (
+          <div className="d-flex align-items-center gap-1">
+            <IndeterminateCheckbox
+              checked={table.getIsAllRowsSelected()}
+              indeterminate={table.getIsSomeRowsSelected()}
+              onChange={table.getToggleAllRowsSelectedHandler()}
+              aria-label="Select all applications"
+            />
+            <span>All</span>
+          </div>
+        ),
+        cell: ({ row }) => (
+          <IndeterminateCheckbox
+            checked={row.getIsSelected()}
+            onChange={row.getToggleSelectedHandler()}
+            aria-label={`Select ${row.original.name}`}
+          />
+        ),
+      },
+      // ✅ FIXED serial column — position in the DISPLAYED order,
+      // not row.index (which is the original data order and goes
+      // 3,1,5,4,10 after sorting)
+      {
+        header: "#",
+        id: "serialNumber",
+        enableSorting: false,
+        cell: ({ row, table }) => {
+          const visibleRows = table.getRowModel().rows;
+          const indexOnPage = visibleRows.findIndex((r) => r.id === row.id);
+          return (
+            table.getState().pagination.pageIndex *
+              table.getState().pagination.pageSize +
+            indexOnPage +
+            1
+          );
+        },
+      },
       {
         header: "Name",
         accessorKey: "name",
         enableSorting: true,
-        // unread applications show bold, like an inbox
         cell: ({ row }) => (
           <span className={row.original.isRead ? "" : "fw-bold"}>
             {row.original.name}
@@ -121,24 +181,52 @@ function CareerTable({ data, onView, onDelete }: Props) {
         enableSorting: false,
       },
     ],
-    [onView, onDelete, pagination.pageIndex, pagination.pageSize]
+    [onView, onDelete]
   );
 
   // eslint-disable-next-line react-hooks/incompatible-library
   const table = useReactTable({
     data,
     columns,
+    getRowId: (row) => row._id,
     getCoreRowModel: getCoreRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
-    state: { pagination, sorting, globalFilter: filtering },
+    state: { pagination, sorting, globalFilter: filtering, rowSelection },
     onPaginationChange: setPagination,
     pageCount: Math.ceil(data.length / pagination.pageSize),
     getSortedRowModel: getSortedRowModel(),
     onSortingChange: setSorting,
     getFilteredRowModel: getFilteredRowModel(),
     onGlobalFilterChange: setFiltering,
+    enableRowSelection: true,
+    onRowSelectionChange: setRowSelection,
     autoResetPageIndex: false,
   });
+
+  // drop selections whose rows no longer exist
+  useEffect(() => {
+    setRowSelection((prev) => {
+      const validIds = new Set(data.map((d) => d._id));
+      const next: RowSelectionState = {};
+      for (const id of Object.keys(prev)) {
+        if (validIds.has(id)) next[id] = true;
+      }
+      return Object.keys(next).length === Object.keys(prev).length ? prev : next;
+    });
+  }, [data]);
+
+  const selectedIds = Object.keys(rowSelection);
+  const selectedCount = selectedIds.length;
+
+  const runBulk = async (fn: () => Promise<void> | void) => {
+    try {
+      setBulkBusy(true);
+      await fn();
+      table.resetRowSelection();
+    } finally {
+      setBulkBusy(false);
+    }
+  };
 
   const { pageIndex, pageSize } = table.getState().pagination;
   const totalRows = table.getFilteredRowModel().rows.length;
@@ -177,6 +265,34 @@ function CareerTable({ data, onView, onDelete }: Props) {
         </div>
       </div>
 
+      {/* ✅ BULK ACTION BAR */}
+      {selectedCount > 0 && (
+        <div
+          className="d-flex align-items-center gap-2 px-3 py-2 mb-2 flex-wrap"
+          style={{ background: "#eef2ff", borderRadius: "10px" }}
+        >
+          <span className="fw-medium me-1" style={{ fontSize: "14px" }}>
+            {selectedCount} selected
+          </span>
+
+          <button
+            className="btn btn-sm btn-danger"
+            disabled={bulkBusy}
+            onClick={() => runBulk(() => onBulkDelete(selectedIds))}
+          >
+            Delete selected
+          </button>
+
+          <button
+            className="btn btn-sm btn-outline-secondary ms-auto"
+            disabled={bulkBusy}
+            onClick={() => table.resetRowSelection()}
+          >
+            Clear
+          </button>
+        </div>
+      )}
+
       <div
         className="card-body table-responsive px-0"
         style={{ minHeight: "520px", overflowX: "auto" }}
@@ -195,10 +311,7 @@ function CareerTable({ data, onView, onDelete }: Props) {
                         : undefined
                     }
                   >
-                    {flexRender(
-                      header.column.columnDef.header,
-                      header.getContext()
-                    )}
+                    {flexRender(header.column.columnDef.header, header.getContext())}
                     {header.column.getCanSort() && (
                       <span className="ms-1 fw-bold">
                         {{
@@ -215,7 +328,11 @@ function CareerTable({ data, onView, onDelete }: Props) {
           <tbody>
             {table.getRowModel().rows.length > 0 ? (
               table.getRowModel().rows.map((row) => (
-                <tr key={row.id} className="tableRowHeight">
+                <tr
+                  key={row.id}
+                  className="tableRowHeight"
+                  style={row.getIsSelected() ? { background: "#f0f4ff" } : undefined}
+                >
                   {row.getVisibleCells().map((cell) => (
                     <td key={cell.id}>
                       {flexRender(cell.column.columnDef.cell, cell.getContext())}

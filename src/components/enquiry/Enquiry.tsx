@@ -2,7 +2,7 @@
 import { useEffect, useState } from "react";
 /* import { useNavigate } from "react-router-dom"; */
 import { useNavigate } from "react-router-dom";
-import {  deleteEnquiriesApi, getAllcontactusApi,  } from "../../services/allAPi";
+import {  bulkDeleteEnquiriesApi, deleteEnquiriesApi, getAllcontactusApi,  } from "../../services/allAPi";
 import '../common/common_toggle.css'
 import '../common/common_styels.css'
 import { toast } from "react-toastify";
@@ -64,18 +64,36 @@ export default function Enquiry() {
         {/* PRODUCT LIST */}
         {/* HEADER + SEARCH */}
         
-          <EnquiryTable data={enquiries} onView={(enquiry) =>  navigate(`/admin-dash/enquiry/view/${enquiry._id}`) }
-         onDelete={async (id) => {
-                      if (!window.confirm("Delete this Enquiry?")) return;
-        
-                      try {
-                        await deleteEnquiriesApi(id);
-                        fetchEnquiries();
-                        toast.success("Enquiry deleted");
-                      } catch {
-                        toast.error("Delete failed");
-                      }
-                    }}  />
+           
+<EnquiryTable
+  data={enquiries}
+  onView={(enquiry) =>
+    navigate(`/admin-dash/enquiry/view/${enquiry._id}`)
+  }
+  onDelete={async (id) => {
+    if (!window.confirm("Delete this enquiry?")) return;
+    try {
+      await deleteEnquiriesApi(id);
+      fetchEnquiries();
+      toast.success("Enquiry deleted");
+    } catch {
+      toast.error("Delete failed");
+    }
+  }}
+  // ✅ BULK DELETE
+  onBulkDelete={async (ids) => {
+    if (!window.confirm(`Delete ${ids.length} enquiry(ies)? This cannot be undone.`))
+      return;
+ 
+    try {
+      const res = await bulkDeleteEnquiriesApi(ids);
+      toast.success(res.data.message);
+      fetchEnquiries();
+    } catch {
+      toast.error("Bulk delete failed");
+    }
+  }}
+/>
         {/* <div className="card-body table-responsive" >
           <table className="table table-hover align-middle mb-0">
             <thead>

@@ -116,13 +116,22 @@ function JobTable({
           />
         ),
       },
-      {
-        header: "#",
-        id: "serialNumber",
-        enableSorting: false,
-        cell: ({ row }) =>
-          pagination.pageIndex * pagination.pageSize + row.index + 1,
-      },
+    {
+  header: "#",
+  id: "serialNumber",
+  enableSorting: false,
+  cell: ({ row, table }) => {
+    // rows as currently displayed (after sort/filter/pagination)
+    const visibleRows = table.getRowModel().rows;
+    const indexOnPage = visibleRows.findIndex((r) => r.id === row.id);
+    return (
+      table.getState().pagination.pageIndex *
+        table.getState().pagination.pageSize +
+      indexOnPage +
+      1
+    );
+  },
+},
       {
         header: "Title",
         accessorKey: "title",

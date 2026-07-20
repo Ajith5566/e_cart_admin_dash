@@ -1,4 +1,5 @@
 
+import type { PaginationMeta } from "../components/hooks/useServerPagination";
 import type { AuthorApiResponse, AuthorResponse } from "../types/author_types";
 import type { BannerApiResponse, BannerResponse } from "../types/bannerTypes";
 import type { BlogApiResponse, BlogResponse } from "../types/blogTypes";
@@ -6,7 +7,7 @@ import type { CareerApiResponse, CareerResponse, CareerStatus } from "../types/c
 import type { CategoryApiResponse, CategoryResponse } from "../types/categoryTypes";
 import type { EnquiryApiResponse, EnquiryResponse} from "../types/enquiryType";
 import type { JobResponse } from "../types/jobTypes";
-import type { LoginHistoryResponse } from "../types/login_history";
+import type { LoginHistoryEntry, LoginHistoryParams} from "../types/login_history";
 import type { AuthCheckResponse, ModulePermission, ModulesResponse, PermissionResponse } from "../types/permissionTypes";
 import type { TestimonialApiResponse, TestimonialResponse } from "../types/testimonialTypes";
 import type { AdminUserPayload,  FetchedAdminUser,  fetchedProducts, GetPagesResponse, PageType} from "../types/types";
@@ -39,10 +40,14 @@ export const adminLogoutApi = () => {
 /* ================= USERS ================= */
 //login history
 // services/allAPi.ts
-export const getLoginHistoryApi = () => {
-  return commonApi<LoginHistoryResponse>(
+export const getLoginHistoryApi = (params: LoginHistoryParams = {}) => {
+  const query = new URLSearchParams();
+  Object.entries(params).forEach(([k, v]) => {
+    if (v !== undefined && v !== "") query.append(k, String(v));
+  });
+  return commonApi<{ success: boolean; data: LoginHistoryEntry[]; pagination: PaginationMeta }>(
     "GET",
-    `${BASE_URL}/admin/login-history`
+    `${BASE_URL}/admin/login-history?${query.toString()}`
   );
 };
 //get profile
@@ -182,6 +187,19 @@ export const togglePageApi = (id: string) => {
   );
 };
 
+export const bulkTogglePagesApi = (ids: string[], isActive: boolean) =>
+  commonApi<{ success: boolean; message: string; modified: number }>(
+    "PATCH",
+    `${BASE_URL}/pages/bulk-status`,
+    { ids, isActive }
+  );
+
+export const bulkDeletePagesApi = (ids: string[]) =>
+  commonApi<{ success: boolean; message: string; deleted: number }>(
+    "POST",
+    `${BASE_URL}/pages/bulk-delete`,
+    { ids }
+  );
 
 //add admin user
 export const register_AdminUser_Api =async (reqBody:unknown)=>{
@@ -319,6 +337,20 @@ export const add_blog_Api =async (reqBody:unknown)=>{
     return await commonApi('POST',`${BASE_URL}/blogs`,reqBody)
 }
 
+export const bulkToggleBlogsApi = (ids: string[], isActive: boolean) =>
+  commonApi<{ success: boolean; message: string; modified: number }>(
+    "PATCH",
+    `${BASE_URL}/admin/blogs/bulk-status`,
+    { ids, isActive }
+  );
+ 
+export const bulkDeleteBlogsApi = (ids: string[]) =>
+  commonApi<{ success: boolean; message: string; deleted: number }>(
+    "POST",
+    `${BASE_URL}/admin/blogs/bulk-delete`,
+    { ids }
+  );
+  
 //get all blog
 export const getAllBlogsApi = () => {
   return commonApi<BlogApiResponse>("GET", `${BASE_URL}/get/blogs`);
@@ -531,6 +563,15 @@ export const getEnquiryByIdApi = (id: string) => {
     `${BASE_URL}/enquiryByid/${id}`
   );
 };
+export const bulkDeleteEnquiriesApi = (ids: string[]) =>
+  commonApi<{ success: boolean; message: string; deleted: number }>(
+    "POST",
+    `${BASE_URL}/contacts/bulk-delete`,
+    { ids }
+  );
+
+
+
 
  
 // list all applications (admin)
@@ -545,6 +586,13 @@ export const getCareerByIdApi = (id: string) => {
     `${BASE_URL}/careers/${id}`
   );
 };
+
+export const bulkDeleteCareersApi = (ids: string[]) =>
+  commonApi<{ success: boolean; message: string; deleted: number }>(
+    "POST",
+    `${BASE_URL}/careers/bulk-delete`,
+    { ids }
+  );
  
 // update workflow status (admin)
 export const updateCareerStatusApi = (
