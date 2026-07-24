@@ -42,6 +42,7 @@ export default function Add_blog() {
   const [quote, setQuote] = useState("");
   const [youtubeUrl, setYoutubeUrl] = useState("");
   const [readTime, setReadTime] = useState(1);
+  const [views, setViews] = useState<number | "">("");
   const [status, setStatus] = useState(true);
   const [loading, setLoading] = useState(false);
   const [loadingData, setLoadingData] = useState(!!id);
@@ -98,6 +99,7 @@ export default function Add_blog() {
         setQuote(blog.quote ?? "");
         setYoutubeUrl(blog.youtubeUrl ?? "");
         setReadTime(blog.readTime ?? 1);
+        setViews(blog.views ?? "");
         setStatus(blog.isActive);
         setExistingImage(blog.image ?? "");
 
@@ -225,6 +227,7 @@ export default function Add_blog() {
     fd.append("quote", quote);
     fd.append("youtubeUrl", youtubeUrl.trim());
     fd.append("readTime", String(readTime));
+    if (views !== "") fd.append("views", String(views));
     fd.append("status", String(status));
     fd.append("existingImage", existingImage);
     fd.append("meta", JSON.stringify(metaWithoutImages));
@@ -358,11 +361,11 @@ export default function Add_blog() {
         />
         {errors.shortDesc && <div className="invalid-feedback">{errors.shortDesc}</div>}
 
-        {/* ── Read Time + YouTube ── */}
+        {/* ── Read Time + View Count + YouTube ── */}
         <div className="row mt-3">
-          <div className="col-md-3">
+          <div className="col-md-2">
             <label htmlFor="readTime" className="form-label">
-              Read Time (minutes) <span className="text-danger">*</span>
+              Read Time (min) <span className="text-danger">*</span>
             </label>
             <input
               id="readTime"
@@ -375,7 +378,26 @@ export default function Add_blog() {
             {errors.readTime && <div className="invalid-feedback">{errors.readTime}</div>}
           </div>
 
-          <div className="col-md-9">
+          <div className="col-md-2">
+            <label htmlFor="views" className="form-label">
+              View Count{" "}
+              <span className="text-muted" style={{ fontSize: "12px" }}>(optional)</span>
+            </label>
+            <input
+              id="views"
+              type="number"
+              min={0}
+              className="form-control"
+              placeholder="e.g. 12500"
+              value={views}
+              onChange={(e) =>
+                setViews(e.target.value === "" ? "" : Number(e.target.value))
+              }
+            />
+            <small className="text-muted">Hidden if empty</small>
+          </div>
+
+          <div className="col-md-8">
             <label htmlFor="youtubeUrl" className="form-label">
               YouTube URL{" "}
               <span className="text-muted" style={{ fontSize: "12px" }}>(optional)</span>

@@ -122,6 +122,10 @@ function BannerTable({
         header: "Title",
         accessorKey: "title",
         enableSorting: true,
+         cell: ({ row }) => {
+          const title = row.original.title;
+          return title?.length > 40 ? title.substring(0, 40) + "..." : title;
+        },
       },
       {
         header: "Edit",
