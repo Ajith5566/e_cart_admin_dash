@@ -1,28 +1,28 @@
+// components/testimonials/Add_testimonial.tsx
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { useEffect, useState, useRef } from "react";
 import "react-quill-new/dist/quill.snow.css";
 import { toast } from "react-toastify";
-import { useNavigate, useParams } from "react-router-dom"; // ✅ removed useLocation
+import { useNavigate, useParams } from "react-router-dom";
 import {
   add_testimonial_Api,
- getTestimonialbyIdApi, // ✅ add this
+  getTestimonialbyIdApi,
   updatetestimonialApi,
 } from "../../services/allAPi";
 import type { TestimonialResponse, TestimonialTypes } from "../../types/testimonialTypes";
+import { imgSrc } from "../../utils/imgSrc"; // ✅ resolves local paths
 
 function Add_testimonial() {
   const [loading, setLoading] = useState(false);
-
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
-  const { id } = useParams();               // ✅ get id from URL
+  const { id } = useParams();
   const isEditMode = !!id;
   const navigate = useNavigate();
 
   const [previewImage, setPreviewImage] = useState<string | null>(null);
   const [existingImages, setExistingImages] = useState<string[]>([]);
-
-  const [loadingData, setLoadingData] = useState(!!id); // ✅ based on id
+  const [loadingData, setLoadingData] = useState(!!id);
 
   const [formData, setFormData] = useState<TestimonialTypes>({
     name: "",
@@ -35,7 +35,6 @@ function Add_testimonial() {
 
   const [errors, setErrors] = useState({ name: "", message: "", url: "" });
 
-  // ✅ Fetch testimonial by ID from API (refresh-safe)
   useEffect(() => {
     if (!id) {
       setLoadingData(false);
@@ -45,11 +44,6 @@ function Add_testimonial() {
     const fetchTestimonial = async () => {
       try {
         const res = await getTestimonialbyIdApi(id);
-        console.log(res.data);
-
-        // adjust based on your backend response shape
-        // { success: true, data: {...} } → res.data.data
-        // direct object               → res.data
         const testimonial: TestimonialResponse = res.data.data ?? res.data;
 
         setFormData({
@@ -61,9 +55,7 @@ function Add_testimonial() {
           url:         testimonial.url         || "",
         });
 
-        if (testimonial.image) {
-          setExistingImages([testimonial.image]);
-        }
+        if (testimonial.image) setExistingImages([testimonial.image]);
       } catch {
         toast.error("Failed to load testimonial");
         navigate("/admin-dash/testimonials");
@@ -80,22 +72,12 @@ function Add_testimonial() {
     let isValid = true;
     const urlRegex = /^(https?:\/\/)?([\w-]+\.)+[\w-]{2,}(\/.*)?$/;
 
-    if (!formData.name.trim()) {
-      newErrors.name = "This field is required";
-      isValid = false;
-    }
-
-    if (!formData.message.trim()) {
-      newErrors.message = "This field is required";
-      isValid = false;
-    }
-
+    if (!formData.name.trim()) { newErrors.name = "This field is required"; isValid = false; }
+    if (!formData.message.trim()) { newErrors.message = "This field is required"; isValid = false; }
     if (!formData.url.trim()) {
-      newErrors.url = "This field is required";
-      isValid = false;
+      newErrors.url = "This field is required"; isValid = false;
     } else if (!urlRegex.test(formData.url.trim())) {
-      newErrors.url = "Please enter a valid URL";
-      isValid = false;
+      newErrors.url = "Please enter a valid URL"; isValid = false;
     }
 
     setErrors(newErrors);
@@ -120,9 +102,7 @@ function Add_testimonial() {
     setFormData((prev) => ({ ...prev, image: null }));
   };
 
-  const removeExistingImage = () => {
-    setExistingImages([]);
-  };
+  const removeExistingImage = () => setExistingImages([]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -142,7 +122,7 @@ function Add_testimonial() {
       if (formData.image) payload.append("image", formData.image);
 
       if (isEditMode) {
-        await updatetestimonialApi(id!, payload); // ✅ use id from URL
+        await updatetestimonialApi(id!, payload);
         toast.success("Testimonial updated");
       } else {
         await add_testimonial_Api(payload);
@@ -162,7 +142,6 @@ function Add_testimonial() {
     }
   };
 
-  // ✅ Loading state
   if (loadingData) {
     return (
       <div>
@@ -185,13 +164,9 @@ function Add_testimonial() {
   return (
     <div>
 
-      {/* HEADER */}
       <div className="d-flex justify-content-between">
         <h4 className="fw-bold">{isEditMode ? "Edit testimonial" : "Add testimonial"}</h4>
-        <button
-          className="btn btn-secondary"
-          onClick={() => navigate("/admin-dash/testimonials")}
-        >
+        <button className="btn btn-secondary" onClick={() => navigate("/admin-dash/testimonials")}>
           ← Back to testimonials
         </button>
       </div>
@@ -256,7 +231,7 @@ function Add_testimonial() {
               onClick={handleSubmit}
               disabled={loading}
             >
-              {isEditMode ? "Update testimonial" : "Add testimonial"}
+              {loading ? "Saving..." : isEditMode ? "Update testimonial" : "Add testimonial"}
             </button>
           </div>
 
@@ -283,40 +258,70 @@ function Add_testimonial() {
               Maximum file size: 2 MB.
             </p>
 
-            <div className="upload-box text-center p-5 border">
-              <input
-                ref={fileInputRef}
-                type="file"
-                className="d-none"
-                id="imageUpload"
-                accept="image/*"
-                onChange={(e) => {
-                  const file = e.target.files?.[0];
-                  if (!file) return;
-                  setFormData((prev) => ({ ...prev, image: file }));
-                  setPreviewImage(URL.createObjectURL(file));
-                }}
-              />
-              <label htmlFor="imageUpload" style={{ cursor: "pointer" }}>
-                <p className="text-primary fw-semibold">
-                  Click / Drop file here to upload
-                </p>
-              </label>
-            </div>
+            {/* upload box — only when no image chosen */}
+            {!previewImage && existingImages.length === 0 && (
+              <div className="upload-box text-center p-5 border">
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  className="d-none"
+                  id="imageUpload"
+                  accept="image/*"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (!file) return;
+                    setFormData((prev) => ({ ...prev, image: file }));
+                    setPreviewImage(URL.createObjectURL(file));
+                    e.target.value = "";
+                  }}
+                />
+                <label htmlFor="imageUpload" style={{ cursor: "pointer" }}>
+                  <p className="text-primary fw-semibold mb-0">
+                    Click / Drop file here to upload
+                  </p>
+                </label>
+              </div>
+            )}
 
+            {/* ✅ FIXED: imgSrc() prefixes server origin for DB paths */}
             {(previewImage || existingImages.length > 0) && (
               <div className="mt-3">
                 <img
-                  src={previewImage || existingImages[0]}
-                  className="img-thumbnail"
+                  src={previewImage || imgSrc(existingImages[0])}
+                  className="img-thumbnail w-100"
                   alt="preview"
                 />
-                <button
-                  className="btn btn-danger btn-sm mt-2"
-                  onClick={previewImage ? removeImage : removeExistingImage}
-                >
-                  Remove
-                </button>
+                <div className="d-flex gap-2 mt-2">
+                  <button
+                    type="button"
+                    className="btn btn-outline-dark btn-sm"
+                    onClick={() => document.getElementById("imageUpload")?.click()}
+                  >
+                    Change
+                  </button>
+                  <button
+                    type="button"
+                    className="btn btn-danger btn-sm"
+                    onClick={previewImage ? removeImage : removeExistingImage}
+                  >
+                    Remove
+                  </button>
+                </div>
+                {/* hidden input for Change button */}
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  className="d-none"
+                  id="imageUpload"
+                  accept="image/*"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (!file) return;
+                    setFormData((prev) => ({ ...prev, image: file }));
+                    setPreviewImage(URL.createObjectURL(file));
+                    e.target.value = "";
+                  }}
+                />
               </div>
             )}
           </div>
