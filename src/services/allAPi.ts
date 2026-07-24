@@ -481,6 +481,30 @@ export const getbannerbyIdApi = (id: string) => {
     `${BASE_URL}/bannerByid/${id}`
   );
 };
+export const bulkToggleBannersApi = (ids: string[], isActive: boolean) =>
+  commonApi<{ success: boolean; message: string; modified: number }>(
+    "PATCH",
+    `${BASE_URL}/admin/banners/bulk-status`,
+    { ids, isActive }
+  );
+ 
+export const bulkDeleteBannersApi = (ids: string[]) =>
+  commonApi<{ success: boolean; message: string; deleted: number }>(
+    "POST",
+    `${BASE_URL}/admin/banners/bulk-delete`,
+    { ids }
+  );
+
+
+
+
+
+
+
+
+
+
+
 //author
 
 //add author

@@ -56,6 +56,7 @@ export default function Blogs() {
         canToggle={can("blog", "status")}
         canDelete={can("blog", "delete")}
         onToggle={async (id) => {
+          if (!window.confirm("Are you sure you want to change the status of this blog?")) return;
           try {
             await toggleBlogApi(id);
             fetchBlogs();

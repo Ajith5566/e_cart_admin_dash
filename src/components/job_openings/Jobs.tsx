@@ -56,6 +56,7 @@ export default function Jobs() {
         canToggle={can("jobs", "status")}
         canDelete={can("jobs", "delete")}
         onToggle={async (id) => {
+          if (!window.confirm("Are you sure you want to change the status of this blog?")) return;
           try {
             await toggleJobApi(id);
             fetchJobs();

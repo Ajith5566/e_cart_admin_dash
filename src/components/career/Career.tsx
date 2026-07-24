@@ -1,12 +1,18 @@
 // components/careers/Careers.tsx — filter icon + filter panel
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { bulkDeleteCareersApi, deleteCareerApi, getAllCareersApi } from "../../services/allAPi";
+import {
+  bulkDeleteCareersApi,
+  deleteCareerApi,
+  getAllCareersApi,
+  getAllJobsApi,
+} from "../../services/allAPi";
 import "../common/common_toggle.css";
 import "../common/common_styels.css";
 import { toast } from "react-toastify";
 import CareerTable from "./CareerTable";
 import type { CareerResponse, CareerStatus } from "../../types/careerTypes";
+import type { JobResponse } from "../../types/jobTypes";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faFilter, faXmark } from "@fortawesome/free-solid-svg-icons";
 
@@ -15,6 +21,7 @@ const STATUS_OPTIONS: CareerStatus[] = ["new", "shortlisted", "hired", "rejected
 export default function Careers() {
   const navigate = useNavigate();
   const [applications, setApplications] = useState<CareerResponse[]>([]);
+  const [jobs, setJobs] = useState<JobResponse[]>([]);
 
   // ✅ APPLIED filters — what actually filters the table
   const [statusFilter, setStatusFilter] = useState<"" | CareerStatus>("");
@@ -37,9 +44,22 @@ export default function Careers() {
     }
   };
 
+  // ✅ fetch ALL job postings — so filter shows every posted job, not just ones with applications
+  const fetchJobs = async () => {
+    try {
+      const res = await getAllJobsApi();
+      setJobs(res.data.data);
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to load jobs");
+    }
+  };
+
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchApplications();
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    fetchJobs();
   }, []);
 
   // close the panel when clicking outside it
@@ -54,10 +74,10 @@ export default function Careers() {
     return () => document.removeEventListener("mousedown", onClick);
   }, [showFilterPanel]);
 
-  // position options = unique job titles in the data
+  // ✅ position options = ALL job postings (from Job Postings), not just jobTitles that already have applications
   const positions = useMemo(
-    () => [...new Set(applications.map((a) => a.jobTitle))].sort(),
-    [applications]
+    () => [...new Set(jobs.map((j) => j.title))].sort(),
+    [jobs]
   );
 
   const filtered = useMemo(
@@ -238,38 +258,38 @@ export default function Careers() {
       )}
 
       <CareerTable
-  data={filtered}
-  onView={(application) =>
-    navigate(`/admin-dash/careers/view/${application._id}`)
-  }
-  onDelete={async (id) => {
-    if (!window.confirm("Delete this application? The CV file will also be removed.")) return;
-    try {
-      await deleteCareerApi(id);
-      fetchApplications();
-      toast.success("Application deleted");
-    } catch {
-      toast.error("Delete failed");
-    }
-  }}
-  // ✅ BULK DELETE
-  onBulkDelete={async (ids) => {
-    if (
-      !window.confirm(
-        `Delete ${ids.length} application(s)? Their CV files will also be removed. This cannot be undone.`
-      )
-    )
-      return;
- 
-    try {
-      const res = await bulkDeleteCareersApi(ids);
-      toast.success(res.data.message);
-      fetchApplications();
-    } catch {
-      toast.error("Bulk delete failed");
-    }
-  }}
-/>
+        data={filtered}
+        onView={(application) =>
+          navigate(`/admin-dash/careers/view/${application._id}`)
+        }
+        onDelete={async (id) => {
+          if (!window.confirm("Delete this application? The CV file will also be removed.")) return;
+          try {
+            await deleteCareerApi(id);
+            fetchApplications();
+            toast.success("Application deleted");
+          } catch {
+            toast.error("Delete failed");
+          }
+        }}
+        // ✅ BULK DELETE
+        onBulkDelete={async (ids) => {
+          if (
+            !window.confirm(
+              `Delete ${ids.length} application(s)? Their CV files will also be removed. This cannot be undone.`
+            )
+          )
+            return;
+
+          try {
+            const res = await bulkDeleteCareersApi(ids);
+            toast.success(res.data.message);
+            fetchApplications();
+          } catch {
+            toast.error("Bulk delete failed");
+          }
+        }}
+      />
     </div>
   );
 }

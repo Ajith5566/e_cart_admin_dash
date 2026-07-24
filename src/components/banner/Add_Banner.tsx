@@ -2,14 +2,15 @@
 import { useEffect, useState, useRef } from "react";
 import "react-quill-new/dist/quill.snow.css";
 import { toast } from "react-toastify";
-import { useNavigate, useParams } from "react-router-dom"; // ✅ removed useLocation
+import { useNavigate, useParams } from "react-router-dom";
 import {
   add_banner_Api,
-   getbannerbyIdApi,
-   // ✅ add this
+  getbannerbyIdApi,
   updatebannerApi,
 } from "../../services/allAPi";
 import type { BannerResponse, BannerTypes } from "../../types/bannerTypes";
+// ✅ resolves "/uploads/banners/..." → "http://localhost:4000/uploads/banners/..."
+import { imgSrc } from "../../utils/imgSrc";
 
 function Add_banner() {
   const [loading, setLoading] = useState(false);
@@ -17,7 +18,7 @@ function Add_banner() {
   const bannerInputRef = useRef<HTMLInputElement | null>(null);
   const mobileInputRef = useRef<HTMLInputElement | null>(null);
 
-  const { id } = useParams();               // ✅ get id from URL
+  const { id } = useParams();
   const isEditMode = !!id;
   const navigate = useNavigate();
 
@@ -26,7 +27,7 @@ function Add_banner() {
   const [previewMobile, setpreviewMobileImage] = useState<string | null>(null);
   const [existingMobileImages, setMobileExistingImages] = useState<string[]>([]);
 
-  const [loadingData, setLoadingData] = useState(!!id); // ✅ based on id
+  const [loadingData, setLoadingData] = useState(!!id);
 
   const [formData, setFormData] = useState<BannerTypes>({
     title: "",
@@ -42,7 +43,6 @@ function Add_banner() {
     name: "", mobile_image: "", banner_image: "", url: ""
   });
 
-  // ✅ Fetch banner by ID from API (refresh-safe)
   useEffect(() => {
     if (!id) {
       setLoadingData(false);
@@ -52,17 +52,14 @@ function Add_banner() {
     const fetchBanner = async () => {
       try {
         const res = await getbannerbyIdApi(id);
-        console.log(res.data);
-
-        // adjust based on your backend response shape
         const banner: BannerResponse = res.data.data ?? res.data;
 
         setFormData({
-          title:        banner.title,
-          sub_title:    banner.sub_title    || "",
-          url:          banner.url          || "",
-          button_text:  banner.button_text  || "",
-          status:       banner.isActive,
+          title:       banner.title,
+          sub_title:   banner.sub_title   || "",
+          url:         banner.url         || "",
+          button_text: banner.button_text || "",
+          status:      banner.isActive,
           banner_image: null,
           mobile_image: null,
         });
@@ -144,19 +141,19 @@ function Add_banner() {
       setLoading(true);
 
       const payload = new FormData();
-      payload.append("title",         formData.title.trim());
-      payload.append("sub_title",     formData.sub_title);
-      payload.append("button_text",   formData.button_text);
-      payload.append("url",           formData.url           || "");
-      payload.append("status",        String(formData.status));
-      payload.append("existingImage", existingImages[0]      || "");
-      payload.append("existingMobileImage", existingMobileImages[0] || ""); // ✅ was missing
+      payload.append("title",               formData.title.trim());
+      payload.append("sub_title",           formData.sub_title);
+      payload.append("button_text",         formData.button_text);
+      payload.append("url",                 formData.url || "");
+      payload.append("status",              String(formData.status));
+      payload.append("existingImage",       existingImages[0] || "");
+      payload.append("existingMobileImage", existingMobileImages[0] || "");
 
       if (formData.banner_image) payload.append("banner_image", formData.banner_image);
       if (formData.mobile_image) payload.append("mobile_image", formData.mobile_image);
 
       if (isEditMode) {
-        await updatebannerApi(id!, payload); // ✅ use id from URL
+        await updatebannerApi(id!, payload);
         toast.success("Banner updated");
       } else {
         await add_banner_Api(payload);
@@ -176,7 +173,6 @@ function Add_banner() {
     }
   };
 
-  // ✅ Loading state
   if (loadingData) {
     return (
       <div className="p-3">
@@ -199,7 +195,6 @@ function Add_banner() {
   return (
     <div className="p-3">
 
-      {/* HEADER */}
       <div className="d-flex justify-content-between">
         <h4 className="fw-bold">{isEditMode ? "Edit banner" : "Add banner"}</h4>
         <button className="btn btn-secondary" onClick={() => navigate("/admin-dash/banner")}>
@@ -261,7 +256,7 @@ function Add_banner() {
               onClick={handleSubmit}
               disabled={loading}
             >
-              {isEditMode ? "Update banner" : "Add banner"}
+              {loading ? "Saving..." : isEditMode ? "Update banner" : "Add banner"}
             </button>
           </div>
 
@@ -280,102 +275,163 @@ function Add_banner() {
             <option value="false">Draft</option>
           </select>
 
-          {/* Banner IMAGE */}
+          {/* BANNER IMAGE */}
           <div className="mt-4">
-            <h6>Banner Image</h6>
+            <h6>Banner Image <span className="text-danger">*</span></h6>
             <p className="font_small text-justify">
               Preferred dimension is 1920px x 720px.
               Allowed file types: jpg, jpeg, png, webp.
               Maximum file size: 2 MB.
             </p>
 
-            <div className="upload-box text-center p-5 border">
-              <input
-                ref={bannerInputRef}
-                type="file"
-                className="d-none"
-                id="bannerUpload"
-                accept="image/*"
-                onChange={(e) => {
-                  const file = e.target.files?.[0];
-                  if (!file) return;
-                  setFormData((prev) => ({ ...prev, banner_image: file }));
-                  setPreviewImage(URL.createObjectURL(file));
-                }}
-              />
-              <label htmlFor="bannerUpload" style={{ cursor: "pointer" }}>
-                <p className="text-primary fw-semibold">
-                  Click / Drop file here to upload
-                </p>
-              </label>
-            </div>
-             {errors.banner_image && (
+            {/* show upload box only when no image is chosen yet */}
+            {!previewImage && existingImages.length === 0 && (
+              <div className="upload-box text-center p-5 border">
+                <input
+                  ref={bannerInputRef}
+                  type="file"
+                  className="d-none"
+                  id="bannerUpload"
+                  accept="image/*"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (!file) return;
+                    setFormData((prev) => ({ ...prev, banner_image: file }));
+                    setPreviewImage(URL.createObjectURL(file));
+                    e.target.value = "";
+                  }}
+                />
+                <label htmlFor="bannerUpload" style={{ cursor: "pointer" }}>
+                  <p className="text-primary fw-semibold mb-0">
+                    Click / Drop file here to upload
+                  </p>
+                </label>
+              </div>
+            )}
+
+            {errors.banner_image && (
               <div className="invalid-feedback d-block">{errors.banner_image}</div>
             )}
 
+            {/* ✅ FIXED: imgSrc() prefixes server origin for DB paths */}
             {(previewImage || existingImages.length > 0) && (
               <div className="mt-3">
                 <img
-                  src={previewImage || existingImages[0]}
-                  className="img-thumbnail"
-                  alt="preview"
+                  src={previewImage || imgSrc(existingImages[0])}
+                  className="img-thumbnail w-100"
+                  alt="Banner preview"
                 />
-                <button
-                  className="btn btn-danger btn-sm mt-2"
-                  onClick={previewImage ? removeBannerImage : removeExistingImage}
-                >
-                  Remove
-                </button>
+                <div className="d-flex gap-2 mt-2">
+                  <button
+                    type="button"
+                    className="btn btn-outline-dark btn-sm"
+                    onClick={() => document.getElementById("bannerUpload")?.click()}
+                  >
+                    Change
+                  </button>
+                  <button
+                    type="button"
+                    className="btn btn-danger btn-sm"
+                    onClick={previewImage ? removeBannerImage : removeExistingImage}
+                  >
+                    Remove
+                  </button>
+                </div>
+                {/* hidden input for "Change" button */}
+                <input
+                  ref={bannerInputRef}
+                  type="file"
+                  className="d-none"
+                  id="bannerUpload"
+                  accept="image/*"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (!file) return;
+                    setFormData((prev) => ({ ...prev, banner_image: file }));
+                    setPreviewImage(URL.createObjectURL(file));
+                    e.target.value = "";
+                  }}
+                />
               </div>
             )}
           </div>
 
-          {/* Mobile IMAGE */}
+          {/* MOBILE IMAGE */}
           <div className="mt-4">
-            <h6>Mobile Image</h6>
+            <h6>Mobile Image <span className="text-danger">*</span></h6>
             <p className="font_small text-justify">
               Preferred dimension is 600px x 350px.
               Allowed file types: jpg, jpeg, png, webp.
               Maximum file size: 2 MB.
             </p>
 
-            <div className="upload-box text-center p-5 border">
-              <input
-                ref={mobileInputRef}
-                type="file"
-                className="d-none"
-                id="mobileUpload"
-                accept="image/*"
-                onChange={(e) => {
-                  const file = e.target.files?.[0];
-                  if (!file) return;
-                  setFormData((prev) => ({ ...prev, mobile_image: file }));
-                  setpreviewMobileImage(URL.createObjectURL(file));
-                }}
-              />
-              <label htmlFor="mobileUpload" style={{ cursor: "pointer" }}>
-                <p className="text-primary fw-semibold">
-                  Click / Drop file here to upload
-                </p>
-              </label>
-            </div>
-             {errors.mobile_image && (
+            {!previewMobile && existingMobileImages.length === 0 && (
+              <div className="upload-box text-center p-5 border">
+                <input
+                  ref={mobileInputRef}
+                  type="file"
+                  className="d-none"
+                  id="mobileUpload"
+                  accept="image/*"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (!file) return;
+                    setFormData((prev) => ({ ...prev, mobile_image: file }));
+                    setpreviewMobileImage(URL.createObjectURL(file));
+                    e.target.value = "";
+                  }}
+                />
+                <label htmlFor="mobileUpload" style={{ cursor: "pointer" }}>
+                  <p className="text-primary fw-semibold mb-0">
+                    Click / Drop file here to upload
+                  </p>
+                </label>
+              </div>
+            )}
+
+            {errors.mobile_image && (
               <div className="invalid-feedback d-block">{errors.mobile_image}</div>
             )}
 
+            {/* ✅ FIXED: imgSrc() prefixes server origin for DB paths */}
             {(previewMobile || existingMobileImages.length > 0) && (
               <div className="mt-3">
                 <img
-                  src={previewMobile || existingMobileImages[0]}
-                  className="img-thumbnail"
-                  alt="preview"
+                  src={previewMobile || imgSrc(existingMobileImages[0])}
+                  className="img-thumbnail w-100"
+                  alt="Mobile preview"
                 />
-                <button
-                  className="btn btn-danger btn-sm mt-2"
-                  onClick={previewMobile ? removeMobileImage : removeExistingMobileImage}
-                >
-                  Remove
-                </button>
+                <div className="d-flex gap-2 mt-2">
+                  <button
+                    type="button"
+                    className="btn btn-outline-dark btn-sm"
+                    onClick={() => document.getElementById("mobileUpload")?.click()}
+                  >
+                    Change
+                  </button>
+                  <button
+                    type="button"
+                    className="btn btn-danger btn-sm"
+                    onClick={previewMobile ? removeMobileImage : removeExistingMobileImage}
+                  >
+                    Remove
+                  </button>
+                </div>
+                {/* hidden input for "Change" button */}
+                <input
+                  ref={mobileInputRef}
+                  type="file"
+                  className="d-none"
+                  id="mobileUpload"
+                  accept="image/*"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (!file) return;
+                    setFormData((prev) => ({ ...prev, mobile_image: file }));
+                    setpreviewMobileImage(URL.createObjectURL(file));
+                    e.target.value = "";
+                  }}
+                />
               </div>
             )}
           </div>
