@@ -1,32 +1,31 @@
+// components/author/Add_blog_author.tsx — twitter + imgSrc fix + bulk-ready
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { useEffect, useState, lazy, Suspense, useRef } from "react";
 import "react-quill-new/dist/quill.snow.css";
 import { toast } from "react-toastify";
-import { useNavigate, useParams } from "react-router-dom"; // ✅ removed useLocation
+import { useNavigate, useParams } from "react-router-dom";
 import { Modules } from "../quillmodule";
 import {
-  add_author_Api,  getAuthorByIdApi,  // ✅ add this
+  add_author_Api,
+  getAuthorByIdApi,
   updateAuthorApi,
 } from "../../services/allAPi";
 import type { AuthorResponse, AuthorTypes } from "../../types/author_types";
+import { imgSrc } from "../../utils/imgSrc"; // ✅ resolves local paths
 
 const ReactQuill = lazy(() => import("react-quill-new"));
 
 function Add_blog_author() {
   const [loading, setLoading] = useState(false);
-
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
-  const { id } = useParams();      
-  /* console.log(id); */
-           // ✅ get id from URL
+  const { id } = useParams();
   const isEditMode = !!id;
   const navigate = useNavigate();
 
   const [previewImage, setPreviewImage] = useState<string | null>(null);
   const [existingImages, setExistingImages] = useState<string[]>([]);
-
-  const [loadingData, setLoadingData] = useState(!!id); // ✅ based on id
+  const [loadingData, setLoadingData] = useState(!!id);
 
   const [formData, setFormData] = useState<AuthorTypes>({
     name: "",
@@ -36,15 +35,14 @@ function Add_blog_author() {
     instagram: "",
     facebook: "",
     youtube: "",
+    twitter: "",   // ✅ twitter added
     status: true,
     image: null,
   });
 
   const [errors, setErrors] = useState({ name: "" });
 
-  // ✅ Fetch author by ID from API (refresh-safe)
   useEffect(() => {
-     
     if (!id) {
       setLoadingData(false);
       return;
@@ -52,36 +50,25 @@ function Add_blog_author() {
 
     const fetchAuthor = async () => {
       try {
-
-         
         const res = await getAuthorByIdApi(id);
-       
-        /* console.log(res.data); */
-           
-            
-
-        // adjust based on your backend response shape
-        // { success: true, data: {...} } → res.data.data
-        // direct object               → res.data
         const author: AuthorResponse = res.data.data ?? res.data;
+
         setFormData({
           name:        author.name,
           tagline:     author.tagline     || "",
           description: author.description || "",
           status:      author.isActive,
           image:       null,
-          linkedin:    author.linkedin  || "",
-          facebook:    author.facebook  || "",
-          instagram:   author.instagram || "",
-          youtube:     author.youtube   || "",
+          linkedin:    author.linkedin    || "",
+          facebook:    author.facebook    || "",
+          instagram:   author.instagram   || "",
+          youtube:     author.youtube     || "",
+          twitter:     author.twitter     || "", // ✅
         });
 
-        if (author.image) {
-          setExistingImages([author.image]);
-        }
-      } catch(err) {
+        if (author.image) setExistingImages([author.image]);
+      } catch {
         toast.error("Failed to load author");
-        /* console.error("4. Error", err); */
         navigate("/admin-dash/blogAuthor");
       } finally {
         setLoadingData(false);
@@ -122,9 +109,7 @@ function Add_blog_author() {
     setFormData((prev) => ({ ...prev, image: null }));
   };
 
-  const removeExistingImage = () => {
-    setExistingImages([]);
-  };
+  const removeExistingImage = () => setExistingImages([]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -134,20 +119,21 @@ function Add_blog_author() {
       setLoading(true);
 
       const payload = new FormData();
-      payload.append("name",        formData.name.trim());
-      payload.append("tagline",     formData.tagline.trim()  || "");
-      payload.append("description", formData.description);
-      payload.append("instagram",   formData.instagram       || "");
-      payload.append("linkedin",    formData.linkedin        || "");
-      payload.append("facebook",    formData.facebook        || "");
-      payload.append("youtube",     formData.youtube         || "");
-      payload.append("status",      String(formData.status));
-      payload.append("existingImage", existingImages[0]      || "");
+      payload.append("name",          formData.name.trim());
+      payload.append("tagline",       formData.tagline.trim()  || "");
+      payload.append("description",   formData.description);
+      payload.append("instagram",     formData.instagram       || "");
+      payload.append("linkedin",      formData.linkedin        || "");
+      payload.append("facebook",      formData.facebook        || "");
+      payload.append("youtube",       formData.youtube         || "");
+      payload.append("twitter",       formData.twitter         || ""); // ✅
+      payload.append("status",        String(formData.status));
+      payload.append("existingImage", existingImages[0]        || "");
 
       if (formData.image) payload.append("image", formData.image);
 
       if (isEditMode) {
-        await updateAuthorApi(id!, payload); // ✅ use id from URL
+        await updateAuthorApi(id!, payload);
         toast.success("Author updated");
       } else {
         await add_author_Api(payload);
@@ -167,7 +153,6 @@ function Add_blog_author() {
     }
   };
 
-  // ✅ Loading state
   if (loadingData) {
     return (
       <div className="p-2">
@@ -190,13 +175,9 @@ function Add_blog_author() {
   return (
     <div className="p-2">
 
-      {/* HEADER */}
       <div className="d-flex justify-content-between">
         <h4 className="fw-bold">{isEditMode ? "Edit Author" : "Add Author"}</h4>
-        <button
-          className="btn btn-secondary"
-          onClick={() => navigate("/admin-dash/blogAuthor")}
-        >
+        <button className="btn btn-secondary" onClick={() => navigate("/admin-dash/blogAuthor")}>
           ← Back to Authors
         </button>
       </div>
@@ -243,9 +224,10 @@ function Add_blog_author() {
             </Suspense>
           </div>
 
+          {/* Social links */}
           <div className="row mt-3">
             <div className="col-md-6">
-              <label className="form-label">Linkedin</label>
+              <label className="form-label">LinkedIn</label>
               <input
                 id="linkedin"
                 className="form-control"
@@ -257,8 +239,8 @@ function Add_blog_author() {
               <label htmlFor="instagram" className="form-label">Instagram</label>
               <input
                 id="instagram"
-                value={formData.instagram}
                 className="form-control"
+                value={formData.instagram}
                 onChange={(e) => setFormData({ ...formData, instagram: e.target.value })}
               />
             </div>
@@ -275,12 +257,26 @@ function Add_blog_author() {
               />
             </div>
             <div className="col-md-6">
-              <label htmlFor="youtube" className="form-label">Youtube</label>
+              <label htmlFor="youtube" className="form-label">YouTube</label>
               <input
                 id="youtube"
                 className="form-control"
                 value={formData.youtube}
                 onChange={(e) => setFormData({ ...formData, youtube: e.target.value })}
+              />
+            </div>
+          </div>
+
+          {/* ✅ Twitter / X */}
+          <div className="row mt-3">
+            <div className="col-md-6">
+              <label className="form-label">Twitter / X</label>
+              <input
+                id="twitter"
+                className="form-control"
+                placeholder="https://x.com/username"
+                value={formData.twitter}
+                onChange={(e) => setFormData({ ...formData, twitter: e.target.value })}
               />
             </div>
           </div>
@@ -299,48 +295,79 @@ function Add_blog_author() {
             <option value="true">Active</option>
             <option value="false">Draft</option>
           </select>
-<div className="mt-4">
+
+          <div className="mt-4">
             <h6>Image</h6>
             <p className="font_small text-justify">
-              Preferred dimension is 300px x 450px.
+              Preferred dimension is 300px x 300px.
               Allowed file types: jpg, jpeg, png, webp.
               Maximum file size: 2 MB.
             </p>
 
-            <div className="upload-box text-center p-5 border">
-              <input
-                ref={fileInputRef}
-                type="file"
-                className="d-none"
-                id="imageUpload"
-                accept="image/*"
-                onChange={(e) => {
-                  const file = e.target.files?.[0];
-                  if (!file) return;
-                  setFormData((prev) => ({ ...prev, image: file }));
-                  setPreviewImage(URL.createObjectURL(file));
-                }}
-              />
-              <label htmlFor="imageUpload" style={{ cursor: "pointer" }}>
-                <p className="text-primary fw-semibold">
-                  Click / Drop file here to upload
-                </p>
-              </label>
-            </div>
+            {/* Upload box — shown only when no image selected */}
+            {!previewImage && existingImages.length === 0 && (
+              <div className="upload-box text-center p-5 border">
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  className="d-none"
+                  id="imageUpload"
+                  accept="image/*"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (!file) return;
+                    setFormData((prev) => ({ ...prev, image: file }));
+                    setPreviewImage(URL.createObjectURL(file));
+                    e.target.value = "";
+                  }}
+                />
+                <label htmlFor="imageUpload" style={{ cursor: "pointer" }}>
+                  <p className="text-primary fw-semibold mb-0">
+                    Click / Drop file here to upload
+                  </p>
+                </label>
+              </div>
+            )}
 
+            {/* ✅ FIXED: imgSrc() prefixes server origin for DB paths */}
             {(previewImage || existingImages.length > 0) && (
               <div className="mt-3">
                 <img
-                  src={previewImage || existingImages[0]}
-                  className="img-thumbnail"
-                  alt="preview"
+                  src={previewImage || imgSrc(existingImages[0])}
+                  className="img-thumbnail w-100"
+                  alt="Author"
                 />
-                <button
-                  className="btn btn-danger btn-sm mt-2"
-                  onClick={previewImage ? removeImage : removeExistingImage}
-                >
-                  Remove
-                </button>
+                <div className="d-flex gap-2 mt-2">
+                  <button
+                    type="button"
+                    className="btn btn-outline-dark btn-sm"
+                    onClick={() => document.getElementById("imageUpload")?.click()}
+                  >
+                    Change
+                  </button>
+                  <button
+                    type="button"
+                    className="btn btn-danger btn-sm"
+                    onClick={previewImage ? removeImage : removeExistingImage}
+                  >
+                    Remove
+                  </button>
+                </div>
+                {/* hidden input for Change button */}
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  className="d-none"
+                  id="imageUpload"
+                  accept="image/*"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (!file) return;
+                    setFormData((prev) => ({ ...prev, image: file }));
+                    setPreviewImage(URL.createObjectURL(file));
+                    e.target.value = "";
+                  }}
+                />
               </div>
             )}
           </div>
@@ -353,7 +380,7 @@ function Add_blog_author() {
           onClick={handleSubmit}
           disabled={loading}
         >
-          {isEditMode ? "Update author" : "Add author"}
+          {loading ? "Saving..." : isEditMode ? "Update Author" : "Add Author"}
         </button>
       </div>
 

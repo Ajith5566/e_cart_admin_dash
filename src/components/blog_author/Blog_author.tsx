@@ -1,193 +1,78 @@
-/* eslint-disable react-hooks/exhaustive-deps */
 import { useEffect, useState } from "react";
-/* import { useNavigate } from "react-router-dom"; */
 import { useNavigate } from "react-router-dom";
-import { deleteAuthorApi, getAllauthorsApi, toggleAuthorApi } from "../../services/allAPi";
-import '../common/common_toggle.css'
-import '../common/common_styels.css'
+import {
+  bulkDeleteAuthorsApi,
+  bulkToggleAuthorsApi,
+  deleteAuthorApi,
+  getAllauthorsApi,
+  toggleAuthorApi,
+} from "../../services/allAPi";
 import { toast } from "react-toastify";
-import type { AuthorResponse } from "../../types/author_types";
 import AuthorTable from "./Author_table";
 import { useAuth } from "../../context/useAuth";
-
-/* import Pagination from "../Pagination"; */
-/* import PaginationLimit from "../PaginationLimit"; */
-/* import Pagination from "./Pagination"; */
-
+import type { AuthorResponse } from "../../types/author_types";
+ 
 export default function BlogAuthor() {
-
   const navigate = useNavigate();
-   const { can } = useAuth();
-
-
+  const { can } = useAuth();
   const [authors, setAuthors] = useState<AuthorResponse[]>([]);
-
-  //pagination
-  /* const [page, setPage] = useState(1); */
-  /*   const [totalPages, setTotalPages] = useState(1); */
-  /*  const [limit, setLimit] = useState(5) */
-
-
+ 
   const fetchAuthors = async () => {
     try {
       const res = await getAllauthorsApi();
-      /*  console.log(res);  */
-
       setAuthors(res.data.data);
-    } catch (err) {
-      console.error(err);
-      toast.error("Failed to load blogs");
+    } catch {
+      toast.error("Failed to load authors");
     }
   };
-
-  useEffect(() => {
-    fetchAuthors();
-  }, []);
-
-
-
-
-
-  /* ---------- SEARCH FILTER ---------- */
-  /*  const filteredProducts = products.filter((item) =>
-     item.productName
-       .toLowerCase()
-       .startsWith(search.toLowerCase())
-   );
-  */
+ 
+  // eslint-disable-next-line react-hooks/set-state-in-effect
+  useEffect(() => { fetchAuthors(); }, []);
+ 
   return (
-    <div className="container p-md-2 ">
+    <div className="container p-md-2">
       <div className="p-md-3 d-flex justify-content-between gap-5">
-        <h4 className="  fw-bold text-dark">
-          Author's
-        </h4>
+        <h4 className="fw-bold text-dark">Author's</h4>
         {can("author", "create") && (
-        <button
-          className="btn btn-success"
-          onClick={() => navigate("/admin-dash/blogAuthor/add")}
-        >
-          + Add Author
-        </button>
-         )}
+          <button className="btn btn-success" onClick={() => navigate("/admin-dash/blogAuthor/add")}>
+            + Add Author
+          </button>
+        )}
       </div>
-
-
-
-        {/* PRODUCT LIST */}
-        {/* HEADER + SEARCH */}
-        
-          <AuthorTable data={authors} onEdit={(author) =>  navigate(`/admin-dash/blogAuthor/edit/${author._id}`) }
-          canEdit={can("author", "update")}
+ 
+      <AuthorTable
+        data={authors}
+        onEdit={(author) => navigate(`/admin-dash/blogAuthor/edit/${author._id}`)}
+        canEdit={can("author", "update")}
         canToggle={can("author", "status")}
         canDelete={can("author", "delete")}
         onToggle={async (id) => {
+          try { await toggleAuthorApi(id); fetchAuthors(); }
+          catch { toast.error("Status update failed"); }
+        }}
+        onDelete={async (id) => {
+          if (!window.confirm("Delete this author? Their image will also be removed.")) return;
+          try { await deleteAuthorApi(id); fetchAuthors(); toast.success("Author deleted"); }
+          catch { toast.error("Delete failed"); }
+        }}
+        onBulkDelete={async (ids) => {
+          if (!window.confirm(`Delete ${ids.length} author(s)? Their images will also be removed.`)) return;
           try {
-            await toggleAuthorApi(id);
+            const res = await bulkDeleteAuthorsApi(ids);
+            toast.success(res.data.message);
             fetchAuthors();
-          } catch {
-            toast.error("Status update failed");
-          }
-        }} 
-         onDelete={async (id) => {
-                      if (!window.confirm("Delete this author?")) return;
-        
-                      try {
-                        await deleteAuthorApi(id);
-                        fetchAuthors();
-                        toast.success("Author deleted");
-                      } catch {
-                        toast.error("Delete failed");
-                      }
-                    }}  />
-        {/* <div className="card-body table-responsive" >
-          <table className="table table-hover align-middle mb-0">
-            <thead>
-              <tr>
-                <th>Category</th>
-                <th>Parent category</th>
-                <th>Edit</th>
-                <th>Status</th>
-              </tr>
-            </thead>
-
-            <tbody>
-
-              {categories.length > 0 ? (
-
-                categories.map((category) => (
-
-                  <tr key={category._id} className="tableRowHeight">
-
-                  
-                    <td>{category.name}</td>
-                    <td>{category.parent_category}</td>
-
-                    
-                    <td>
-                      <button
-                        className="btn btn-sm btn-warning"
-                        onClick={() =>
-                          navigate("/admin-dash/category/add", {
-                            state: { category },
-                          })
-                        }
-                      >
-                        Edit
-                      </button>
-                    </td>
-
-                    <td>
-                      <label className="toggle-switch">
-                        <input
-                          className="toggle-input"
-                          type="checkbox"
-                          checked={!!category.isActive}
-                          onChange={async () => {
-                            try {
-                              await toggleCategoryApi(category._id);
-                              fetchCategories();
-                            } catch {
-                              toast.error("Status update failed");
-                            }
-                          }}
-                        />
-                        <span className="toggle-slider"></span>
-                      </label>
-                    </td>
-
-                  </tr>
-
-                ))
-
-              ) : (
-
-                <tr>
-                  <td colSpan={4} className="text-center text-muted">
-                    No users found
-                  </td>
-                </tr>
-
-              )}
-
-            </tbody>
-
-          </table>
-
-
-
-        </div> */}
-        {/* ✅ PAGINATION UI (same as PageEditor) */}
-        <div className="d-flex justify-content-center align-items-center mb-2 gap-2 flex-wrap">
-
-          {/* <Pagination
-            currentPage={page}
-            totalPages={totalPages}
-            onChange={(newPage) => setPage(newPage)}
-          /> */}
-
-        </div>
-    
+          } catch { toast.error("Bulk delete failed"); }
+        }}
+        onBulkToggle={async (ids, isActive) => {
+          const verb = isActive ? "Activate" : "Deactivate";
+          if (!window.confirm(`${verb} ${ids.length} author(s)?`)) return;
+          try {
+            const res = await bulkToggleAuthorsApi(ids, isActive);
+            toast.success(res.data.message);
+            fetchAuthors();
+          } catch { toast.error("Bulk status update failed"); }
+        }}
+      />
     </div>
-
   );
 }

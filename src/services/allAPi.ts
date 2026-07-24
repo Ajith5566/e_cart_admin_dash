@@ -551,6 +551,19 @@ export const getAuthorByIdApi = (id: string) => {
     `${BASE_URL}/authorByid/${id}`
   );
 };
+export const bulkToggleAuthorsApi = (ids: string[], isActive: boolean) =>
+  commonApi<{ success: boolean; message: string; modified: number }>(
+    "PATCH",
+    `${BASE_URL}/admin/authors/bulk-status`,
+    { ids, isActive }
+  );
+ 
+export const bulkDeleteAuthorsApi = (ids: string[]) =>
+  commonApi<{ success: boolean; message: string; deleted: number }>(
+    "POST",
+    `${BASE_URL}/admin/authors/bulk-delete`,
+    { ids }
+  );
 
 //permission apis
 // services/allAPi.ts
