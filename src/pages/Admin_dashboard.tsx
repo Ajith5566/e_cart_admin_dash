@@ -109,7 +109,7 @@ const NAV_ITEMS: NavItem[] = [
         key: "Services",
         label: "Services",
         icon: faAddressBook,
-        path: "services"
+        path: "service"
       },
      
     ]
