@@ -13,6 +13,8 @@ import type {
   ModulesResponse,
   PermissionResponse,
 } from "../types/permissionTypes";
+import type { ServiceResponse } from "../types/serviceTypes";
+import type { TechnologyResponse } from "../types/technologyTypes";
 import type { TestimonialApiResponse, TestimonialResponse } from "../types/testimonialTypes";
 import type {
   AdminUserPayload,
@@ -575,4 +577,74 @@ export const bulkDeleteJobsApi = (ids: string[]) =>
     "POST",
     `${BASE_URL}/jobs/bulk-delete`,
     { ids }
+  );
+
+  /* ============================================================
+   Technology (POSTINGS)
+   ============================================================ */
+export const addTechnologyApi = (data: FormData) =>
+  commonApi("POST", `${BASE_URL}/admin/technologies`, data);
+ 
+export const getAllTechnologiesApi = () =>
+  commonApi<{ success: boolean; data: TechnologyResponse[] }>(
+    "GET", `${BASE_URL}/admin/technologies`
+  );
+ 
+export const getTechnologyByIdApi = (id: string) =>
+  commonApi<{ success: boolean; data: TechnologyResponse }>(
+    "GET", `${BASE_URL}/admin/technologies/${id}`
+  );
+ 
+export const updateTechnologyApi = (id: string, data: FormData) =>
+  commonApi("PUT", `${BASE_URL}/admin/technologies/${id}`, data);
+ 
+export const toggleTechnologyApi = (id: string) =>
+  commonApi("PATCH", `${BASE_URL}/admin/technologies/${id}/toggle`);
+ 
+export const deleteTechnologyApi = (id: string) =>
+  commonApi("DELETE", `${BASE_URL}/admin/technologies/${id}`);
+ 
+export const bulkToggleTechnologiesApi = (ids: string[], isActive: boolean) =>
+  commonApi<{ success: boolean; message: string; modified: number }>(
+    "PATCH", `${BASE_URL}/admin/technologies/bulk-status`, { ids, isActive }
+  );
+ 
+export const bulkDeleteTechnologiesApi = (ids: string[]) =>
+  commonApi<{ success: boolean; message: string; deleted: number }>(
+    "POST", `${BASE_URL}/admin/technologies/bulk-delete`, { ids }
+  );
+
+  /* ============================================================
+   SERVICES
+   ============================================================ */
+export const addServiceApi = (data: FormData) =>
+  commonApi("POST", `${BASE_URL}/admin/services`, data);
+
+export const getAllServicesApi = () =>
+  commonApi<{ success: boolean; data: ServiceResponse[] }>(
+    "GET", `${BASE_URL}/admin/services`
+  );
+
+export const getServiceByIdApi = (id: string) =>
+  commonApi<{ success: boolean; data: ServiceResponse }>(
+    "GET", `${BASE_URL}/admin/services/${id}`
+  );
+
+export const updateServiceApi = (id: string, data: FormData) =>
+  commonApi("PUT", `${BASE_URL}/admin/services/${id}`, data);
+
+export const toggleServiceApi = (id: string) =>
+  commonApi("PATCH", `${BASE_URL}/admin/services/${id}/toggle`);
+
+export const deleteServiceApi = (id: string) =>
+  commonApi("DELETE", `${BASE_URL}/admin/services/${id}`);
+
+export const bulkToggleServicesApi = (ids: string[], isActive: boolean) =>
+  commonApi<{ success: boolean; message: string; modified: number }>(
+    "PATCH", `${BASE_URL}/admin/services/bulk-status`, { ids, isActive }
+  );
+
+export const bulkDeleteServicesApi = (ids: string[]) =>
+  commonApi<{ success: boolean; message: string; deleted: number }>(
+    "POST", `${BASE_URL}/admin/services/bulk-delete`, { ids }
   );

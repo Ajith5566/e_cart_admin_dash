@@ -97,6 +97,23 @@ const NAV_ITEMS: NavItem[] = [
       }
     ]
   },
+  {
+    key: "Case study", label: "Case study Listing", icon: faQuestionCircle, section: "Case Study", children: [
+      {
+        key: "Technologies",
+        label: "Technologies",
+        icon: faAddressBook,
+        path: "technology"
+      },
+       {
+        key: "Services",
+        label: "Services",
+        icon: faAddressBook,
+        path: "services"
+      },
+     
+    ]
+  },
 
   { key: "settings", label: "Settings", icon: faGear, path: "/admin-dash/settings", section: "System" },
   { key: "profile", label: "Profile", icon: faGear, path: "/admin-dash/profile", section: "System" },

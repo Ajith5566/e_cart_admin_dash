@@ -37,70 +37,82 @@ import Careers from "./components/career/Career";
 import CareerView from "./components/career/CareerView";
 import Jobs from "./components/job_openings/Jobs";
 import Add_job from "./components/job_openings/Add_job";
+import Technologies from "./components/technology/Technologies";
+import Add_technology from "./components/technology/Add_technology";
+import Services from "./components/services/Services";
+import Add_service from "./components/services/ServiceForm";
 
 
 function App() {
   return (
     <>
       <Routes>
-        <Route path="/" element={ <GuestRoute><HomePage /></GuestRoute>} />
-         <Route path="/forgot-password" element={<ForgotPassword />} />
-         <Route path="/reset-password/:token" element={<ResetPassword />} />
-          {/* code */}
+        <Route path="/" element={<GuestRoute><HomePage /></GuestRoute>} />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route path="/reset-password/:token" element={<ResetPassword />} />
+        {/* code */}
         {/* ADMIN LAYOUT */}
-        <Route path="/admin-dash" element={ <AuthProvider><Admin_dashboard /></AuthProvider>}>
+        <Route path="/admin-dash" element={<AuthProvider><Admin_dashboard /></AuthProvider>}>
           <Route path="pages" element={<PageEditor />} />
           <Route path="pages/add" element={<PermissionProtectedRoute module="pages" action="create"><Add_page /></PermissionProtectedRoute>} />
           <Route path="pages/edit/:id" element={<PermissionProtectedRoute module="pages" action="update"><Add_page /></PermissionProtectedRoute>} />
 
           <Route path="products" element={<Products />} />
-          <Route path="product/add" element={<PermissionProtectedRoute module="products" action="create"><Add_product/></PermissionProtectedRoute>} />
+          <Route path="product/add" element={<PermissionProtectedRoute module="products" action="create"><Add_product /></PermissionProtectedRoute>} />
           <Route path="product/edit/:id" element={<PermissionProtectedRoute module="products" action="update"><Add_product /></PermissionProtectedRoute>} />  {/* ✅ new */}
 
-          <Route path="user" element={<RoleProtectedRoute allowedRoles={["super_admin"]}>  <User_page /> </RoleProtectedRoute>}  />
-          <Route path="user/add" element={ <RoleProtectedRoute allowedRoles={["super_admin"]} > <Add_user /> </RoleProtectedRoute>}  />
-          <Route path="user/edit/:id" element={ <RoleProtectedRoute allowedRoles={["super_admin"]} > <Add_user /> </RoleProtectedRoute>}  />
+          <Route path="user" element={<RoleProtectedRoute allowedRoles={["super_admin"]}>  <User_page /> </RoleProtectedRoute>} />
+          <Route path="user/add" element={<RoleProtectedRoute allowedRoles={["super_admin"]} > <Add_user /> </RoleProtectedRoute>} />
+          <Route path="user/edit/:id" element={<RoleProtectedRoute allowedRoles={["super_admin"]} > <Add_user /> </RoleProtectedRoute>} />
 
-          <Route path="category" element={<Product_category/>} />
-          <Route path="category/add" element={<PermissionProtectedRoute module="category" action="create"><Add_category/></PermissionProtectedRoute>} />
-          <Route path="category/edit/:id" element={<PermissionProtectedRoute module="category" action="update"><Add_category/></PermissionProtectedRoute>} />
+          <Route path="category" element={<Product_category />} />
+          <Route path="category/add" element={<PermissionProtectedRoute module="category" action="create"><Add_category /></PermissionProtectedRoute>} />
+          <Route path="category/edit/:id" element={<PermissionProtectedRoute module="category" action="update"><Add_category /></PermissionProtectedRoute>} />
 
-          <Route path="blog" element={<Blog/>}  />
-          <Route path="blog/add" element={<PermissionProtectedRoute module="blog" action="create"><Add_blog/></PermissionProtectedRoute>} />
-          <Route path="blog/edit/:id" element={<PermissionProtectedRoute module="blog" action="update"><Add_blog/></PermissionProtectedRoute>} />
+          <Route path="blog" element={<Blog />} />
+          <Route path="blog/add" element={<PermissionProtectedRoute module="blog" action="create"><Add_blog /></PermissionProtectedRoute>} />
+          <Route path="blog/edit/:id" element={<PermissionProtectedRoute module="blog" action="update"><Add_blog /></PermissionProtectedRoute>} />
 
-          <Route path="blogAuthor" element={<BlogAuthor/>}  />
-          <Route path="blogAuthor/add" element={<PermissionProtectedRoute module="author" action="create"><Add_blog_author/></PermissionProtectedRoute>} />
-          <Route path="blogAuthor/edit/:id" element={<PermissionProtectedRoute module="author" action="update"><Add_blog_author/></PermissionProtectedRoute>} />
-          
-
-          <Route path="testimonials" element={<Testimonials/>} />
-          <Route path="testimonials/add" element={<PermissionProtectedRoute module="testimonials" action="create"><Add_testimonial/></PermissionProtectedRoute>} />
-           <Route path="testimonials/edit/:id" element={<PermissionProtectedRoute module="testimonials" action="update"><Add_testimonial/></PermissionProtectedRoute>} />
+          <Route path="blogAuthor" element={<BlogAuthor />} />
+          <Route path="blogAuthor/add" element={<PermissionProtectedRoute module="author" action="create"><Add_blog_author /></PermissionProtectedRoute>} />
+          <Route path="blogAuthor/edit/:id" element={<PermissionProtectedRoute module="author" action="update"><Add_blog_author /></PermissionProtectedRoute>} />
 
 
-          <Route path="banner" element={<Banner/>} />
-          <Route path="banner/add" element={<PermissionProtectedRoute module="banner" action="create"><Add_banner/></PermissionProtectedRoute>} />
-          <Route path="banner/edit/:id" element={<PermissionProtectedRoute module="banner" action="update"><Add_banner/></PermissionProtectedRoute>} />
-
-           <Route path="profile" element={<Profile />} />
-           <Route path="login-history" element={<RoleProtectedRoute allowedRoles={["super_admin"]}>  <LoginHistory /> </RoleProtectedRoute>}  />
+          <Route path="testimonials" element={<Testimonials />} />
+          <Route path="testimonials/add" element={<PermissionProtectedRoute module="testimonials" action="create"><Add_testimonial /></PermissionProtectedRoute>} />
+          <Route path="testimonials/edit/:id" element={<PermissionProtectedRoute module="testimonials" action="update"><Add_testimonial /></PermissionProtectedRoute>} />
 
 
-          <Route path="settings" element={<RoleProtectedRoute allowedRoles={["super_admin"]} > <Settings/> </RoleProtectedRoute>} />
+          <Route path="banner" element={<Banner />} />
+          <Route path="banner/add" element={<PermissionProtectedRoute module="banner" action="create"><Add_banner /></PermissionProtectedRoute>} />
+          <Route path="banner/edit/:id" element={<PermissionProtectedRoute module="banner" action="update"><Add_banner /></PermissionProtectedRoute>} />
+
+          <Route path="profile" element={<Profile />} />
+          <Route path="login-history" element={<RoleProtectedRoute allowedRoles={["super_admin"]}>  <LoginHistory /> </RoleProtectedRoute>} />
+
+
+          <Route path="settings" element={<RoleProtectedRoute allowedRoles={["super_admin"]} > <Settings /> </RoleProtectedRoute>} />
           <Route path="/admin-dash/role-permissions" element={<RoleProtectedRoute allowedRoles={["super_admin"]}><RolePermissions /></RoleProtectedRoute>} />
 
-           <Route path="enquiry" element={<Enquiry/>}  />
-             <Route path="enquiry/view/:id" element={<EnquiryView />} />  {/* ✅ new */}
+          <Route path="enquiry" element={<Enquiry />} />
+          <Route path="enquiry/view/:id" element={<EnquiryView />} />  {/* ✅ new */}
 
-              <Route path="career" element={<Careers/>}  /> 
-                <Route path="careers/view/:id" element={<CareerView />} />
+          <Route path="career" element={<Careers />} />
+          <Route path="careers/view/:id" element={<CareerView />} />
 
-                <Route path="job" element={<Jobs/>}  /> 
-                <Route path="jobs/add" element={<Add_job />} />
-                <Route path="jobs/edit/:id" element={<Add_job />} />
-              </Route>
-      
+          <Route path="job" element={<Jobs />} />
+          <Route path="jobs/add" element={<PermissionProtectedRoute module="jobs" action="create"><Add_job /></PermissionProtectedRoute>} />
+          <Route path="jobs/edit/:id" element={<PermissionProtectedRoute module="jobs" action="update"><Add_job /></PermissionProtectedRoute>} />
+
+          <Route path="technology" element={<Technologies />} />
+          <Route path="technology/add" element={<PermissionProtectedRoute module="technology" action="create"><Add_technology /></PermissionProtectedRoute>} />
+          <Route path="technology/edit/:id" element={<PermissionProtectedRoute module="technology" action="update"><Add_technology /></PermissionProtectedRoute>} />
+
+          <Route path="service" element={<Services />} />
+          <Route path="service/add" element={<PermissionProtectedRoute module="service" action="create"><Add_service /></PermissionProtectedRoute>} />
+          <Route path="service/edit/:id" element={<PermissionProtectedRoute module="technology" action="update"><Add_service /></PermissionProtectedRoute>} />
+        </Route>
+
       </Routes>
 
       <ToastContainer
