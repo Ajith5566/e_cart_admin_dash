@@ -23,6 +23,9 @@ import type {
   GetPagesResponse,
   PageType,
 } from "../types/types";
+  import type { IndustryResponse } from "../types/industryTypes";
+   import type { SolutionResponse } from "../types/solutionTypes";
+   import type { CaseStudyResponse } from "../types/caseStudyTypes";
 import { BASE_URL } from "./baseURL";
 import { commonApi } from "./commonAPi";
 
@@ -647,4 +650,119 @@ export const bulkToggleServicesApi = (ids: string[], isActive: boolean) =>
 export const bulkDeleteServicesApi = (ids: string[]) =>
   commonApi<{ success: boolean; message: string; deleted: number }>(
     "POST", `${BASE_URL}/admin/services/bulk-delete`, { ids }
+  );
+
+
+
+/* ============================================================
+   INDUSTRIES
+   ============================================================ */
+export const addIndustryApi = (data: FormData) =>
+  commonApi("POST", `${BASE_URL}/admin/industries`, data);
+
+export const getAllIndustriesApi = () =>
+  commonApi<{ success: boolean; data: IndustryResponse[] }>(
+    "GET", `${BASE_URL}/admin/industries`
+  );
+
+export const getIndustryByIdApi = (id: string) =>
+  commonApi<{ success: boolean; data: IndustryResponse }>(
+    "GET", `${BASE_URL}/admin/industries/${id}`
+  );
+
+export const updateIndustryApi = (id: string, data: FormData) =>
+  commonApi("PUT", `${BASE_URL}/admin/industries/${id}`, data);
+
+export const toggleIndustryApi = (id: string) =>
+  commonApi("PATCH", `${BASE_URL}/admin/industries/${id}/toggle`);
+
+export const deleteIndustryApi = (id: string) =>
+  commonApi("DELETE", `${BASE_URL}/admin/industries/${id}`);
+
+export const bulkToggleIndustriesApi = (ids: string[], isActive: boolean) =>
+  commonApi<{ success: boolean; message: string; modified: number }>(
+    "PATCH", `${BASE_URL}/admin/industries/bulk-status`, { ids, isActive }
+  );
+
+export const bulkDeleteIndustriesApi = (ids: string[]) =>
+  commonApi<{ success: boolean; message: string; deleted: number }>(
+    "POST", `${BASE_URL}/admin/industries/bulk-delete`, { ids }
+  );
+
+
+
+/* ============================================================
+   SOLUTIONS
+   ============================================================ */
+export const addSolutionApi = (data: { name: string; status: boolean }) =>
+  commonApi("POST", `${BASE_URL}/admin/solutions`, data);
+
+export const getAllSolutionsApi = () =>
+  commonApi<{ success: boolean; data: SolutionResponse[] }>(
+    "GET", `${BASE_URL}/admin/solutions`
+  );
+
+export const getSolutionByIdApi = (id: string) =>
+  commonApi<{ success: boolean; data: SolutionResponse }>(
+    "GET", `${BASE_URL}/admin/solutions/${id}`
+  );
+
+export const updateSolutionApi = (id: string, data: { name: string; status: boolean }) =>
+  commonApi("PUT", `${BASE_URL}/admin/solutions/${id}`, data);
+
+export const toggleSolutionApi = (id: string) =>
+  commonApi("PATCH", `${BASE_URL}/admin/solutions/${id}/toggle`);
+
+export const deleteSolutionApi = (id: string) =>
+  commonApi("DELETE", `${BASE_URL}/admin/solutions/${id}`);
+
+export const bulkToggleSolutionsApi = (ids: string[], isActive: boolean) =>
+  commonApi<{ success: boolean; message: string; modified: number }>(
+    "PATCH", `${BASE_URL}/admin/solutions/bulk-status`, { ids, isActive }
+  );
+
+export const bulkDeleteSolutionsApi = (ids: string[]) =>
+  commonApi<{ success: boolean; message: string; deleted: number }>(
+    "POST", `${BASE_URL}/admin/solutions/bulk-delete`, { ids }
+  );
+
+   
+// ============================================================
+// services/allAPi.ts — ADD CaseStudy APIs
+// ============================================================
+
+ 
+export const addCaseStudyApi = (data: FormData) =>
+  commonApi("POST", `${BASE_URL}/admin/case-studies`, data);
+ 
+export const getAllCaseStudiesApi = () =>
+  commonApi<{ success: boolean; data: Partial<CaseStudyResponse>[] }>(
+    "GET", `${BASE_URL}/admin/case-studies`
+  );
+ 
+export const getCaseStudyByIdApi = (id: string) =>
+  commonApi<{ success: boolean; data: CaseStudyResponse }>(
+    "GET", `${BASE_URL}/admin/case-studies/${id}`
+  );
+ 
+export const updateCaseStudyApi = (id: string, data: FormData) =>
+  commonApi("PUT", `${BASE_URL}/admin/case-studies/${id}`, data);
+ 
+export const toggleCaseStudyApi = (id: string) =>
+  commonApi("PATCH", `${BASE_URL}/admin/case-studies/${id}/toggle`);
+ 
+export const deleteCaseStudyApi = (id: string) =>
+  commonApi("DELETE", `${BASE_URL}/admin/case-studies/${id}`);
+ 
+export const removeGalleryImageApi = (id: string, imagePath: string) =>
+  commonApi("DELETE", `${BASE_URL}/admin/case-studies/${id}/gallery`, { imagePath });
+ 
+export const bulkToggleCaseStudiesApi = (ids: string[], isActive: boolean) =>
+  commonApi<{ success: boolean; message: string; modified: number }>(
+    "PATCH", `${BASE_URL}/admin/case-studies/bulk-status`, { ids, isActive }
+  );
+ 
+export const bulkDeleteCaseStudiesApi = (ids: string[]) =>
+  commonApi<{ success: boolean; message: string; deleted: number }>(
+    "POST", `${BASE_URL}/admin/case-studies/bulk-delete`, { ids }
   );

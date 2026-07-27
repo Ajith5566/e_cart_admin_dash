@@ -41,6 +41,12 @@ import Technologies from "./components/technology/Technologies";
 import Add_technology from "./components/technology/Add_technology";
 import Services from "./components/services/Services";
 import Add_service from "./components/services/ServiceForm";
+import Industries from "./components/industries/Industries";
+import Add_industry from "./components/industries/Add_industry";
+import Solutions from "./components/solutions/Solutions";
+import Add_solution from "./components/solutions/Add_solution";
+import CaseStudies from "./components/caseStudy/CaseStudies";
+import Add_caseStudy from "./components/caseStudy/Add_caseStudy";
 
 
 function App() {
@@ -111,6 +117,18 @@ function App() {
           <Route path="service" element={<Services />} />
           <Route path="service/add" element={<PermissionProtectedRoute module="service" action="create"><Add_service /></PermissionProtectedRoute>} />
           <Route path="service/edit/:id" element={<PermissionProtectedRoute module="technology" action="update"><Add_service /></PermissionProtectedRoute>} />
+
+          <Route path="industry" element={<Industries />} />
+          <Route path="industry/add" element={<PermissionProtectedRoute module="service" action="create"><Add_industry /></PermissionProtectedRoute>} />
+          <Route path="industry/edit/:id" element={<PermissionProtectedRoute module="technology" action="update"><Add_industry /></PermissionProtectedRoute>} />
+
+          <Route path="solution" element={<Solutions />} />
+          <Route path="solution/add" element={<PermissionProtectedRoute module="service" action="create"><Add_solution /></PermissionProtectedRoute>} />
+          <Route path="solution/edit/:id" element={<PermissionProtectedRoute module="technology" action="update"><Add_solution/></PermissionProtectedRoute>} />
+
+           <Route path="case-study" element={<CaseStudies />} />
+          <Route path="case-study/add" element={<PermissionProtectedRoute module="service" action="create"><Add_caseStudy /></PermissionProtectedRoute>} />
+          <Route path="case-study/edit/:id" element={<PermissionProtectedRoute module="technology" action="update"><Add_caseStudy/></PermissionProtectedRoute>} />
         </Route>
 
       </Routes>

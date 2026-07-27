@@ -99,6 +99,12 @@ const NAV_ITEMS: NavItem[] = [
   },
   {
     key: "Case study", label: "Case study Listing", icon: faQuestionCircle, section: "Case Study", children: [
+        {
+        key: "CaseStudies",
+        label: "CaseStudies",
+        icon: faAddressBook,
+        path: "case-study"
+      },
       {
         key: "Technologies",
         label: "Technologies",
@@ -110,6 +116,18 @@ const NAV_ITEMS: NavItem[] = [
         label: "Services",
         icon: faAddressBook,
         path: "service"
+      },
+       {
+        key: "Industries",
+        label: "Industries",
+        icon: faAddressBook,
+        path: "industry"
+      },
+      {
+        key: "Solutions",
+        label: "Solutions",
+        icon: faAddressBook,
+        path: "solution"
       },
      
     ]
