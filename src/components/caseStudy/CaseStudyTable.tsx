@@ -192,10 +192,6 @@ function CaseStudyTable({
       ),
     },
     {
-      header: "Client", accessorKey: "clientCompany", enableSorting: false,
-      cell: ({ row }) => <span className="text-muted" style={{ fontSize: "13px" }}>{row.original.clientCompany || "—"}</span>,
-    },
-    {
       header: "Edit", enableSorting: false,
       cell: ({ row }) => <button className="btn btn-sm btn-warning" disabled={!canEdit} onClick={() => onEdit(row.original)}>Edit</button>,
     },
