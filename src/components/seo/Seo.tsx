@@ -4,12 +4,13 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faChevronDown, faChevronUp } from "@fortawesome/free-solid-svg-icons";
 import type { MetaFields } from "../../types/types";
 import "./seo.css";
+import { imgSrc } from "../../utils/imgSrc";
 
 type SeoPreviewProps = {
   value: MetaFields;
   onChange: (updated: MetaFields) => void;
   baseUrl?: string;
-  onManualEdit?: (field: keyof MetaFields) => void; // 👈 add this
+  onManualEdit?: (field: keyof MetaFields) => void;
 };
 
 function SeoPreview({ value, onManualEdit, onChange, baseUrl = "https://yourdomain.com/" }: SeoPreviewProps) {
@@ -18,14 +19,14 @@ function SeoPreview({ value, onManualEdit, onChange, baseUrl = "https://yourdoma
   const handle =
     (field: keyof MetaFields) =>
       (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
-        onManualEdit?.(field); // 👈 notify parent before updating
+        onManualEdit?.(field);
         onChange({ ...value, [field]: e.target.value });
       };
 
   const previewUrl = `${baseUrl}${value.slug || ""}`;
   const previewTitle = value.meta_title || "Page Title";
   const previewDesc = value.meta_description || "Meta description here.";
-  // ✅ define state types
+
   const [keywords, setKeywords] = useState<string[]>([]);
   const [input, setInput] = useState<string>("");
 
@@ -36,7 +37,6 @@ function SeoPreview({ value, onManualEdit, onChange, baseUrl = "https://yourdoma
     }
   }, [value.meta_keywords]);
 
-  // ✅ type the keyboard event
   const handleKeyDown = (
     e: React.KeyboardEvent<HTMLInputElement>
   ) => {
@@ -50,7 +50,6 @@ function SeoPreview({ value, onManualEdit, onChange, baseUrl = "https://yourdoma
 
         setKeywords(updated);
 
-        // ✅ update meta
         onChange({
           ...value,
           meta_keywords: updated,
@@ -68,13 +67,21 @@ function SeoPreview({ value, onManualEdit, onChange, baseUrl = "https://yourdoma
 
     setKeywords(updated);
 
-    // ✅ update meta
     onChange({
       ...value,
       meta_keywords: updated,
     });
   };
 
+  // ✅ resolves a preview src for either a freshly-picked File or a saved server path
+  const resolveImagePreview = (val: File | string | null | undefined) => {
+    if (!val) return "";
+    if (val instanceof File) return URL.createObjectURL(val);
+    return imgSrc(val);
+  };
+
+  const ogImagePreview = resolveImagePreview(value.og_image);
+  const twitterImagePreview = resolveImagePreview(value.twitter_image);
 
   return (
     <div className="seo-preview-wrapper h-auto w-74 w-md-100">
@@ -227,12 +234,17 @@ function SeoPreview({ value, onManualEdit, onChange, baseUrl = "https://yourdoma
                   OG Image
                   <span className="seo-info" title="Image shown when shared on social media">ℹ</span>
                 </label>
-                {value.og_image && typeof value.og_image === "string" && (
-                  <img src={value.og_image} alt="OG preview" className="seo-og-preview" style={{
-                    width: "150px",
-                    height: "150px",
-                    objectFit: "cover"
-                  }} />
+                {ogImagePreview && (
+                  <img
+                    src={ogImagePreview}
+                    alt="OG preview"
+                    className="seo-og-preview"
+                    style={{
+                      width: "150px",
+                      height: "150px",
+                      objectFit: "cover"
+                    }}
+                  />
                 )}
                 <input
                   type="file"
@@ -282,19 +294,24 @@ function SeoPreview({ value, onManualEdit, onChange, baseUrl = "https://yourdoma
                   Twitter Image
                   <span className="seo-info" title="Image shown when shared on Twitter">ℹ</span>
                 </label>
-                {value.twitter_image && typeof value.twitter_image === "string" && (
-                  <img src={value.twitter_image} alt="Twitter preview" className="seo-og-preview" style={{
-                    width: "150px",
-                    height: "150px",
-                    objectFit: "cover"
-                  }} />
+                {twitterImagePreview && (
+                  <img
+                    src={twitterImagePreview}
+                    alt="Twitter preview"
+                    className="seo-og-preview"
+                    style={{
+                      width: "150px",
+                      height: "150px",
+                      objectFit: "cover"
+                    }}
+                  />
                 )}
                 <input
                   type="file"
                   accept="image/*"
                   className="seo-file-input"
                   onChange={(e) =>
-                    onChange({ ...value, twitter_image: e.target.files?.[0] ?? null }) // ✅ fixed — was og_image
+                    onChange({ ...value, twitter_image: e.target.files?.[0] ?? null })
                   }
                 />
               </div>
