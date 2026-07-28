@@ -1,19 +1,45 @@
-// components/caseStudy/CaseStudyTable.tsx
-import { useEffect, useMemo, useRef, useState } from "react";
+// components/caseStudy/CaseStudyTable.tsx — drag-and-drop row reorder
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
-  useReactTable, getCoreRowModel, flexRender,
-  getPaginationRowModel, getSortedRowModel, getFilteredRowModel,
+  useReactTable,
+  getCoreRowModel,
+  flexRender,
+  getPaginationRowModel,
+  getFilteredRowModel,
 } from "@tanstack/react-table";
-import type { ColumnDef, SortingState, RowSelectionState } from "@tanstack/react-table";
+import type { ColumnDef, RowSelectionState } from "@tanstack/react-table";
+import {
+  DndContext,
+  closestCenter,
+  PointerSensor,
+  useSensor,
+  useSensors,
+} from "@dnd-kit/core";
+import type { DragEndEvent } from "@dnd-kit/core";
+import {
+  SortableContext,
+  useSortable,
+  verticalListSortingStrategy,
+  arrayMove,
+} from "@dnd-kit/sortable";
+import { restrictToVerticalAxis } from "@dnd-kit/modifiers";
+import { CSS } from "@dnd-kit/utilities";
 import "../common/common_toggle.css";
 import "../common/common_styels.css";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faAngleLeft, faAngleRight, faAnglesLeft, faAnglesRight } from "@fortawesome/free-solid-svg-icons";
+import {
+  faAngleLeft, faAngleRight,
+  faAnglesLeft, faAnglesRight,
+  faGripVertical,
+} from "@fortawesome/free-solid-svg-icons";
 import type { CaseStudyResponse } from "../../types/caseStudyTypes";
 import { imgSrc } from "../../utils/imgSrc";
+import { updateCaseStudyOrderApi } from "../../services/allAPi";
+import { toast } from "react-toastify";
 
 type Props = {
   data: Partial<CaseStudyResponse>[];
+  onDataReorder: (reordered: Partial<CaseStudyResponse>[]) => void;
   onEdit: (cs: Partial<CaseStudyResponse>) => void;
   onToggle: (id: string) => void;
   onDelete: (id: string) => void;
@@ -34,42 +60,110 @@ function IndeterminateCheckbox({
   return <input type="checkbox" ref={ref} className="form-check-input" style={{ cursor: "pointer" }} {...rest} />;
 }
 
+// ── Sortable row — wraps each TR with dnd-kit ─────────────────
+function SortableRow({
+  id,
+  isSelected,
+  children,
+}: {
+  id: string;
+  isSelected: boolean;
+  children: (listeners: object, attributes: object) => React.ReactNode;
+}) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
+    useSortable({ id });
+
+  return (
+    <tr
+      ref={setNodeRef}
+      className="tableRowHeight"
+      style={{
+        transform: CSS.Transform.toString(transform),
+        transition,
+        opacity: isDragging ? 0.5 : 1,
+        background: isDragging ? "#eef2ff" : isSelected ? "#f0f4ff" : undefined,
+      }}
+    >
+      {children(listeners ?? {}, attributes)}
+    </tr>
+  );
+}
+
 function CaseStudyTable({
-  data, onEdit, onToggle, onDelete,
-  canEdit, canToggle, canDelete,
-  onBulkDelete, onBulkToggle,
+  data,
+  onDataReorder,
+  onEdit,
+  onToggle,
+  onDelete,
+  canEdit,
+  canToggle,
+  canDelete,
+  onBulkDelete,
+  onBulkToggle,
 }: Props) {
-  const [limit, setLimit] = useState(10);
+  const [limit, setLimit] = useState(25);
   const [pagination, setPagination] = useState({ pageIndex: 0, pageSize: limit });
-  const [sorting, setSorting] = useState<SortingState>([]);
   const [filtering, setFiltering] = useState("");
   const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
   const [bulkBusy, setBulkBusy] = useState(false);
+  const [savingOrder, setSavingOrder] = useState(false);
+  const [orderedData, setOrderedData] = useState(data);
 
+  useEffect(() => { setOrderedData(data); }, [data]);
   useEffect(() => {
     setPagination((prev) => ({ ...prev, pageIndex: 0, pageSize: limit }));
   }, [limit]);
 
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 8 } })
+  );
+
+  const handleDragEnd = useCallback(
+    async (event: DragEndEvent) => {
+      const { active, over } = event;
+      if (!over || active.id === over.id) return;
+
+      const oldIndex = orderedData.findIndex((d) => d._id === active.id);
+      const newIndex = orderedData.findIndex((d) => d._id === over.id);
+      if (oldIndex === -1 || newIndex === -1) return;
+
+      const reordered = arrayMove(orderedData, oldIndex, newIndex);
+      setOrderedData(reordered);
+
+      try {
+        setSavingOrder(true);
+        await updateCaseStudyOrderApi(
+          reordered.map((cs, index) => ({ id: cs._id!, displayOrder: index }))
+        );
+        onDataReorder(reordered);
+        toast.success("Order saved");
+      } catch {
+        toast.error("Failed to save order");
+        setOrderedData(data); // revert
+      } finally {
+        setSavingOrder(false);
+      }
+    },
+    [orderedData, data, onDataReorder]
+  );
+
   const columns = useMemo<ColumnDef<Partial<CaseStudyResponse>>[]>(() => [
+    // drag handle column — actual handle rendered in SortableRow render prop
+    { id: "drag", enableSorting: false, header: () => <span style={{ color: "#bbb" }}><FontAwesomeIcon icon={faGripVertical} /></span>, cell: () => null },
+    // selection
     {
       id: "select", enableSorting: false,
       header: ({ table }) => (
         <div className="d-flex align-items-center gap-1">
-          <IndeterminateCheckbox
-            checked={table.getIsAllRowsSelected()}
+          <IndeterminateCheckbox checked={table.getIsAllRowsSelected()}
             indeterminate={table.getIsSomeRowsSelected()}
-            onChange={table.getToggleAllRowsSelectedHandler()}
-            aria-label="Select all"
-          />
+            onChange={table.getToggleAllRowsSelectedHandler()} aria-label="Select all" />
           <span>All</span>
         </div>
       ),
       cell: ({ row }) => (
-        <IndeterminateCheckbox
-          checked={row.getIsSelected()}
-          onChange={row.getToggleSelectedHandler()}
-          aria-label={`Select ${row.original.title}`}
-        />
+        <IndeterminateCheckbox checked={row.getIsSelected()}
+          onChange={row.getToggleSelectedHandler()} aria-label={`Select ${row.original.title}`} />
       ),
     },
     {
@@ -84,12 +178,10 @@ function CaseStudyTable({
       cell: ({ row }) => row.original.bannerImage ? (
         <img src={imgSrc(row.original.bannerImage)} alt={row.original.title}
           style={{ width: "80px", height: "48px", objectFit: "cover", borderRadius: "6px" }} />
-      ) : (
-        <div className="text-muted" style={{ fontSize: "12px" }}>No image</div>
-      ),
+      ) : <span className="text-muted" style={{ fontSize: "12px" }}>No image</span>,
     },
     {
-      header: "Title", accessorKey: "title", enableSorting: true,
+      header: "Title", accessorKey: "title", enableSorting: false,
       cell: ({ row }) => (
         <div>
           <span className="fw-medium">{row.original.title}</span>
@@ -101,63 +193,38 @@ function CaseStudyTable({
     },
     {
       header: "Client", accessorKey: "clientCompany", enableSorting: false,
-      cell: ({ row }) => (
-        <span className="text-muted" style={{ fontSize: "13px" }}>
-          {row.original.clientCompany || "—"}
-        </span>
-      ),
-    },
-    {
-      header: "Order", accessorKey: "displayOrder", enableSorting: true,
-      cell: ({ row }) => (
-        <span className="badge bg-light text-dark border">{row.original.displayOrder ?? 0}</span>
-      ),
+      cell: ({ row }) => <span className="text-muted" style={{ fontSize: "13px" }}>{row.original.clientCompany || "—"}</span>,
     },
     {
       header: "Edit", enableSorting: false,
-      cell: ({ row }) => (
-        <button className="btn btn-sm btn-warning" disabled={!canEdit}
-          title={!canEdit ? "No permission" : undefined}
-          onClick={() => onEdit(row.original)}>
-          Edit
-        </button>
-      ),
+      cell: ({ row }) => <button className="btn btn-sm btn-warning" disabled={!canEdit} onClick={() => onEdit(row.original)}>Edit</button>,
     },
     {
       header: "Status", enableSorting: false,
       cell: ({ row }) => (
         <label className="toggle-switch">
-          <input className="toggle-input" type="checkbox"
-            checked={!!row.original.isActive} disabled={!canToggle}
-            onChange={() => onToggle(row.original._id!)} />
+          <input className="toggle-input" type="checkbox" checked={!!row.original.isActive}
+            disabled={!canToggle} onChange={() => onToggle(row.original._id!)} />
           <span className="toggle-slider"></span>
         </label>
       ),
     },
     {
       header: "Delete", enableSorting: false,
-      cell: ({ row }) => (
-        <button className="btn btn-sm btn-danger" disabled={!canDelete}
-          title={!canDelete ? "No permission" : undefined}
-          onClick={() => onDelete(row.original._id!)}>
-          delete
-        </button>
-      ),
+      cell: ({ row }) => <button className="btn btn-sm btn-danger" disabled={!canDelete} onClick={() => onDelete(row.original._id!)}>delete</button>,
     },
   ], [onEdit, onToggle, onDelete, canEdit, canToggle, canDelete]);
 
   // eslint-disable-next-line react-hooks/incompatible-library
   const table = useReactTable({
-    data,
+    data: orderedData,
     columns,
     getRowId: (row) => row._id!,
     getCoreRowModel: getCoreRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
-    state: { pagination, sorting, globalFilter: filtering, rowSelection },
+    state: { pagination, globalFilter: filtering, rowSelection },
     onPaginationChange: setPagination,
-    pageCount: Math.ceil(data.length / pagination.pageSize),
-    getSortedRowModel: getSortedRowModel(),
-    onSortingChange: setSorting,
+    pageCount: Math.ceil(orderedData.length / pagination.pageSize),
     getFilteredRowModel: getFilteredRowModel(),
     onGlobalFilterChange: setFiltering,
     enableRowSelection: true,
@@ -167,15 +234,16 @@ function CaseStudyTable({
 
   useEffect(() => {
     setRowSelection((prev) => {
-      const validIds = new Set(data.map((d) => d._id!));
+      const validIds = new Set(orderedData.map((d) => d._id!));
       const next: RowSelectionState = {};
       for (const id of Object.keys(prev)) if (validIds.has(id)) next[id] = true;
       return Object.keys(next).length === Object.keys(prev).length ? prev : next;
     });
-  }, [data]);
+  }, [orderedData]);
 
   const selectedIds = Object.keys(rowSelection);
   const selectedCount = selectedIds.length;
+  const rowIds = table.getRowModel().rows.map((r) => r.id);
 
   const runBulk = async (fn: () => Promise<void> | void) => {
     try { setBulkBusy(true); await fn(); table.resetRowSelection(); }
@@ -193,18 +261,23 @@ function CaseStudyTable({
         <div className="d-flex flex-wrap align-items-center gap-2 w-100 w-md-auto">
           <select className="form-select" style={{ minWidth: "90px", maxWidth: "120px" }}
             value={limit} onChange={(e) => setLimit(Number(e.target.value))}>
-            {[5, 10, 25, 50].map((n) => <option key={n} value={n}>{n}</option>)}
+            {[10, 25, 50, 100].map((n) => <option key={n} value={n}>{n}</option>)}
           </select>
           <span>entries per page</span>
+          {savingOrder && (
+            <span className="text-muted ms-2" style={{ fontSize: "13px" }}>
+              <span className="spinner-border spinner-border-sm me-1" role="status" />
+              Saving order...
+            </span>
+          )}
         </div>
-        <div className="d-flex flex-column flex-sm-row gap-2 justify-content-end align-items-start align-items-sm-center p-0 w-100 w-md-auto">
+        <div className="d-flex gap-2 justify-content-end align-items-center w-100 w-md-auto">
           <h6 className="mb-0">Search:</h6>
-          <input type="text" className="form-control" style={{ maxWidth: "250px", width: "100%" }}
+          <input type="text" className="form-control" style={{ maxWidth: "250px" }}
             value={filtering} onChange={(e) => setFiltering(e.target.value)} placeholder="searching..." />
         </div>
       </div>
 
-      {/* BULK BAR */}
       {selectedCount > 0 && (
         <div className="d-flex align-items-center gap-2 px-3 py-2 mb-2 flex-wrap"
           style={{ background: "#eef2ff", borderRadius: "10px" }}>
@@ -226,44 +299,61 @@ function CaseStudyTable({
         </div>
       )}
 
+      <p className="text-muted mb-2" style={{ fontSize: "12px" }}>
+        <FontAwesomeIcon icon={faGripVertical} className="me-1" />
+        Drag rows to reorder — saves automatically
+      </p>
+
       <div className="card-body table-responsive px-0" style={{ minHeight: "400px", overflowX: "auto" }}>
-        <table className="table table-hover align-middle mb-0" style={{ minWidth: "700px" }}>
-          <thead>
-            {table.getHeaderGroups().map((hg) => (
-              <tr key={hg.id}>
-                {hg.headers.map((h) => (
-                  <th key={h.id} className={h.column.getCanSort() ? "cursor-pointer" : ""}
-                    onClick={h.column.getCanSort() ? h.column.getToggleSortingHandler() : undefined}>
-                    {flexRender(h.column.columnDef.header, h.getContext())}
-                    {h.column.getCanSort() && (
-                      <span className="ms-1 fw-bold">
-                        {{ asc: "▲", desc: "▼" }[h.column.getIsSorted() as string] ?? "⇅"}
-                      </span>
-                    )}
-                  </th>
-                ))}
-              </tr>
-            ))}
-          </thead>
-          <tbody>
-            {table.getRowModel().rows.length > 0 ? (
-              table.getRowModel().rows.map((row) => (
-                <tr key={row.id} className="tableRowHeight"
-                  style={row.getIsSelected() ? { background: "#f0f4ff" } : undefined}>
-                  {row.getVisibleCells().map((cell) => (
-                    <td key={cell.id}>{flexRender(cell.column.columnDef.cell, cell.getContext())}</td>
+        <DndContext sensors={sensors} collisionDetection={closestCenter}
+          modifiers={[restrictToVerticalAxis]} onDragEnd={handleDragEnd}>
+          <table className="table table-hover align-middle mb-0" style={{ minWidth: "700px" }}>
+            <thead>
+              {table.getHeaderGroups().map((hg) => (
+                <tr key={hg.id}>
+                  {hg.headers.map((h) => (
+                    <th key={h.id}>{flexRender(h.column.columnDef.header, h.getContext())}</th>
                   ))}
                 </tr>
-              ))
-            ) : (
-              <tr><td colSpan={columns.length} className="text-center text-muted">No case studies found</td></tr>
-            )}
-          </tbody>
-        </table>
+              ))}
+            </thead>
+            <tbody>
+              <SortableContext items={rowIds} strategy={verticalListSortingStrategy}>
+                {table.getRowModel().rows.length > 0 ? (
+                  table.getRowModel().rows.map((row) => (
+                    <SortableRow key={row.id} id={row.id} isSelected={row.getIsSelected()}>
+                      {(listeners, attributes) => (
+                        <>
+                          {/* drag handle — first cell */}
+                          <td style={{ width: "36px" }}>
+                            <span {...(listeners as object)} {...(attributes as object)}
+                              style={{ cursor: "grab", color: "#bbb", padding: "0 4px" }}>
+                              <FontAwesomeIcon icon={faGripVertical} />
+                            </span>
+                          </td>
+                          {/* rest of cells — skip the "drag" column since we rendered it above */}
+                          {row.getVisibleCells()
+                            .filter((c) => c.column.id !== "drag")
+                            .map((cell) => (
+                              <td key={cell.id}>
+                                {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                              </td>
+                            ))}
+                        </>
+                      )}
+                    </SortableRow>
+                  ))
+                ) : (
+                  <tr><td colSpan={columns.length} className="text-center text-muted">No case studies found</td></tr>
+                )}
+              </SortableContext>
+            </tbody>
+          </table>
+        </DndContext>
       </div>
 
       <div className="d-flex flex-column flex-md-row justify-content-between align-items-center gap-3 mt-3">
-        <span className="text-center text-md-start">Showing {startRow} to {endRow} of {totalRows} entries</span>
+        <span>Showing {startRow} to {endRow} of {totalRows} entries</span>
         <div className="d-flex justify-content-center align-items-center mb-2 gap-2 flex-wrap">
           <button className="btn btn-outline-secondary btn-sm" onClick={() => table.setPageIndex(0)} disabled={!table.getCanPreviousPage()}><FontAwesomeIcon icon={faAnglesLeft} /></button>
           <button className="btn btn-outline-secondary btn-sm" onClick={() => table.previousPage()} disabled={!table.getCanPreviousPage()}><FontAwesomeIcon icon={faAngleLeft} /></button>

@@ -53,6 +53,7 @@ export default function CaseStudies() {
         canEdit={can("casestudy", "update")}
         canToggle={can("casestudy", "status")}
         canDelete={can("casestudy", "delete")}
+        onDataReorder={(reordered) => setCaseStudies(reordered)}  
         onToggle={async (id) => {
           try { await toggleCaseStudyApi(id); fetchCaseStudies(); }
           catch { toast.error("Status update failed"); }

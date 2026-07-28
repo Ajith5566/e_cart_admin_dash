@@ -45,7 +45,6 @@ export type CaseStudyResponse = {
   statistics: CaseStudyStatistic[];
   testimonial: CaseStudyTestimonial;
   featured: boolean;
-  displayOrder: number;
   isActive: boolean;
   adminId?: string;
   meta?: Record<string, unknown>;

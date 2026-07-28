@@ -30,15 +30,15 @@ export const Modules = {
   ],
 
   // ✅ HTML source code view button
-  htmlEditButton: {
-    debug: false,
-    msg: "Edit the content in HTML format",
-    okText: "Ok",
-    cancelText: "Cancel",
-    buttonHTML: "&lt;&gt;",
-    buttonTitle: "Show HTML source",
-    syntax: false,
-    prependSelector: "div#myelement",
-    editorModules: {},
-  },
+htmlEditButton: {
+  debug: false,
+  msg: "Edit the content in HTML format",
+  okText: "Ok",
+  cancelText: "Cancel",
+  buttonHTML: `<svg viewBox="0 0 18 18"><polyline points="6 2 2 9 6 16" style="fill:none;stroke:currentColor;stroke-linecap:round;stroke-linejoin:round;stroke-width:2"></polyline><polyline points="12 2 16 9 12 16" style="fill:none;stroke:currentColor;stroke-linecap:round;stroke-linejoin:round;stroke-width:2"></polyline></svg>`,
+  buttonTitle: "Show HTML source",
+  syntax: false,
+  prependSelector: "div#myelement",
+  editorModules: {},
+},
 };

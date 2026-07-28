@@ -29,6 +29,33 @@ const emptyTestimonial: CaseStudyTestimonial = {
   clientName: "", company: "", designation: "", quote: "", video: "", thumbnail: "",
 };
 
+type FormErrors = {
+  title: string;
+  bannerImage: string;
+  industry: string;
+  overview: string;
+  challenge: string;
+  proposedSolution: string;
+  implementation: string;
+  outcome: string;
+  statistics: string;
+};
+
+const emptyErrors: FormErrors = {
+  title: "",
+  bannerImage: "",
+  industry: "",
+  overview: "",
+  challenge: "",
+  proposedSolution: "",
+  implementation: "",
+  outcome: "",
+  statistics: "",
+};
+
+// strip HTML tags to check if a Quill field has real content (not just empty <p></p>)
+const hasRealContent = (html: string) => html.replace(/<[^>]*>/g, "").trim().length > 0;
+
 export default function Add_caseStudy() {
   const { id } = useParams();
   const isEditMode = !!id;
@@ -39,7 +66,6 @@ export default function Add_caseStudy() {
   const [shortDescription, setShortDescription] = useState("");
   const [status, setStatus] = useState(true);
   const [featured, setFeatured] = useState(false);
-  const [displayOrder, setDisplayOrder] = useState(0);
   const [loading, setLoading] = useState(false);
   const [loadingData, setLoadingData] = useState(!!id);
 
@@ -110,7 +136,7 @@ export default function Add_caseStudy() {
   const [metaTitleManuallyEdited, setMetaTitleManuallyEdited] = useState(false);
   const [metaDescManuallyEdited, setMetaDescManuallyEdited] = useState(false);
 
-  const [errors, setErrors] = useState({ title: "", bannerImage: "" });
+  const [errors, setErrors] = useState<FormErrors>(emptyErrors);
 
   // ── fetch dropdown options ─────────────────────────────────
   useEffect(() => {
@@ -150,7 +176,6 @@ export default function Add_caseStudy() {
         setShortDescription(cs.shortDescription ?? "");
         setStatus(cs.isActive);
         setFeatured(cs.featured ?? false);
-        setDisplayOrder(cs.displayOrder ?? 0);
         setClientName(cs.clientName ?? "");
         setClientCompany(cs.clientCompany ?? "");
         setClientDesignation(cs.clientDesignation ?? "");
@@ -238,12 +263,82 @@ export default function Add_caseStudy() {
     } catch { toast.error("Failed to remove gallery image"); }
   };
 
+  // ── scroll to first invalid field ──────────────────────────
+  const scrollToFirstError = (newErrors: FormErrors) => {
+    const firstErrorKey = Object.keys(newErrors).find(
+      (key) => newErrors[key as keyof FormErrors] !== ""
+    );
+    if (!firstErrorKey) return;
+    const element = document.getElementById(firstErrorKey);
+    if (element) {
+      element.scrollIntoView({ behavior: "smooth", block: "center" });
+      setTimeout(() => {
+        if (typeof (element as HTMLElement).focus === "function") {
+          (element as HTMLElement).focus();
+        }
+      }, 300);
+    }
+  };
+
+  // ── validation (mandatory fields) ──────────────────────────
   const validateForm = () => {
-    const next = { title: "", bannerImage: "" };
+    const next: FormErrors = { ...emptyErrors };
     let ok = true;
-    if (!title.trim()) { next.title = "Title is required"; ok = false; }
-    if (!bannerFile && !existingBanner) { next.bannerImage = "Banner image is required"; ok = false; }
+
+    if (!title.trim()) {
+      next.title = "Title is required";
+      ok = false;
+    }
+
+    if (!bannerFile && !existingBanner) {
+      next.bannerImage = "Banner image is required";
+      ok = false;
+    }
+
+    if (!industry) {
+      next.industry = "Industry is required";
+      ok = false;
+    }
+
+    if (!hasRealContent(overview)) {
+      next.overview = "Overview is required";
+      ok = false;
+    }
+
+    if (!hasRealContent(challenge)) {
+      next.challenge = "Challenge is required";
+      ok = false;
+    }
+
+    if (!hasRealContent(proposedSolution)) {
+      next.proposedSolution = "Proposed Solution is required";
+      ok = false;
+    }
+
+    if (!hasRealContent(implementation)) {
+      next.implementation = "Implementation is required";
+      ok = false;
+    }
+
+    if (!hasRealContent(outcome)) {
+      next.outcome = "Outcome is required";
+      ok = false;
+    }
+
+    const hasCompleteStat = statistics.some(
+      (s) => s.title.trim() !== "" && s.value.trim() !== ""
+    );
+    if (!hasCompleteStat) {
+      next.statistics = "At least one complete statistic (title + value) is required";
+      ok = false;
+    }
+
     setErrors(next);
+
+    if (!ok) {
+      scrollToFirstError(next);
+    }
+
     return ok;
   };
 
@@ -256,6 +351,11 @@ export default function Add_caseStudy() {
       return;
     }
 
+    // strip incomplete statistic rows before sending
+    const cleanedStatistics = statistics.filter(
+      (s) => s.title.trim() !== "" && s.value.trim() !== ""
+    );
+
     const metaWithoutImages = { ...meta };
     delete metaWithoutImages.og_image;
     delete metaWithoutImages.twitter_image;
@@ -265,7 +365,6 @@ export default function Add_caseStudy() {
     fd.append("shortDescription",   shortDescription);
     fd.append("status",             String(status));
     fd.append("featured",           String(featured));
-    fd.append("displayOrder",       String(displayOrder));
     fd.append("clientName",         clientName);
     fd.append("clientCompany",      clientCompany);
     fd.append("clientDesignation",  clientDesignation);
@@ -281,10 +380,9 @@ export default function Add_caseStudy() {
     fd.append("technologies",       JSON.stringify(selectedTechnologies));
     fd.append("solutions",          JSON.stringify(selectedSolutions));
     fd.append("relatedCaseStudies", JSON.stringify(relatedCaseStudies));
-    fd.append("statistics",         JSON.stringify(statistics));
+    fd.append("statistics",         JSON.stringify(cleanedStatistics));
     fd.append("meta",               JSON.stringify(metaWithoutImages));
 
-    // testimonial text fields
     fd.append("testimonial_clientName",  testimonial.clientName);
     fd.append("testimonial_company",     testimonial.company);
     fd.append("testimonial_designation", testimonial.designation);
@@ -374,10 +472,6 @@ export default function Add_caseStudy() {
                   <option value="false">Draft</option>
                 </select>
               </div>
-              <div className="col-md-2">
-                <label className="form-label">Display Order</label>
-                <input type="number" min={0} className="form-control" value={displayOrder} onChange={(e) => setDisplayOrder(Number(e.target.value))} />
-              </div>
             </div>
 
             <div className="row mt-3">
@@ -424,9 +518,23 @@ export default function Add_caseStudy() {
           <div className="card-body">
             <div className="row">
               <div className="col-md-6">
-                <label className="form-label">Industry</label>
-                <Select options={industryOptions} value={industryOptions.find((o) => o.value === industry) ?? null}
-                  onChange={(v) => setIndustry(v?.value ?? "")} isClearable placeholder="Select industry" classNamePrefix="react-select" />
+                <label className="form-label">
+                  Industry <span className="text-danger">*</span>
+                </label>
+                <div id="industry" tabIndex={-1}>
+                  <Select
+                    options={industryOptions}
+                    value={industryOptions.find((o) => o.value === industry) ?? null}
+                    onChange={(v) => setIndustry(v?.value ?? "")}
+                    isClearable
+                    placeholder="Select industry"
+                    classNamePrefix="react-select"
+                    styles={errors.industry ? { control: (base) => ({ ...base, borderColor: "#dc3545" }) } : undefined}
+                  />
+                </div>
+                {errors.industry && (
+                  <div className="text-danger mt-1" style={{ fontSize: "13px" }}>{errors.industry}</div>
+                )}
               </div>
               <div className="col-md-3">
                 <label className="form-label">Timeline</label>
@@ -470,7 +578,7 @@ export default function Add_caseStudy() {
             <div className="row">
               {/* Banner */}
               <div className="col-md-6">
-                <h6>Banner Image <span className="text-danger">*</span></h6>
+                <h6 id="bannerImage">Banner Image <span className="text-danger">*</span></h6>
                 <input ref={bannerRef} type="file" accept="image/*" className="d-none"
                   onChange={(e) => {
                     const f = e.target.files?.[0]; if (!f) return;
@@ -557,31 +665,40 @@ export default function Add_caseStudy() {
           </div>
         </div>
 
-        {/* ── CONTENT SECTIONS ── */}
+        {/* ── CONTENT SECTIONS (all mandatory) ── */}
         {[
-          { label: "Overview", value: overview, setter: setOverview },
-          { label: "Challenge", value: challenge, setter: setChallenge },
-          { label: "Proposed Solution", value: proposedSolution, setter: setProposedSolution },
-          { label: "Implementation", value: implementation, setter: setImplementation },
-          { label: "Outcome", value: outcome, setter: setOutcome },
-        ].map(({ label, value, setter }) => (
-          <div key={label} className="card mb-4 border-0 shadow-sm">
-            <div className="card-header fw-semibold bg-light">{label}</div>
+          { id: "overview", label: "Overview", value: overview, setter: setOverview, error: errors.overview },
+          { id: "challenge", label: "Challenge", value: challenge, setter: setChallenge, error: errors.challenge },
+          { id: "proposedSolution", label: "Proposed Solution", value: proposedSolution, setter: setProposedSolution, error: errors.proposedSolution },
+          { id: "implementation", label: "Implementation", value: implementation, setter: setImplementation, error: errors.implementation },
+          { id: "outcome", label: "Outcome", value: outcome, setter: setOutcome, error: errors.outcome },
+        ].map(({ id: sectionId, label, value, setter, error }) => (
+          <div key={sectionId} id={sectionId} className="card mb-4 border-0 shadow-sm">
+            <div className="card-header fw-semibold bg-light">
+              {label} <span className="text-danger">*</span>
+            </div>
             <div className="card-body">
               <Suspense fallback={<div>Loading editor...</div>}>
-                <ReactQuill className="custom-quill" value={value} onChange={setter} modules={Modules} theme="snow" />
+                <ReactQuill className={`custom-quill ${error ? "is-invalid" : ""}`}
+                  value={value} onChange={setter} modules={Modules} theme="snow" />
               </Suspense>
+              {error && (
+                <div className="text-danger mt-1" style={{ fontSize: "13px" }}>{error}</div>
+              )}
             </div>
           </div>
         ))}
 
         {/* ── STATISTICS ── */}
-        <div className="card mb-4 border-0 shadow-sm">
+        <div id="statistics" className="card mb-4 border-0 shadow-sm">
           <div className="card-header fw-semibold bg-light d-flex justify-content-between align-items-center">
-            <span>Statistics</span>
+            <span>Statistics <span className="text-danger">*</span> <span className="text-muted" style={{ fontSize: "12px" }}>(at least one)</span></span>
             <button type="button" className="btn btn-sm btn-outline-dark" onClick={addStat}>+ Add Stat</button>
           </div>
           <div className="card-body">
+            {errors.statistics && (
+              <div className="alert alert-danger py-2" style={{ fontSize: "13px" }}>{errors.statistics}</div>
+            )}
             {statistics.map((stat, i) => (
               <div key={i} className="row align-items-center mb-3 g-2">
                 <div className="col-md-4">

@@ -766,3 +766,12 @@ export const bulkDeleteCaseStudiesApi = (ids: string[]) =>
   commonApi<{ success: boolean; message: string; deleted: number }>(
     "POST", `${BASE_URL}/admin/case-studies/bulk-delete`, { ids }
   );
+
+export const updateCaseStudyOrderApi = (
+  updates: { id: string; displayOrder: number }[]
+) =>
+  commonApi<{ success: boolean; message: string }>(
+    "PATCH",
+    `${BASE_URL}/admin/case-studies/order`,
+    updates
+  );
