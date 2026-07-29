@@ -19,6 +19,8 @@ export type BannerResponse = {
   isActive: boolean;
   banner_image:string;
  mobile_image: string;
+  displayOrder: number;
+
 };
 export type BannerApiResponse = {
   success: boolean;

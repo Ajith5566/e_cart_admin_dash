@@ -51,6 +51,7 @@ export default function Banner() {
 
       <BannerTable
         data={banners}
+        onDataReorder={(reordered) => setBanners(reordered)}
         onEdit={(banner) => navigate(`/admin-dash/banner/edit/${banner._id}`)}
         canEdit={can("banner", "update")}
         canToggle={can("banner", "status")}

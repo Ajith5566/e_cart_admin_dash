@@ -5,6 +5,7 @@ export type TechnologyResponse = {
   logo: string;
   isActive: boolean;
   description:string;
+  displayOrder: number;
   adminId?: string;
   createdAt: string;
   updatedAt: string;

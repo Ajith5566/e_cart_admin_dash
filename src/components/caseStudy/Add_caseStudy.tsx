@@ -18,7 +18,11 @@ import {
 } from "../../services/allAPi";
 import { Modules } from "../quillmodule";
 import type { MetaFields } from "../../types/types";
-import type { CaseStudyStatistic, CaseStudyTestimonial } from "../../types/caseStudyTypes";
+import type {
+  CaseStudyGalleryItem,
+  CaseStudyStatistic,
+  CaseStudyTestimonial,
+} from "../../types/caseStudyTypes";
 import SeoPreview from "../seo/Seo";
 import slugify from "slugify";
 import { imgSrc } from "../../utils/imgSrc";
@@ -39,6 +43,7 @@ type FormErrors = {
   implementation: string;
   outcome: string;
   statistics: string;
+  gallery: string; // ✅ ADD — mandatory labels for gallery images
 };
 
 const emptyErrors: FormErrors = {
@@ -51,6 +56,7 @@ const emptyErrors: FormErrors = {
   implementation: "",
   outcome: "",
   statistics: "",
+  gallery: "", // ✅ ADD
 };
 
 // strip HTML tags to check if a Quill field has real content (not just empty <p></p>)
@@ -66,6 +72,7 @@ export default function Add_caseStudy() {
   const [shortDescription, setShortDescription] = useState("");
   const [status, setStatus] = useState(true);
   const [featured, setFeatured] = useState(false);
+  const [displayOrder, setDisplayOrder] = useState(0); // ✅ ADD — matches backend field
   const [loading, setLoading] = useState(false);
   const [loadingData, setLoadingData] = useState(!!id);
 
@@ -99,9 +106,11 @@ export default function Add_caseStudy() {
   const [logoPreview, setLogoPreview] = useState("");
   const [existingLogo, setExistingLogo] = useState("");
 
+  // ✅ gallery: new files + parallel labels, existing items as CaseStudyGalleryItem[]
   const [galleryFiles, setGalleryFiles] = useState<File[]>([]);
   const [galleryPreviews, setGalleryPreviews] = useState<string[]>([]);
-  const [existingGallery, setExistingGallery] = useState<string[]>([]);
+  const [galleryLabels, setGalleryLabels] = useState<string[]>([]);
+  const [existingGallery, setExistingGallery] = useState<CaseStudyGalleryItem[]>([]);
 
   const bannerRef = useRef<HTMLInputElement | null>(null);
   const logoRef   = useRef<HTMLInputElement | null>(null);
@@ -137,6 +146,7 @@ export default function Add_caseStudy() {
   const [metaDescManuallyEdited, setMetaDescManuallyEdited] = useState(false);
 
   const [errors, setErrors] = useState<FormErrors>(emptyErrors);
+  const [formSubmitted, setFormSubmitted] = useState(false); // ✅ ADD — drives per-item gallery label highlighting
 
   // ── fetch dropdown options ─────────────────────────────────
   useEffect(() => {
@@ -176,6 +186,7 @@ export default function Add_caseStudy() {
         setShortDescription(cs.shortDescription ?? "");
         setStatus(cs.isActive);
         setFeatured(cs.featured ?? false);
+        setDisplayOrder(cs.displayOrder ?? 0); // ✅ ADD
         setClientName(cs.clientName ?? "");
         setClientCompany(cs.clientCompany ?? "");
         setClientDesignation(cs.clientDesignation ?? "");
@@ -188,6 +199,7 @@ export default function Add_caseStudy() {
         setWebsiteUrl(cs.websiteUrl ?? "");
         setExistingBanner(cs.bannerImage ?? "");
         setExistingLogo(cs.logo ?? "");
+        // ✅ gallery now comes back as [{ image, label }]
         setExistingGallery(cs.gallery ?? []);
         setOverview(cs.overview ?? "");
         setChallenge(cs.challenge ?? "");
@@ -241,24 +253,35 @@ export default function Add_caseStudy() {
     setStatistics((prev) => prev.map((s, idx) => idx === i ? { ...s, [field]: value } : s));
   };
 
-  // ── gallery ───────────────────────────────────────────────
+  // ── gallery helpers ────────────────────────────────────────
   const addGalleryFiles = (files: FileList | null) => {
     if (!files) return;
     const newFiles = Array.from(files);
     setGalleryFiles((prev) => [...prev, ...newFiles]);
     setGalleryPreviews((prev) => [...prev, ...newFiles.map((f) => URL.createObjectURL(f))]);
+    setGalleryLabels((prev) => [...prev, ...newFiles.map(() => "")]);
   };
 
   const removeNewGalleryFile = (i: number) => {
     setGalleryFiles((prev) => prev.filter((_, idx) => idx !== i));
     setGalleryPreviews((prev) => prev.filter((_, idx) => idx !== i));
+    setGalleryLabels((prev) => prev.filter((_, idx) => idx !== i));
   };
 
-  const removeExistingGalleryImage = async (path: string) => {
-    if (!id) { setExistingGallery((prev) => prev.filter((p) => p !== path)); return; }
+  const updateNewGalleryLabel = (i: number, label: string) => {
+    setGalleryLabels((prev) => prev.map((l, idx) => idx === i ? label : l));
+  };
+
+  const updateExistingGalleryLabel = (i: number, label: string) => {
+    setExistingGallery((prev) => prev.map((item, idx) => idx === i ? { ...item, label } : item));
+  };
+
+  // ✅ backend's DELETE endpoint expects { imagePath } — matches removeGalleryImage controller
+  const removeExistingGalleryImage = async (image: string) => {
+    if (!id) { setExistingGallery((prev) => prev.filter((item) => item.image !== image)); return; }
     try {
-      await removeGalleryImageApi(id, path);
-      setExistingGallery((prev) => prev.filter((p) => p !== path));
+      await removeGalleryImageApi(id, image);
+      setExistingGallery((prev) => prev.filter((item) => item.image !== image));
       toast.success("Gallery image removed");
     } catch { toast.error("Failed to remove gallery image"); }
   };
@@ -333,7 +356,16 @@ export default function Add_caseStudy() {
       ok = false;
     }
 
+    // ✅ ADD — every gallery image (existing or newly added) must have a non-empty label
+    const hasEmptyExistingLabel = existingGallery.some((item) => !item.label?.trim());
+    const hasEmptyNewLabel = galleryLabels.some((l) => !l.trim());
+    if (hasEmptyExistingLabel || hasEmptyNewLabel) {
+      next.gallery = "Every gallery image needs a label";
+      ok = false;
+    }
+
     setErrors(next);
+    setFormSubmitted(true); // ✅ ADD — enables per-thumbnail highlighting of missing labels
 
     if (!ok) {
       scrollToFirstError(next);
@@ -365,6 +397,7 @@ export default function Add_caseStudy() {
     fd.append("shortDescription",   shortDescription);
     fd.append("status",             String(status));
     fd.append("featured",           String(featured));
+    fd.append("displayOrder",       String(displayOrder)); // ✅ ADD — matches backend field
     fd.append("clientName",         clientName);
     fd.append("clientCompany",      clientCompany);
     fd.append("clientDesignation",  clientDesignation);
@@ -391,10 +424,16 @@ export default function Add_caseStudy() {
 
     if (bannerFile) fd.append("bannerImage", bannerFile);
     if (logoFile)   fd.append("logo", logoFile);
-    for (const f of galleryFiles) fd.append("gallery", f);
     if (thumbFile)  fd.append("testimonial_thumbnail", thumbFile);
     if (meta.og_image instanceof File) fd.append("og_image", meta.og_image);
     if (meta.twitter_image instanceof File) fd.append("twitter_image", meta.twitter_image);
+
+    // ✅ gallery: file + label in parallel arrays — matches parseGalleryLabels on backend
+    for (const f of galleryFiles) fd.append("gallery", f);
+    for (const l of galleryLabels) fd.append("galleryLabels", l);
+
+    // ✅ existing gallery labels — matches req.body.existingGalleryLabels in updateCaseStudy
+    fd.append("existingGalleryLabels", JSON.stringify(existingGallery.map((item) => item.label)));
 
     try {
       setLoading(true);
@@ -471,6 +510,11 @@ export default function Add_caseStudy() {
                   <option value="true">Active</option>
                   <option value="false">Draft</option>
                 </select>
+              </div>
+              <div className="col-md-2">
+                <label className="form-label">Display Order</label>
+                <input type="number" min={0} className="form-control"
+                  value={displayOrder} onChange={(e) => setDisplayOrder(Number(e.target.value))} />
               </div>
             </div>
 
@@ -633,33 +677,75 @@ export default function Add_caseStudy() {
               </div>
             </div>
 
-            {/* Gallery */}
-            <div className="mt-4">
-              <h6>Gallery <span className="text-muted" style={{ fontSize: "12px" }}>(multiple images)</span></h6>
+            {/* ✅ GALLERY with mandatory labels */}
+            <div id="gallery" className="mt-4">
+              <h6>
+                Gallery{" "}
+                <span className="text-muted" style={{ fontSize: "12px" }}>
+                  (multiple images — label is required for each image)
+                </span>
+              </h6>
               <input ref={galleryRef} type="file" accept="image/*" multiple className="d-none"
                 onChange={(e) => { addGalleryFiles(e.target.files); e.target.value = ""; }} />
               <button type="button" className="btn btn-outline-dark btn-sm mb-3"
                 onClick={() => galleryRef.current?.click()}>+ Add images</button>
 
-              <div className="d-flex flex-wrap gap-2">
-                {existingGallery.map((path) => (
-                  <div key={path} style={{ position: "relative" }}>
-                    <img src={imgSrc(path)} alt="gallery"
-                      style={{ width: "120px", height: "80px", objectFit: "cover", borderRadius: "6px" }} />
-                    <button type="button" className="btn btn-danger btn-sm"
-                      style={{ position: "absolute", top: 2, right: 2, padding: "1px 5px", fontSize: "11px" }}
-                      onClick={() => removeExistingGalleryImage(path)}>✕</button>
-                  </div>
-                ))}
-                {galleryPreviews.map((src, i) => (
-                  <div key={i} style={{ position: "relative" }}>
-                    <img src={src} alt="new gallery"
-                      style={{ width: "120px", height: "80px", objectFit: "cover", borderRadius: "6px", border: "2px solid #0d6efd" }} />
-                    <button type="button" className="btn btn-danger btn-sm"
-                      style={{ position: "absolute", top: 2, right: 2, padding: "1px 5px", fontSize: "11px" }}
-                      onClick={() => removeNewGalleryFile(i)}>✕</button>
-                  </div>
-                ))}
+              {errors.gallery && (
+                <div className="alert alert-danger py-2" style={{ fontSize: "13px" }}>{errors.gallery}</div>
+              )}
+
+              <div className="d-flex flex-wrap gap-3">
+                {/* existing gallery items */}
+                {existingGallery.map((item, i) => {
+                  const labelMissing = formSubmitted && !item.label?.trim();
+                  return (
+                    <div key={item._id ?? item.image} style={{ width: "150px" }}>
+                      <div style={{ position: "relative" }}>
+                        <img src={imgSrc(item.image)} alt={item.label || "gallery"}
+                          style={{ width: "150px", height: "100px", objectFit: "cover", borderRadius: "6px" }} />
+                        <button type="button" className="btn btn-danger btn-sm"
+                          style={{ position: "absolute", top: 4, right: 4, padding: "1px 6px", fontSize: "11px" }}
+                          onClick={() => removeExistingGalleryImage(item.image)}>✕</button>
+                      </div>
+                      <input
+                        type="text"
+                        className={`form-control form-control-sm mt-1 ${labelMissing ? "is-invalid" : ""}`}
+                        placeholder='Label (required) — e.g. "01 Homepage — Desktop"'
+                        value={item.label}
+                        onChange={(e) => updateExistingGalleryLabel(i, e.target.value)}
+                      />
+                      {labelMissing && (
+                        <div className="text-danger" style={{ fontSize: "11px" }}>Label is required</div>
+                      )}
+                    </div>
+                  );
+                })}
+
+                {/* new gallery files */}
+                {galleryPreviews.map((src, i) => {
+                  const labelMissing = formSubmitted && !(galleryLabels[i] ?? "").trim();
+                  return (
+                    <div key={i} style={{ width: "150px" }}>
+                      <div style={{ position: "relative" }}>
+                        <img src={src} alt="new gallery"
+                          style={{ width: "150px", height: "100px", objectFit: "cover", borderRadius: "6px", border: "2px solid #0d6efd" }} />
+                        <button type="button" className="btn btn-danger btn-sm"
+                          style={{ position: "absolute", top: 4, right: 4, padding: "1px 6px", fontSize: "11px" }}
+                          onClick={() => removeNewGalleryFile(i)}>✕</button>
+                      </div>
+                      <input
+                        type="text"
+                        className={`form-control form-control-sm mt-1 ${labelMissing ? "is-invalid" : ""}`}
+                        placeholder='Label (required) — e.g. "02 Product Catalogue"'
+                        value={galleryLabels[i] ?? ""}
+                        onChange={(e) => updateNewGalleryLabel(i, e.target.value)}
+                      />
+                      {labelMissing && (
+                        <div className="text-danger" style={{ fontSize: "11px" }}>Label is required</div>
+                      )}
+                    </div>
+                  );
+                })}
               </div>
             </div>
           </div>

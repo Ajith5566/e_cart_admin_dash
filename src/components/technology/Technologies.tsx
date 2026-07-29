@@ -56,6 +56,7 @@ export default function Technologies() {
         canEdit={can("technology", "update")}
         canToggle={can("technology", "status")}
         canDelete={can("technology", "delete")}
+         onDataReorder={(reordered) => setTechnologies(reordered)}
         onToggle={async (id) => {
           try {
             await toggleTechnologyApi(id);

@@ -407,6 +407,13 @@ export const bulkDeleteBannersApi = (ids: string[]) =>
     { ids }
   );
 
+  export const updateBannerOrderApi = (updates: { id: string; displayOrder: number }[]) =>
+  commonApi<{ success: boolean; message: string }>(
+    "PATCH",
+    `${BASE_URL}/admin/banners/order`,
+    updates
+  );
+
 /* ============================================================
    AUTHORS
    ============================================================ */
@@ -585,6 +592,13 @@ export const bulkDeleteJobsApi = (ids: string[]) =>
   /* ============================================================
    Technology (POSTINGS)
    ============================================================ */
+   export const updateTechnologyOrderApi = (updates: { id: string; displayOrder: number }[]) =>
+  commonApi<{ success: boolean; message: string }>(
+    "PATCH",
+    `${BASE_URL}/admin/technologies/order`,
+    updates
+  );
+
 export const addTechnologyApi = (data: FormData) =>
   commonApi("POST", `${BASE_URL}/admin/technologies`, data);
  
