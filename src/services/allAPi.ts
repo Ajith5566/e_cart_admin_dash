@@ -289,6 +289,25 @@ export const getBlogByIdApi = (id: string) => {
     `${BASE_URL}/blogByid/${id}`
   );
 };
+ 
+// ✅ NEW — immediately delete a single already-saved gallery image from a content block
+export const removeBlogBlockImageApi = (id: string, blockId: string, imagePath: string) => {
+  return commonApi("POST", `${BASE_URL}/admin/blog/${id}/remove-block-image`, {
+    blockId,
+    imagePath,
+  });
+};
+ 
+// ✅ NEW — dedicated publish / unpublish action
+export const setBlogPublicationStatusApi = (
+  id: string,
+  publicationStatus: "draft" | "published"
+) => {
+  return commonApi("PATCH", `${BASE_URL}/admin/blog/${id}/publication-status`, {
+    publicationStatus,
+  });
+};
+ 
 
 // bulk actions
 export const bulkToggleBlogsApi = (ids: string[], isActive: boolean) =>

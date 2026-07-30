@@ -1,6 +1,9 @@
-// components/blogs/Add_blog.tsx — updated with quote + readTime + youtubeUrl
+// components/blogs/Add_blog.tsx
+// ✅ draft/published workflow, isActive visibility toggle, editor-controlled Last Updated date
+// ✅ NEW: block-based content editor (Editor / Gallery / YouTube / Quote) replacing
+//    fixed description, quote, youtubeUrl fields
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { useEffect, useRef, useState, lazy, Suspense } from "react";
+import { useEffect, useRef, useState } from "react";
 import "react-quill-new/dist/quill.snow.css";
 import { toast } from "react-toastify";
 import {
@@ -8,25 +11,65 @@ import {
   getAllauthorsApi,
   getBlogByIdApi,
   updateBlogApi,
+  removeBlogBlockImageApi, // ⚠️ NEW — add this to services/allAPi, mirrors removeGalleryImageApi
 } from "../../services/allAPi";
-import { Modules } from "../quillmodule";
 import { useNavigate, useParams } from "react-router-dom";
 import type { MetaFields } from "../../types/types";
 import type { AuthorResponse } from "../../types/author_types";
+import type { BlogPublicationStatus } from "../../types/blogTypes";
+import type { ContentBlock } from "../../types/contentBlockTypes";
 import SeoPreview from "../seo/Seo";
 import slugify from "slugify";
 import { imgSrc } from "../../utils/imgSrc";
 import Select from "react-select";
+import ContentBlockEditor from "../shared/ContentBlockEditor";
 
-const ReactQuill = lazy(() => import("react-quill-new"));
+// small helper for displaying audit dates in the sidebar
+const formatDate = (iso: string | null | undefined) => {
+  if (!iso) return "—";
+  return new Date(iso).toLocaleString(undefined, {
+    dateStyle: "medium",
+    timeStyle: "short",
+  });
+};
 
-// minimal quill config for the quote — no images, just basic formatting
-const QuoteModules = {
-  toolbar: [
-    ["bold", "italic", "underline"],
-    [{ list: "ordered" }, { list: "bullet" }],
-    ["clean"],
-  ],
+// strip HTML tags to check if a block has real content (not just empty <p></p>)
+const hasRealContent = (html: string) => (html || "").replace(/<[^>]*>/g, "").trim().length > 0;
+
+const youtubeRegex = /^(https?:\/\/)?(www\.)?(youtube\.com|youtu\.be)\/.+/;
+
+// ✅ per-block validation — every block that exists must be genuinely complete.
+// Returns a map of blockId -> error message for any block that fails.
+const validateContentBlocks = (blocks: ContentBlock[]): Record<string, string> => {
+  const errors: Record<string, string> = {};
+
+  for (const b of blocks) {
+    if (b.type === "editor" || b.type === "quote") {
+      const kind = b.type === "editor" ? "Editor" : "Quote";
+      if (!(b.label || "").trim()) {
+        errors[b.blockId] = `${kind} block needs a label`;
+      } else if (!hasRealContent(b.html || "")) {
+        errors[b.blockId] = `${kind} block content is required`;
+      }
+    }
+
+    if (b.type === "youtube") {
+      const url = (b.youtubeUrl || "").trim();
+      if (!url) errors[b.blockId] = "YouTube URL is required";
+      else if (!youtubeRegex.test(url)) errors[b.blockId] = "Enter a valid YouTube URL";
+    }
+
+    if (b.type === "gallery") {
+      const images = b.images || [];
+      if (images.length === 0) {
+        errors[b.blockId] = "Add at least one image";
+      } else if (images.some((img) => !img.caption.trim())) {
+        errors[b.blockId] = "Every image needs a label";
+      }
+    }
+  }
+
+  return errors;
 };
 
 export default function Add_blog() {
@@ -38,12 +81,22 @@ export default function Add_blog() {
   const [author, setAuthor] = useState("");
   const [authors, setAuthors] = useState<AuthorResponse[]>([]);
   const [shortDesc, setShortDesc] = useState("");
-  const [description, setDescription] = useState("");
-  const [quote, setQuote] = useState("");
-  const [youtubeUrl, setYoutubeUrl] = useState("");
   const [readTime, setReadTime] = useState(1);
   const [views, setViews] = useState<number | "">("");
-  const [status, setStatus] = useState(true);
+
+  // ✅ content blocks replace description / quote / youtubeUrl
+  const [contentBlocks, setContentBlocks] = useState<ContentBlock[]>([]);
+  const [contentError, setContentError] = useState("");
+  const [blockErrors, setBlockErrors] = useState<Record<string, string>>({});
+
+  const [isActive, setIsActive] = useState(true);
+
+  const [publicationStatus, setPublicationStatus] = useState<BlogPublicationStatus>("draft");
+  const [originalPublicationStatus, setOriginalPublicationStatus] = useState<BlogPublicationStatus | "">("");
+  const [publishedAt, setPublishedAt] = useState<string | null>(null);
+  const [lastContentUpdatedAt, setLastContentUpdatedAt] = useState<string | null>(null);
+  const [updateLastContentDate, setUpdateLastContentDate] = useState(false);
+
   const [loading, setLoading] = useState(false);
   const [loadingData, setLoadingData] = useState(!!id);
 
@@ -66,10 +119,7 @@ export default function Add_blog() {
     title: "",
     author: "",
     shortDesc: "",
-    description: "",
     image: "",
-    youtubeUrl: "",
-    readTime: "",
   });
 
   useEffect(() => {
@@ -95,13 +145,17 @@ export default function Add_blog() {
         setTitle(blog.title ?? "");
         setAuthor(blog.author?._id ?? "");
         setShortDesc(blog.shortDescription ?? "");
-        setDescription(blog.description ?? "");
-        setQuote(blog.quote ?? "");
-        setYoutubeUrl(blog.youtubeUrl ?? "");
+        setContentBlocks(blog.contentBlocks ?? []);
         setReadTime(blog.readTime ?? 1);
         setViews(blog.views ?? "");
-        setStatus(blog.isActive);
+        setIsActive(blog.isActive);
         setExistingImage(blog.image ?? "");
+
+        const fetchedStatus: BlogPublicationStatus = blog.publicationStatus ?? "draft";
+        setPublicationStatus(fetchedStatus);
+        setOriginalPublicationStatus(fetchedStatus);
+        setPublishedAt(blog.publishedAt ?? null);
+        setLastContentUpdatedAt(blog.lastContentUpdatedAt ?? null);
 
         if (blog.meta && Object.keys(blog.meta).length > 0) {
           setMeta(blog.meta);
@@ -176,34 +230,86 @@ export default function Add_blog() {
     setImagePreview(URL.createObjectURL(file));
   };
 
-  const isEditorEmpty = (html: string) =>
-    html.replace(/<[^>]+>/g, "").trim().length === 0;
+  // ✅ NEW — immediately delete an already-saved gallery image from the server
+  // when the editor removes it from a block, mirroring the case-study pattern
+  const handleRemoveExistingGalleryImage = async (blockId: string, imagePath: string) => {
+    if (!id) return; // brand-new blog — nothing saved server-side yet, state update is enough
+    try {
+      await removeBlogBlockImageApi(id, blockId, imagePath);
+    } catch {
+      toast.error("Failed to remove image");
+    }
+  };
 
-  const youtubeRegex = /^(https?:\/\/)?(www\.)?(youtube\.com|youtu\.be)\/.+/;
+  // ── scroll to first invalid field (regular inputs) ──────────
+  const scrollToFirstError = (newErrors: typeof errors) => {
+    const firstErrorKey = Object.keys(newErrors).find(
+      (key) => newErrors[key as keyof typeof newErrors] !== ""
+    );
+    if (!firstErrorKey) return;
+    const element = document.getElementById(firstErrorKey);
+    if (element) {
+      element.scrollIntoView({ behavior: "smooth", block: "center" });
+      setTimeout(() => {
+        if (typeof (element as HTMLElement).focus === "function") {
+          (element as HTMLElement).focus();
+        }
+      }, 300);
+    }
+  };
+
+  // ✅ NEW — scroll to the first content block that failed validation,
+  // in the block's own saved order (not object key order)
+  const scrollToFirstBlockError = (currentBlocks: ContentBlock[], errs: Record<string, string>) => {
+    const firstInvalid = currentBlocks.find((b) => errs[b.blockId]);
+    if (!firstInvalid) return;
+    const element = document.getElementById(`block-${firstInvalid.blockId}`);
+    if (element) {
+      element.scrollIntoView({ behavior: "smooth", block: "center" });
+      setTimeout(() => {
+        if (typeof (element as HTMLElement).focus === "function") {
+          (element as HTMLElement).focus();
+        }
+      }, 300);
+    }
+  };
 
   const validateForm = () => {
-    const next = {
-      title: "", author: "", shortDesc: "", description: "",
-      image: "", youtubeUrl: "", readTime: "",
-    };
+    const next = { title: "", author: "", shortDesc: "", image: "" };
     let ok = true;
 
     if (!title.trim()) { next.title = "Title is required"; ok = false; }
     if (!author) { next.author = "Author is required"; ok = false; }
     if (!shortDesc.trim()) { next.shortDesc = "Short description is required"; ok = false; }
-    if (!description.trim() || description === "<p><br></p>" || isEditorEmpty(description)) {
-      next.description = "Description is required"; ok = false;
-    }
     if (!imageFile && !existingImage) { next.image = "Blog image is required"; ok = false; }
-    if (youtubeUrl.trim() && !youtubeRegex.test(youtubeUrl.trim())) {
-      next.youtubeUrl = "Please enter a valid YouTube URL"; ok = false;
-    }
-    if (!readTime || readTime < 1) {
-      next.readTime = "Read time must be at least 1 minute"; ok = false;
-    }
 
     setErrors(next);
-    return ok;
+
+    // content blocks: both "at least one block" and per-block completeness
+    let blocksOk = true;
+    if (contentBlocks.length === 0) {
+      setContentError("Add at least one content block");
+      setBlockErrors({});
+      blocksOk = false;
+    } else {
+      const errs = validateContentBlocks(contentBlocks);
+      setBlockErrors(errs);
+      if (Object.keys(errs).length > 0) {
+        setContentError("");
+        blocksOk = false;
+      } else {
+        setContentError("");
+      }
+    }
+
+    if (!ok) {
+      scrollToFirstError(next);
+    } else if (!blocksOk) {
+      scrollToFirstBlockError(contentBlocks, validateContentBlocks(contentBlocks));
+      document.getElementById("content-blocks")?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+
+    return ok && blocksOk;
   };
 
   const handleSubmit = async () => {
@@ -219,22 +325,40 @@ export default function Add_blog() {
     delete metaWithoutImages.og_image;
     delete metaWithoutImages.twitter_image;
 
+    // ✅ split blocks into a JSON-safe payload + a flat, ordered list of new
+    // gallery files. Existing images keep their path; new ones become an
+    // empty placeholder ("") whose file is appended to blockGalleryImages
+    // in the SAME left-to-right order — the backend consumes them in lockstep.
+    const galleryFilesInOrder: File[] = [];
+    const blocksForPayload = contentBlocks.map((block) => {
+      if (block.type !== "gallery") return block;
+      const images = (block.images || []).map((img) => {
+        if (img.image) return { image: img.image, caption: img.caption };
+        if (img.file) galleryFilesInOrder.push(img.file);
+        return { image: "", caption: img.caption };
+      });
+      return { blockId: block.blockId, type: "gallery", images };
+    });
+
     const fd = new FormData();
     fd.append("title", title.trim());
     fd.append("author", author);
     fd.append("shortDescription", shortDesc);
-    fd.append("description", description);
-    fd.append("quote", quote);
-    fd.append("youtubeUrl", youtubeUrl.trim());
+    fd.append("contentBlocks", JSON.stringify(blocksForPayload));
     fd.append("readTime", String(readTime));
     if (views !== "") fd.append("views", String(views));
-    fd.append("status", String(status));
+    fd.append("status", String(isActive));
+    fd.append("publicationStatus", publicationStatus);
+    if (isEditMode && originalPublicationStatus === "published") {
+      fd.append("updateLastContentDate", String(updateLastContentDate));
+    }
     fd.append("existingImage", existingImage);
     fd.append("meta", JSON.stringify(metaWithoutImages));
 
     if (imageFile) fd.append("image", imageFile);
     if (meta.og_image instanceof File) fd.append("og_image", meta.og_image);
     if (meta.twitter_image instanceof File) fd.append("twitter_image", meta.twitter_image);
+    for (const f of galleryFilesInOrder) fd.append("blockGalleryImages", f);
 
     try {
       setLoading(true);
@@ -243,7 +367,7 @@ export default function Add_blog() {
         toast.success("Blog updated");
       } else {
         await add_blog_Api(fd);
-        toast.success("Blog added");
+        toast.success(publicationStatus === "published" ? "Blog published" : "Blog saved as draft");
       }
       navigate("/admin-dash/blog");
     } catch (err: any) {
@@ -273,6 +397,7 @@ export default function Add_blog() {
   const authorOptions = authors.map((a) => ({ value: a._id, label: a.name }));
   const selectedAuthor = authorOptions.find((o) => o.value === author) ?? null;
   const shownImage = imagePreview || (existingImage ? imgSrc(existingImage) : "");
+  const showLastUpdatedOptIn = isEditMode && originalPublicationStatus === "published";
 
   return (
     <div className="p-2">
@@ -285,7 +410,7 @@ export default function Add_blog() {
 
       <div className="p-md-2 mb-4">
 
-        {/* ── Title / Author / Status ── */}
+        {/* ── Title / Author ── */}
         <div className="row">
           <div className="col-md-6">
             <label htmlFor="title" className="form-label">
@@ -300,7 +425,7 @@ export default function Add_blog() {
             {errors.title && <div className="invalid-feedback">{errors.title}</div>}
           </div>
 
-          <div className="col-md-3">
+          <div className="col-md-6">
             <label htmlFor="author" className="form-label">
               Author <span className="text-danger">*</span>
             </label>
@@ -315,17 +440,70 @@ export default function Add_blog() {
             />
             {errors.author && <div className="text-danger mt-1 small">{errors.author}</div>}
           </div>
+        </div>
 
-          <div className="col-md-3">
-            <label className="form-label">Status</label>
-            <select
-              className="form-control"
-              value={status ? "true" : "false"}
-              onChange={(e) => setStatus(e.target.value === "true")}
-            >
-              <option value="true">Active</option>
-              <option value="false">Draft</option>
-            </select>
+        {/* ── PUBLISHING ── */}
+        <div className="card mt-3 border-0 shadow-sm">
+          <div className="card-header fw-semibold bg-light">Publishing</div>
+          <div className="card-body">
+            <div className="row">
+              <div className="col-md-4">
+                <label className="form-label">Publication Status</label>
+                <select
+                  className="form-control"
+                  value={publicationStatus}
+                  onChange={(e) => setPublicationStatus(e.target.value as BlogPublicationStatus)}
+                >
+                  <option value="draft">Draft</option>
+                  <option value="published">Published</option>
+                </select>
+                <small className="text-muted">
+                  Drafts are only visible in the admin panel and never appear on the site.
+                </small>
+              </div>
+
+              <div className="col-md-4">
+                <label className="form-label">Visibility</label>
+                <select
+                  className="form-control"
+                  value={isActive ? "true" : "false"}
+                  onChange={(e) => setIsActive(e.target.value === "true")}
+                >
+                  <option value="true">Active</option>
+                  <option value="false">Inactive</option>
+                </select>
+                <small className="text-muted">
+                  Only matters once published — lets you temporarily hide a published blog
+                  without moving it back to draft.
+                </small>
+              </div>
+
+              {isEditMode && (
+                <div className="col-md-4">
+                  <label className="form-label d-block">Editorial dates</label>
+                  <div className="small text-muted">Published: {formatDate(publishedAt)}</div>
+                  <div className="small text-muted">Last updated (public): {formatDate(lastContentUpdatedAt)}</div>
+                </div>
+              )}
+            </div>
+
+            {showLastUpdatedOptIn && (
+              <div className="mt-3">
+                <label className="form-check-label d-flex align-items-center gap-2">
+                  <input
+                    type="checkbox"
+                    className="form-check-input"
+                    checked={updateLastContentDate}
+                    onChange={(e) => setUpdateLastContentDate(e.target.checked)}
+                  />
+                  Update the public &quot;Last Updated&quot; date with this edit
+                </label>
+                <small className="text-muted d-block mt-1">
+                  Leave unchecked for minor changes (SEO, visibility) that shouldn&apos;t change
+                  the date readers see. The internal audit trail is always kept either way.
+                </small>
+              </div>
+            )}
           </div>
         </div>
 
@@ -361,7 +539,7 @@ export default function Add_blog() {
         />
         {errors.shortDesc && <div className="invalid-feedback">{errors.shortDesc}</div>}
 
-        {/* ── Read Time + View Count + YouTube ── */}
+        {/* ── Read Time + View Count ── */}
         <div className="row mt-3">
           <div className="col-md-2">
             <label htmlFor="readTime" className="form-label">
@@ -371,11 +549,10 @@ export default function Add_blog() {
               id="readTime"
               type="number"
               min={1}
-              className={`form-control ${errors.readTime ? "is-invalid" : ""}`}
+              className="form-control"
               value={readTime}
               onChange={(e) => setReadTime(Number(e.target.value))}
             />
-            {errors.readTime && <div className="invalid-feedback">{errors.readTime}</div>}
           </div>
 
           <div className="col-md-2">
@@ -395,22 +572,6 @@ export default function Add_blog() {
               }
             />
             <small className="text-muted">Hidden if empty</small>
-          </div>
-
-          <div className="col-md-8">
-            <label htmlFor="youtubeUrl" className="form-label">
-              YouTube URL{" "}
-              <span className="text-muted" style={{ fontSize: "12px" }}>(optional)</span>
-            </label>
-            <input
-              id="youtubeUrl"
-              type="url"
-              className={`form-control ${errors.youtubeUrl ? "is-invalid" : ""}`}
-              placeholder="https://www.youtube.com/watch?v=..."
-              value={youtubeUrl}
-              onChange={(e) => setYoutubeUrl(e.target.value)}
-            />
-            {errors.youtubeUrl && <div className="invalid-feedback">{errors.youtubeUrl}</div>}
           </div>
         </div>
 
@@ -469,39 +630,21 @@ export default function Add_blog() {
           {errors.image && <div className="text-danger mt-1">{errors.image}</div>}
         </div>
 
-        {/* ── Main description ── */}
-        <div className="mt-3" id="description">
-          <h6>Description <span className="text-danger">*</span></h6>
-          <Suspense fallback={<div>Loading editor...</div>}>
-            <ReactQuill
-              className="custom-quill"
-              value={description}
-              onChange={setDescription}
-              modules={Modules}
-              theme="snow"
-            />
-          </Suspense>
-          {errors.description && <div className="text-danger mt-1">{errors.description}</div>}
-        </div>
-
-        {/* ── Quote (Quill, minimal toolbar) ── */}
-        <div className="mt-4">
+        {/* ── BLOCK-BASED CONTENT ── */}
+        <div className="mt-4" id="content-blocks">
           <h6>
-            Quote{" "}
+            Content <span className="text-danger">*</span>{" "}
             <span className="text-muted" style={{ fontSize: "12px" }}>
-              (optional — highlight quote shown in the blog)
+              (build the article from Editor, Gallery, YouTube Video, and Quote blocks — drag to reorder)
             </span>
           </h6>
-          <Suspense fallback={<div>Loading editor...</div>}>
-            <ReactQuill
-              className="custom-quill"
-              value={quote}
-              onChange={setQuote}
-              modules={QuoteModules}
-              theme="snow"
-              placeholder="Enter a highlight quote..."
-            />
-          </Suspense>
+          <ContentBlockEditor
+            blocks={contentBlocks}
+            onChange={setContentBlocks}
+            onRemoveExistingGalleryImage={handleRemoveExistingGalleryImage}
+            error={contentError}
+            blockErrors={blockErrors}
+          />
         </div>
 
         {/* ── SEO ── */}
@@ -526,7 +669,13 @@ export default function Add_blog() {
 
         <div className="mt-3 d-flex gap-2">
           <button className="btn btn-primary" onClick={handleSubmit} disabled={loading}>
-            {loading ? "Saving..." : isEditMode ? "Update Blog" : "Add Blog"}
+            {loading
+              ? "Saving..."
+              : isEditMode
+              ? "Update Blog"
+              : publicationStatus === "published"
+              ? "Publish Blog"
+              : "Save Draft"}
           </button>
           {isEditMode && (
             <button
