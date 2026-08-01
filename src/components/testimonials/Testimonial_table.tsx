@@ -1,4 +1,4 @@
-// components/testimonials/TestimonialTable.tsx — selection + bulk bar + thumbnail
+// components/testimonials/TestimonialTable.tsx — with type badge + video link
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
   useReactTable,
@@ -12,13 +12,9 @@ import type { ColumnDef, SortingState, RowSelectionState } from "@tanstack/react
 import "../common/common_toggle.css";
 import "../common/common_styels.css";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import {
-  faAngleLeft,
-  faAngleRight,
-  faAnglesLeft,
-  faAnglesRight,
-} from "@fortawesome/free-solid-svg-icons";
+import { faAngleLeft, faAngleRight, faAnglesLeft, faAnglesRight } from "@fortawesome/free-solid-svg-icons";
 import type { TestimonialResponse } from "../../types/testimonialTypes";
+import { imgSrc } from "../../utils/imgSrc";
 
 type Props = {
   data: TestimonialResponse[];
@@ -33,38 +29,19 @@ type Props = {
 };
 
 function IndeterminateCheckbox({
-  indeterminate,
-  ...rest
+  indeterminate, ...rest
 }: { indeterminate?: boolean } & React.InputHTMLAttributes<HTMLInputElement>) {
   const ref = useRef<HTMLInputElement>(null);
-
   useEffect(() => {
-    if (ref.current) {
-      ref.current.indeterminate = !rest.checked && !!indeterminate;
-    }
+    if (ref.current) ref.current.indeterminate = !rest.checked && !!indeterminate;
   }, [indeterminate, rest.checked]);
-
-  return (
-    <input
-      type="checkbox"
-      ref={ref}
-      className="form-check-input"
-      style={{ cursor: "pointer" }}
-      {...rest}
-    />
-  );
+  return <input type="checkbox" ref={ref} className="form-check-input" style={{ cursor: "pointer" }} {...rest} />;
 }
 
 function TestimonialTable({
-  data,
-  onEdit,
-  onToggle,
-  onDelete,
-  canEdit,
-  canToggle,
-  canDelete,
-  onBulkDelete,
-  onBulkToggle,
+  data, onEdit, onToggle, onDelete,
+  canEdit, canToggle, canDelete,
+  onBulkDelete, onBulkToggle,
 }: Props) {
   const [limit, setLimit] = useState(5);
   const [pagination, setPagination] = useState({ pageIndex: 0, pageSize: limit });
@@ -77,113 +54,117 @@ function TestimonialTable({
     setPagination((prev) => ({ ...prev, pageIndex: 0, pageSize: limit }));
   }, [limit]);
 
-  const columns = useMemo<ColumnDef<TestimonialResponse>[]>(
-    () => [
-      // SELECTION
-      {
-        id: "select",
-        enableSorting: false,
-        header: ({ table }) => (
-          <div className="d-flex align-items-center gap-1">
-            <IndeterminateCheckbox
-              checked={table.getIsAllRowsSelected()}
-              indeterminate={table.getIsSomeRowsSelected()}
-              onChange={table.getToggleAllRowsSelectedHandler()}
-              aria-label="Select all testimonials"
-            />
-            <span>All</span>
-          </div>
-        ),
-        cell: ({ row }) => (
-          <IndeterminateCheckbox
-            checked={row.getIsSelected()}
-            onChange={row.getToggleSelectedHandler()}
-            aria-label={`Select ${row.original.name}`}
-          />
-        ),
+  const columns = useMemo<ColumnDef<TestimonialResponse>[]>(() => [
+    {
+      id: "select", enableSorting: false,
+      header: ({ table }) => (
+        <div className="d-flex align-items-center gap-1">
+          <IndeterminateCheckbox checked={table.getIsAllRowsSelected()}
+            indeterminate={table.getIsSomeRowsSelected()}
+            onChange={table.getToggleAllRowsSelectedHandler()} aria-label="Select all" />
+          <span>All</span>
+        </div>
+      ),
+      cell: ({ row }) => (
+        <IndeterminateCheckbox checked={row.getIsSelected()}
+          onChange={row.getToggleSelectedHandler()} aria-label={`Select ${row.original.name}`} />
+      ),
+    },
+    {
+      header: "#", id: "serialNumber", enableSorting: false,
+      cell: ({ row, table }) => {
+        const i = table.getRowModel().rows.findIndex((r) => r.id === row.id);
+        return table.getState().pagination.pageIndex * table.getState().pagination.pageSize + i + 1;
       },
-      // FIXED serial
-      {
-        header: "#",
-        id: "serialNumber",
-        enableSorting: false,
-        cell: ({ row, table }) => {
-          const visibleRows = table.getRowModel().rows;
-          const indexOnPage = visibleRows.findIndex((r) => r.id === row.id);
-          return (
-            table.getState().pagination.pageIndex *
-              table.getState().pagination.pageSize +
-            indexOnPage +
-            1
-          );
-        },
+    },
+    {
+      header: "Image", enableSorting: false,
+      cell: ({ row }) => row.original.image ? (
+        <div style={{ position: "relative", display: "inline-block" }}>
+          <img src={imgSrc(row.original.image)} alt={row.original.name}
+            style={{ width: "48px", height: "48px", objectFit: "cover", borderRadius: "50%" }} />
+          {row.original.type === "video" && (
+            <span style={{
+              position: "absolute", bottom: 0, right: 0,
+              background: "#dc3545", borderRadius: "50%",
+              width: "16px", height: "16px", display: "flex",
+              alignItems: "center", justifyContent: "center", fontSize: "8px", color: "#fff",
+            }}>▶</span>
+          )}
+        </div>
+      ) : (
+        <div className="d-flex align-items-center justify-content-center fw-semibold text-white"
+          style={{ width: "48px", height: "48px", borderRadius: "50%", background: "#6c757d", fontSize: "14px" }}>
+          {row.original.name.charAt(0).toUpperCase()}
+        </div>
+      ),
+    },
+    {
+      header: "Name", accessorKey: "name", enableSorting: true,
+      cell: ({ row }) => (
+        <div>
+          <span className="fw-medium">{row.original.name}</span>
+          {row.original.company && (
+            <div className="text-muted" style={{ fontSize: "12px" }}>{row.original.company}</div>
+          )}
+        </div>
+      ),
+    },
+    {
+      header: "Type", enableSorting: false,
+      cell: ({ row }) => (
+        <span className={`badge ${row.original.type === "video" ? "bg-danger" : "bg-secondary"}`}
+          style={{ fontSize: "11px" }}>
+          {row.original.type === "video" ? "▶ Video" : "✏️ Text"}
+        </span>
+      ),
+    },
+    {
+      header: "Content", enableSorting: false,
+      cell: ({ row }) => {
+        if (row.original.type === "video") {
+          return row.original.videoUrl ? (
+            <a href={row.original.videoUrl} target="_blank" rel="noreferrer"
+              className="btn btn-sm btn-outline-danger" style={{ fontSize: "11px" }}>
+              ▶ Watch
+            </a>
+          ) : <span className="text-muted">—</span>;
+        }
+        const msg = row.original.message ?? "";
+        return <span className="text-muted" style={{ fontSize: "13px" }}>{msg?.length > 40 ? msg.substring(0, 40) + "..." : msg}</span>;
       },
-      {
-        header: "Author",
-        accessorKey: "name",
-        enableSorting: true,
-      },
-      {
-        header: "Message",
-        accessorKey: "message",
-        enableSorting: false,
-        cell: ({ row }) => {
-          const msg = row.original.message;
-          return msg?.length > 40 ? msg.substring(0, 40) + "..." : msg;
-        },
-      },
-      {
-        header: "Edit",
-        enableSorting: false,
-        cell: ({ row }) => (
-          <button
-            className="btn btn-sm btn-warning"
-            disabled={!canEdit}
-            title={!canEdit ? "You don't have permission to edit" : undefined}
-            onClick={() => onEdit(row.original)}
-          >
-            Edit
-          </button>
-        ),
-      },
-      {
-        header: "Status",
-        enableSorting: false,
-        cell: ({ row }) => (
-          <label className="toggle-switch">
-            <input
-              className="toggle-input"
-              type="checkbox"
-              checked={!!row.original.isActive}
-              disabled={!canToggle}
-              onChange={() => onToggle(row.original._id)}
-            />
-            <span className="toggle-slider"></span>
-          </label>
-        ),
-      },
-      {
-        header: "Delete",
-        enableSorting: false,
-        cell: ({ row }) => (
-          <button
-            className="btn btn-sm btn-danger"
-            disabled={!canDelete}
-            title={!canDelete ? "You don't have permission to delete" : undefined}
-            onClick={() => onDelete(row.original._id)}
-          >
-            delete
-          </button>
-        ),
-      },
-    ],
-    [onEdit, onToggle, onDelete, canEdit, canToggle, canDelete]
-  );
+    },
+    {
+      header: "Edit", enableSorting: false,
+      cell: ({ row }) => (
+        <button className="btn btn-sm btn-warning" disabled={!canEdit}
+          title={!canEdit ? "No permission" : undefined}
+          onClick={() => onEdit(row.original)}>Edit</button>
+      ),
+    },
+    {
+      header: "Status", enableSorting: false,
+      cell: ({ row }) => (
+        <label className="toggle-switch">
+          <input className="toggle-input" type="checkbox" checked={!!row.original.isActive}
+            disabled={!canToggle} onChange={() => onToggle(row.original._id)} />
+          <span className="toggle-slider"></span>
+        </label>
+      ),
+    },
+    {
+      header: "Delete", enableSorting: false,
+      cell: ({ row }) => (
+        <button className="btn btn-sm btn-danger" disabled={!canDelete}
+          title={!canDelete ? "No permission" : undefined}
+          onClick={() => onDelete(row.original._id)}>delete</button>
+      ),
+    },
+  ], [onEdit, onToggle, onDelete, canEdit, canToggle, canDelete]);
 
   // eslint-disable-next-line react-hooks/incompatible-library
   const table = useReactTable({
-    data,
-    columns,
+    data, columns,
     getRowId: (row) => row._id,
     getCoreRowModel: getCoreRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
@@ -199,139 +180,79 @@ function TestimonialTable({
     autoResetPageIndex: false,
   });
 
-  // prune selections whose rows no longer exist
   useEffect(() => {
     setRowSelection((prev) => {
       const validIds = new Set(data.map((d) => d._id));
       const next: RowSelectionState = {};
-      for (const id of Object.keys(prev)) {
-        if (validIds.has(id)) next[id] = true;
-      }
+      for (const id of Object.keys(prev)) if (validIds.has(id)) next[id] = true;
       return Object.keys(next).length === Object.keys(prev).length ? prev : next;
     });
   }, [data]);
 
-  const selectedIds = Object.keys(rowSelection);
+  const selectedIds   = Object.keys(rowSelection);
   const selectedCount = selectedIds.length;
 
   const runBulk = async (fn: () => Promise<void> | void) => {
-    try {
-      setBulkBusy(true);
-      await fn();
-      table.resetRowSelection();
-    } finally {
-      setBulkBusy(false);
-    }
+    try { setBulkBusy(true); await fn(); table.resetRowSelection(); }
+    finally { setBulkBusy(false); }
   };
 
   const { pageIndex, pageSize } = table.getState().pagination;
   const totalRows = table.getFilteredRowModel().rows.length;
-  const startRow = totalRows === 0 ? 0 : pageIndex * pageSize + 1;
-  const endRow = Math.min((pageIndex + 1) * pageSize, totalRows);
+  const startRow  = totalRows === 0 ? 0 : pageIndex * pageSize + 1;
+  const endRow    = Math.min((pageIndex + 1) * pageSize, totalRows);
 
   return (
     <div className="container px-2 w-100">
       <div className="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-3 mb-3 mt-2 p-2">
         <div className="d-flex flex-wrap align-items-center gap-2 w-100 w-md-auto">
-          <select
-            className="form-select"
-            style={{ minWidth: "90px", maxWidth: "120px" }}
-            value={limit}
-            onChange={(e) => setLimit(Number(e.target.value))}
-          >
-            <option value={5}>5</option>
-            <option value={10}>10</option>
-            <option value={25}>25</option>
-            <option value={50}>50</option>
-            <option value={100}>100</option>
+          <select className="form-select" style={{ minWidth: "90px", maxWidth: "120px" }}
+            value={limit} onChange={(e) => setLimit(Number(e.target.value))}>
+            {[5, 10, 25, 50, 100].map((n) => <option key={n} value={n}>{n}</option>)}
           </select>
           <span>entries per page</span>
         </div>
-
         <div className="d-flex flex-column flex-sm-row gap-2 justify-content-end align-items-start align-items-sm-center p-0 w-100 w-md-auto">
           <h6 className="mb-0">Search:</h6>
-          <input
-            type="text"
-            className="form-control"
-            style={{ maxWidth: "250px", width: "100%" }}
-            value={filtering}
-            onChange={(e) => setFiltering(e.target.value)}
-            placeholder="searching..."
-          />
+          <input type="text" className="form-control" style={{ maxWidth: "250px", width: "100%" }}
+            value={filtering} onChange={(e) => setFiltering(e.target.value)} placeholder="searching..." />
         </div>
       </div>
 
-      {/* BULK ACTION BAR */}
+      {/* BULK BAR */}
       {selectedCount > 0 && (
-        <div
-          className="d-flex align-items-center gap-2 px-3 py-2 mb-2 flex-wrap"
-          style={{ background: "#eef2ff", borderRadius: "10px" }}
-        >
-          <span className="fw-medium me-1" style={{ fontSize: "14px" }}>
-            {selectedCount} selected
-          </span>
-
+        <div className="d-flex align-items-center gap-2 px-3 py-2 mb-2 flex-wrap"
+          style={{ background: "#eef2ff", borderRadius: "10px" }}>
+          <span className="fw-medium me-1" style={{ fontSize: "14px" }}>{selectedCount} selected</span>
           {canToggle && (
             <>
-              <button
-                className="btn btn-sm btn-outline-dark"
-                disabled={bulkBusy}
-                onClick={() => runBulk(() => onBulkToggle(selectedIds, false))}
-              >
-                Deactivate selected
-              </button>
-              <button
-                className="btn btn-sm btn-outline-success"
-                disabled={bulkBusy}
-                onClick={() => runBulk(() => onBulkToggle(selectedIds, true))}
-              >
-                Activate selected
-              </button>
+              <button className="btn btn-sm btn-outline-dark" disabled={bulkBusy}
+                onClick={() => runBulk(() => onBulkToggle(selectedIds, false))}>Deactivate selected</button>
+              <button className="btn btn-sm btn-outline-success" disabled={bulkBusy}
+                onClick={() => runBulk(() => onBulkToggle(selectedIds, true))}>Activate selected</button>
             </>
           )}
-
           {canDelete && (
-            <button
-              className="btn btn-sm btn-danger"
-              disabled={bulkBusy}
-              onClick={() => runBulk(() => onBulkDelete(selectedIds))}
-            >
-              Delete selected
-            </button>
+            <button className="btn btn-sm btn-danger" disabled={bulkBusy}
+              onClick={() => runBulk(() => onBulkDelete(selectedIds))}>Delete selected</button>
           )}
-
-          <button
-            className="btn btn-sm btn-outline-secondary ms-auto"
-            disabled={bulkBusy}
-            onClick={() => table.resetRowSelection()}
-          >
-            Clear
-          </button>
+          <button className="btn btn-sm btn-outline-secondary ms-auto" disabled={bulkBusy}
+            onClick={() => table.resetRowSelection()}>Clear</button>
         </div>
       )}
 
-      <div
-        className="card-body table-responsive px-0"
-        style={{ minHeight: "520px", overflowX: "auto" }}
-      >
+      <div className="card-body table-responsive px-0" style={{ minHeight: "520px", overflowX: "auto" }}>
         <table className="table table-hover align-middle mb-0" style={{ minWidth: "650px" }}>
           <thead>
-            {table.getHeaderGroups().map((headerGroup) => (
-              <tr key={headerGroup.id}>
-                {headerGroup.headers.map((header) => (
-                  <th
-                    key={header.id}
-                    className={header.column.getCanSort() ? "cursor-pointer" : ""}
-                    onClick={
-                      header.column.getCanSort()
-                        ? header.column.getToggleSortingHandler()
-                        : undefined
-                    }
-                  >
-                    {flexRender(header.column.columnDef.header, header.getContext())}
-                    {header.column.getCanSort() && (
+            {table.getHeaderGroups().map((hg) => (
+              <tr key={hg.id}>
+                {hg.headers.map((h) => (
+                  <th key={h.id} className={h.column.getCanSort() ? "cursor-pointer" : ""}
+                    onClick={h.column.getCanSort() ? h.column.getToggleSortingHandler() : undefined}>
+                    {flexRender(h.column.columnDef.header, h.getContext())}
+                    {h.column.getCanSort() && (
                       <span className="ms-1 fw-bold">
-                        {{ asc: "▲", desc: "▼" }[header.column.getIsSorted() as string] ?? "⇅"}
+                        {{ asc: "▲", desc: "▼" }[h.column.getIsSorted() as string] ?? "⇅"}
                       </span>
                     )}
                   </th>
@@ -342,65 +263,28 @@ function TestimonialTable({
           <tbody>
             {table.getRowModel().rows.length > 0 ? (
               table.getRowModel().rows.map((row) => (
-                <tr
-                  key={row.id}
-                  className="tableRowHeight"
-                  style={row.getIsSelected() ? { background: "#f0f4ff" } : undefined}
-                >
+                <tr key={row.id} className="tableRowHeight"
+                  style={row.getIsSelected() ? { background: "#f0f4ff" } : undefined}>
                   {row.getVisibleCells().map((cell) => (
-                    <td key={cell.id}>
-                      {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                    </td>
+                    <td key={cell.id}>{flexRender(cell.column.columnDef.cell, cell.getContext())}</td>
                   ))}
                 </tr>
               ))
             ) : (
-              <tr>
-                <td colSpan={columns.length} className="text-center text-muted">
-                  No testimonials found
-                </td>
-              </tr>
+              <tr><td colSpan={columns.length} className="text-center text-muted">No testimonials found</td></tr>
             )}
           </tbody>
         </table>
       </div>
 
       <div className="d-flex flex-column flex-md-row justify-content-between align-items-center gap-3 mt-3">
-        <span className="text-center text-md-start">
-          Showing {startRow} to {endRow} of {totalRows} entries
-        </span>
+        <span className="text-center text-md-start">Showing {startRow} to {endRow} of {totalRows} entries</span>
         <div className="d-flex justify-content-center align-items-center mb-2 gap-2 flex-wrap">
-          <button
-            className="btn btn-outline-secondary btn-sm"
-            onClick={() => table.setPageIndex(0)}
-            disabled={!table.getCanPreviousPage()}
-          >
-            <FontAwesomeIcon icon={faAnglesLeft} />
-          </button>
-          <button
-            className="btn btn-outline-secondary btn-sm"
-            onClick={() => table.previousPage()}
-            disabled={!table.getCanPreviousPage()}
-          >
-            <FontAwesomeIcon icon={faAngleLeft} />
-          </button>
-          <button className="btn btn-secondary btn-sm">
-            {table.getState().pagination.pageIndex + 1}
-          </button>
-          <button
-            className="btn btn-outline-secondary btn-sm"
-            onClick={() => table.nextPage()}
-            disabled={!table.getCanNextPage()}
-          >
-            <FontAwesomeIcon icon={faAngleRight} />
-          </button>
-          <button
-            className="btn btn-outline-secondary btn-sm"
-            onClick={() => table.setPageIndex(table.getPageCount() - 1)}
-            disabled={!table.getCanNextPage()}
-          >
-            <FontAwesomeIcon icon={faAnglesRight} />
-          </button>
+          <button className="btn btn-outline-secondary btn-sm" onClick={() => table.setPageIndex(0)} disabled={!table.getCanPreviousPage()}><FontAwesomeIcon icon={faAnglesLeft} /></button>
+          <button className="btn btn-outline-secondary btn-sm" onClick={() => table.previousPage()} disabled={!table.getCanPreviousPage()}><FontAwesomeIcon icon={faAngleLeft} /></button>
+          <button className="btn btn-secondary btn-sm">{table.getState().pagination.pageIndex + 1}</button>
+          <button className="btn btn-outline-secondary btn-sm" onClick={() => table.nextPage()} disabled={!table.getCanNextPage()}><FontAwesomeIcon icon={faAngleRight} /></button>
+          <button className="btn btn-outline-secondary btn-sm" onClick={() => table.setPageIndex(table.getPageCount() - 1)} disabled={!table.getCanNextPage()}><FontAwesomeIcon icon={faAnglesRight} /></button>
         </div>
       </div>
     </div>

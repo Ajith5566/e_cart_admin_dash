@@ -24,10 +24,11 @@ import type {
   PageType,
 } from "../types/types";
   import type { IndustryResponse } from "../types/industryTypes";
-   import type { SolutionResponse } from "../types/solutionTypes";
+   import type { SolutionApiResponse, SolutionResponse } from "../types/solutionTypes";
    import type { CaseStudyResponse } from "../types/caseStudyTypes";
 import { BASE_URL } from "./baseURL";
 import { commonApi } from "./commonAPi";
+import type { ClientResponse } from "../types/clientTypes";
 
 export type PagePayload = {
   title: string;
@@ -723,32 +724,38 @@ export const bulkDeleteIndustriesApi = (ids: string[]) =>
   );
 
 
-
 /* ============================================================
-   SOLUTIONS
-   ============================================================ */
-export const addSolutionApi = (data: { name: string; status: boolean }) =>
-  commonApi("POST", `${BASE_URL}/admin/solutions`, data);
+   SOLUTION APIs
+============================================================ */
 
-export const getAllSolutionsApi = () =>
-  commonApi<{ success: boolean; data: SolutionResponse[] }>(
-    "GET", `${BASE_URL}/admin/solutions`
+
+export const add_solution_Api = (data: FormData) => {
+  return commonApi("POST", `${BASE_URL}/solutions`, data);
+};
+
+export const getAllSolutionsApi = () => {
+  return commonApi<SolutionApiResponse>("GET", `${BASE_URL}/get/solutions`);
+};
+
+export const getSolutionByIdApi = (id: string) => {
+  return commonApi<{ success: boolean; data: SolutionResponse }>(
+    "GET",
+    `${BASE_URL}/solutionById/${id}`
   );
+};
 
-export const getSolutionByIdApi = (id: string) =>
-  commonApi<{ success: boolean; data: SolutionResponse }>(
-    "GET", `${BASE_URL}/admin/solutions/${id}`
-  );
+export const updateSolutionApi = (id: string, data: FormData) => {
+  return commonApi("PUT", `${BASE_URL}/admin/updateSolution/${id}`, data);
+};
 
-export const updateSolutionApi = (id: string, data: { name: string; status: boolean }) =>
-  commonApi("PUT", `${BASE_URL}/admin/solutions/${id}`, data);
+export const toggleSolutionApi = (id: string) => {
+  return commonApi("PUT", `${BASE_URL}/admin/solution/${id}/toggle`);
+};
 
-export const toggleSolutionApi = (id: string) =>
-  commonApi("PATCH", `${BASE_URL}/admin/solutions/${id}/toggle`);
-
-export const deleteSolutionApi = (id: string) =>
-  commonApi("DELETE", `${BASE_URL}/admin/solutions/${id}`);
-
+export const deleteSolutionApi = (id: string) => {
+  return commonApi("DELETE", `${BASE_URL}/admin/solution/delete/${id}`);
+};
+  
 export const bulkToggleSolutionsApi = (ids: string[], isActive: boolean) =>
   commonApi<{ success: boolean; message: string; modified: number }>(
     "PATCH", `${BASE_URL}/admin/solutions/bulk-status`, { ids, isActive }
@@ -758,8 +765,6 @@ export const bulkDeleteSolutionsApi = (ids: string[]) =>
   commonApi<{ success: boolean; message: string; deleted: number }>(
     "POST", `${BASE_URL}/admin/solutions/bulk-delete`, { ids }
   );
-
-   
 // ============================================================
 // services/allAPi.ts — ADD CaseStudy APIs
 // ============================================================
@@ -807,4 +812,42 @@ export const updateCaseStudyOrderApi = (
     "PATCH",
     `${BASE_URL}/admin/case-studies/order`,
     updates
+  );
+
+
+
+  // ============================================================
+// client api
+// ============================================================
+
+  export const addClientApi = (data: FormData) =>
+  commonApi("POST", `${BASE_URL}/admin/clients`, data);
+
+export const getAllClientsApi = () =>
+  commonApi<{ success: boolean; data: ClientResponse[] }>(
+    "GET", `${BASE_URL}/admin/clients`
+  );
+
+export const getClientByIdApi = (id: string) =>
+  commonApi<{ success: boolean; data: ClientResponse }>(
+    "GET", `${BASE_URL}/admin/clients/${id}`
+  );
+
+export const updateClientApi = (id: string, data: FormData) =>
+  commonApi("PUT", `${BASE_URL}/admin/clients/${id}`, data);
+
+export const toggleClientApi = (id: string) =>
+  commonApi("PATCH", `${BASE_URL}/admin/clients/${id}/toggle`);
+
+export const deleteClientApi = (id: string) =>
+  commonApi("DELETE", `${BASE_URL}/admin/clients/${id}`);
+
+export const bulkToggleClientsApi = (ids: string[], isActive: boolean) =>
+  commonApi<{ success: boolean; message: string; modified: number }>(
+    "PATCH", `${BASE_URL}/admin/clients/bulk-status`, { ids, isActive }
+  );
+
+export const bulkDeleteClientsApi = (ids: string[]) =>
+  commonApi<{ success: boolean; message: string; deleted: number }>(
+    "POST", `${BASE_URL}/admin/clients/bulk-delete`, { ids }
   );

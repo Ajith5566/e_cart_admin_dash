@@ -47,6 +47,8 @@ import Solutions from "./components/solutions/Solutions";
 import Add_solution from "./components/solutions/Add_solution";
 import CaseStudies from "./components/caseStudy/CaseStudies";
 import Add_caseStudy from "./components/caseStudy/Add_caseStudy";
+import Clients from "./components/client/Clients";
+import Add_client from "./components/client/Add_client";
 
 
 function App() {
@@ -129,6 +131,11 @@ function App() {
            <Route path="case-study" element={<CaseStudies />} />
           <Route path="case-study/add" element={<PermissionProtectedRoute module="service" action="create"><Add_caseStudy /></PermissionProtectedRoute>} />
           <Route path="case-study/edit/:id" element={<PermissionProtectedRoute module="technology" action="update"><Add_caseStudy/></PermissionProtectedRoute>} />
+
+           <Route path="client" element={<Clients />} />
+          <Route path="client/add" element={<PermissionProtectedRoute module="service" action="create"><Add_client /></PermissionProtectedRoute>} />
+          <Route path="client/edit/:id" element={<PermissionProtectedRoute module="technology" action="update"><Add_client/></PermissionProtectedRoute>} />
+
         </Route>
 
       </Routes>

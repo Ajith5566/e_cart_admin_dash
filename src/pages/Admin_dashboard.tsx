@@ -42,7 +42,9 @@ interface NavItem {
 const NAV_ITEMS: NavItem[] = [
   { key: "dashboard", label: "Dashboard", icon: faTableCellsLarge, path: "/admin-dash" },
 
-  { key: "user", label: "Users", icon: faUsers, path: "/admin-dash/user", section: "Content" },
+  { key: "user", label: "Users", icon: faUsers, path: "/admin-dash/user", section: "USER MANAGEMENT" },
+  { key: "RolePermissions", label: "Role", icon: faGear, path: "/admin-dash/role-permissions", section:"USER MANAGEMENT"  },
+  { key: "client", label: "Clients", icon: faUserGroup, path: "/admin-dash/client" ,section: "ORGANIZATION" },
 
   {
     key: "blog-manager", label: "Blog Manager", icon: faBlog, section: "Content", children: [
@@ -136,7 +138,7 @@ const NAV_ITEMS: NavItem[] = [
   { key: "settings", label: "Settings", icon: faGear, path: "/admin-dash/settings", section: "System" },
   { key: "profile", label: "Profile", icon: faGear, path: "/admin-dash/profile", section: "System" },
    { key: "login history", label: "Login history", icon: faGear, path: "/admin-dash/login-history", section: "System" },
-   { key: "RolePermissions", label: "Role", icon: faGear, path: "/admin-dash/role-permissions", section: "System" },
+   
 ];
 
 /* ─── Stat card data ─────────────────────────────────── */
