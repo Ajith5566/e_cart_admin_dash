@@ -1,7 +1,7 @@
-
 import { useEffect, useState } from "react";
 import { getSettingsApi, saveSettingsApi } from "../../services/allAPi";
 import { toast } from "react-toastify";
+
 type SettingsData = {
     email: string;
     phone: string;
@@ -11,12 +11,17 @@ type SettingsData = {
     linkedin: string;
     instagram: string;
     youtube: string;
+    // ✅ NEW
+    yearsOfExperience: string;
+    projectsCompleted: string;
+    clientSatisfaction: string;
+    expertTeamMembers: string;
 };
+
 export default function Settings() {
 
     const [loading, setLoading] = useState(false);
 
-    // ⭐ Form Data (All fields)
     const [formData, setFormData] = useState<SettingsData>({
         email: "",
         phone: "",
@@ -25,44 +30,46 @@ export default function Settings() {
         twitter: "",
         linkedin: "",
         instagram: "",
-        youtube: ""
+        youtube: "",
+        // ✅ NEW
+        yearsOfExperience: "",
+        projectsCompleted: "",
+        clientSatisfaction: "",
+        expertTeamMembers: "",
     });
 
-    // ⭐ Errors only for email & phone
     const [errors, setErrors] = useState({
         email: "",
         phone: ""
     });
 
-    // ✅ Load settings automatically
     useEffect(() => {
 
-    const loadSettings = async () => {
+        const loadSettings = async () => {
 
-        try {
+            try {
 
-            const res = await getSettingsApi();
+                const res = await getSettingsApi();
 
-            if (res?.data) {
+                if (res?.data) {
 
-                setFormData(res.data as SettingsData);
+                    setFormData(res.data as SettingsData);
+
+                }
+
+            } catch {
+
+                console.log("Failed loading settings");
 
             }
 
-        } catch {
+        };
 
-            console.log("Failed loading settings");
+        loadSettings();
 
-        }
-
-    };
-
-    loadSettings();
-
-}, []);
+    }, []);
 
 
-    // ⭐ Single handleChange
     const handleChange = (
         e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
     ) => {
@@ -74,7 +81,6 @@ export default function Settings() {
             [name]: value
         }));
 
-        // clear validation error while typing
         if (name === "email" || name === "phone") {
 
             setErrors(prev => ({
@@ -85,7 +91,6 @@ export default function Settings() {
         }
     };
 
-    // ⭐ Validate only email & phone
     const validateForm = () => {
 
         const newErrors = {
@@ -117,7 +122,6 @@ export default function Settings() {
         return isValid;
     };
 
-    // ⭐ Submit (Add + Update)
     const handleSubmit = async (e: React.FormEvent) => {
 
         e.preventDefault();
@@ -254,6 +258,35 @@ export default function Settings() {
                                 <div className="col-md-6 mb-3">
                                     <label className="form-label">Youtube</label>
                                     <input name="youtube" value={formData.youtube} onChange={handleChange} className="form-control" />
+                                </div>
+
+                            </div>
+
+                            {/* ✅ NEW — 4 fixed counter fields */}
+                            <div className="mt-3">
+                                <h3>Counts</h3>
+                            </div>
+
+                            <div className="row">
+
+                                <div className="col-md-3 mb-3">
+                                    <label className="form-label">Years of Experience</label>
+                                    <input name="yearsOfExperience" value={formData.yearsOfExperience} onChange={handleChange} className="form-control" placeholder="e.g. 14+" />
+                                </div>
+
+                                <div className="col-md-3 mb-3">
+                                    <label className="form-label">Projects Completed</label>
+                                    <input name="projectsCompleted" value={formData.projectsCompleted} onChange={handleChange} className="form-control" placeholder="e.g. 460+" />
+                                </div>
+
+                                <div className="col-md-3 mb-3">
+                                    <label className="form-label">Client Satisfaction</label>
+                                    <input name="clientSatisfaction" value={formData.clientSatisfaction} onChange={handleChange} className="form-control" placeholder="e.g. 95%" />
+                                </div>
+
+                                <div className="col-md-3 mb-3">
+                                    <label className="form-label">Expert Team Members</label>
+                                    <input name="expertTeamMembers" value={formData.expertTeamMembers} onChange={handleChange} className="form-control" placeholder="e.g. 50+" />
                                 </div>
 
                             </div>
