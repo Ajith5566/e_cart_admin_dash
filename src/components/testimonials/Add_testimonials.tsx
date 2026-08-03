@@ -8,7 +8,7 @@ import {
   getTestimonialbyIdApi,
   updatetestimonialApi,
 } from "../../services/allAPi";
-import type { TestimonialResponse, TestimonialTypes } from "../../types/testimonialTypes";
+import type { TestimonialResponse} from "../../types/testimonialTypes";
 import { imgSrc } from "../../utils/imgSrc";
 
 const YOUTUBE_REGEX = /^(https?:\/\/)?(www\.)?(youtube\.com|youtu\.be)\/.+/;
