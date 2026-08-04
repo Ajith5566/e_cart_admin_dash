@@ -160,7 +160,7 @@ export default function Add_caseStudy() {
           getAllCaseStudiesApi(),
         ]);
         setIndustryOptions((ind.data.data ?? []).map((i: any) => ({ value: i._id, label: i.name })));
-        setServiceOptions((svc.data.data ?? []).map((s: any) => ({ value: s._id, label: s.name })));
+        setServiceOptions((svc.data.data ?? []).map((s: any) => ({ value: s._id, label: s.title })));
         setTechnologyOptions((tech.data.data ?? []).map((t: any) => ({ value: t._id, label: t.name })));
         setSolutionOptions((sol.data.data ?? []).map((s: any) => ({ value: s._id, label: s.name })));
         setCaseStudyOptions((cs.data.data ?? [])
