@@ -16,11 +16,14 @@ import { toast } from "react-toastify";
 import { useAuth } from "../../context/useAuth";
 import type { ServiceResponse } from "../../types/serviceTypes";
 import ServiceTable from "./ServiceTable";
+import ServiceFaqModal from "./Servicefaqmodal";
+
 
 export default function Services() {
   const navigate = useNavigate();
   const { can } = useAuth();
   const [services, setServices] = useState<ServiceResponse[]>([]);
+  const [faqModalFor, setFaqModalFor] = useState<ServiceResponse | null>(null);
 
   const fetchServices = async () => {
     try {
@@ -55,6 +58,8 @@ export default function Services() {
         canEdit={can("service", "update")}
         canToggle={can("service", "status")}
         canDelete={can("service", "delete")}
+        canFaqs={can("service", "update")}
+        onFaqs={(service) => setFaqModalFor(service)}
         onToggle={async (id) => {
           try {
             await toggleServiceApi(id);
@@ -64,18 +69,19 @@ export default function Services() {
           }
         }}
         onDelete={async (id) => {
-          if (!window.confirm("Delete this service? The icon will also be removed.")) return;
+          if (!window.confirm("Delete this service? Its images will also be removed.")) return;
           try {
             await deleteServiceApi(id);
             fetchServices();
             toast.success("Service deleted");
-          } catch {
-            toast.error("Delete failed");
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          } catch (err: any) {
+            toast.error(err?.response?.data?.message || "Delete failed");
           }
         }}
         onBulkDelete={async (ids) => {
           if (!window.confirm(
-            `Delete ${ids.length} service(s)? Their icons will also be removed.`
+            `Delete ${ids.length} service(s)? Their images will also be removed.`
           )) return;
           try {
             const res = await bulkDeleteServicesApi(ids);
@@ -97,6 +103,18 @@ export default function Services() {
           }
         }}
       />
+
+      {faqModalFor && (
+        <ServiceFaqModal
+          serviceId={faqModalFor._id}
+          serviceTitle={faqModalFor.title}
+          initialFaqs={faqModalFor.faqs ?? []}
+          onClose={() => setFaqModalFor(null)}
+          onSaved={(faqs) =>
+            setServices((prev) => prev.map((s) => (s._id === faqModalFor._id ? { ...s, faqs } : s)))
+          }
+        />
+      )}
     </div>
   );
 }

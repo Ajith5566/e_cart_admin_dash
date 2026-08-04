@@ -1,4 +1,4 @@
-// components/caseStudy/ServiceTable.tsx
+// components/faq/FaqTable.tsx
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
   useReactTable,
@@ -17,18 +17,16 @@ import {
   faAnglesLeft, faAnglesRight,
 } from "@fortawesome/free-solid-svg-icons";
 
-import type { ServiceResponse } from "../../types/serviceTypes";
+import type { FaqResponse } from "../../types/faqTypes";
 
 type Props = {
-  data: ServiceResponse[];
-  onEdit: (service: ServiceResponse) => void;
+  data: FaqResponse[];
+  onEdit: (faq: FaqResponse) => void;
   onToggle: (id: string) => void;
   onDelete: (id: string) => void;
-  onFaqs: (service: ServiceResponse) => void;
   canEdit: boolean;
   canToggle: boolean;
   canDelete: boolean;
-  canFaqs: boolean;
   onBulkDelete: (ids: string[]) => Promise<void> | void;
   onBulkToggle: (ids: string[], isActive: boolean) => Promise<void> | void;
 };
@@ -47,9 +45,11 @@ function IndeterminateCheckbox({
   );
 }
 
-function ServiceTable({
-  data, onEdit, onToggle, onDelete, onFaqs,
-  canEdit, canToggle, canDelete, canFaqs,
+const truncate = (s: string, n: number) => (s.length > n ? `${s.slice(0, n)}…` : s);
+
+function FaqTable({
+  data, onEdit, onToggle, onDelete,
+  canEdit, canToggle, canDelete,
   onBulkDelete, onBulkToggle,
 }: Props) {
   const [limit, setLimit] = useState(10);
@@ -63,7 +63,7 @@ function ServiceTable({
     setPagination((prev) => ({ ...prev, pageIndex: 0, pageSize: limit }));
   }, [limit]);
 
-  const columns = useMemo<ColumnDef<ServiceResponse>[]>(() => [
+  const columns = useMemo<ColumnDef<FaqResponse>[]>(() => [
     {
       id: "select",
       enableSorting: false,
@@ -82,7 +82,7 @@ function ServiceTable({
         <IndeterminateCheckbox
           checked={row.getIsSelected()}
           onChange={row.getToggleSelectedHandler()}
-          aria-label={`Select ${row.original.title}`}
+          aria-label={`Select ${row.original.question}`}
         />
       ),
     },
@@ -96,38 +96,22 @@ function ServiceTable({
       },
     },
     {
-      header: "Title",
-      accessorKey: "title",
+      header: "Question",
+      accessorKey: "question",
       enableSorting: true,
     },
     {
-      header: "Parent",
-      id: "parent",
+      header: "Answer",
+      id: "answer",
       enableSorting: false,
-      cell: ({ row }) =>
-        row.original.parentService ? (
-          row.original.parentService.title
-        ) : (
-          <span className="badge bg-secondary">Top-level</span>
-        ),
+      cell: ({ row }) => (
+        <span className="text-muted" style={{ fontSize: "13px" }}>{truncate(row.original.answer, 80)}</span>
+      ),
     },
     {
-      header: "FAQs",
-      id: "faqs",
-      enableSorting: false,
-      cell: ({ row }) =>
-        row.original.parentService ? (
-          <button
-            className="btn btn-sm btn-outline-dark"
-            onClick={() => onFaqs(row.original)}
-            disabled={!canFaqs}
-            title={!canFaqs ? "No permission" : undefined}
-          >
-            FAQs ({row.original.faqs?.length ?? 0})
-          </button>
-        ) : (
-          <span className="text-muted" style={{ fontSize: "12px" }}>—</span>
-        ),
+      header: "Order",
+      accessorKey: "displayOrder",
+      enableSorting: true,
     },
     {
       header: "Edit",
@@ -173,7 +157,7 @@ function ServiceTable({
         </button>
       ),
     },
-  ], [onEdit, onToggle, onDelete, onFaqs, canEdit, canToggle, canDelete, canFaqs]);
+  ], [onEdit, onToggle, onDelete, canEdit, canToggle, canDelete]);
 
   // eslint-disable-next-line react-hooks/incompatible-library
   const table = useReactTable({
@@ -312,7 +296,7 @@ function ServiceTable({
             ) : (
               <tr>
                 <td colSpan={columns.length} className="text-center text-muted">
-                  No services found
+                  No FAQs found
                 </td>
               </tr>
             )}
@@ -351,4 +335,4 @@ function ServiceTable({
   );
 }
 
-export default ServiceTable;
+export default FaqTable;

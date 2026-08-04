@@ -66,6 +66,7 @@ const NAV_ITEMS: NavItem[] = [
   { key: "banner", label: "Banner", icon: faPenToSquare, path: "/admin-dash/banner" },
 
   { key: "pages", label: "Pages", icon: faFileLines, path: "/admin-dash/pages" },
+   { key: "faqs", label: "Faqs", icon: faFileLines, path: "/admin-dash/faq" },
 
   { key: "products", label: "Products", icon: faBox, path: "/admin-dash/products", section: "Store" },
 

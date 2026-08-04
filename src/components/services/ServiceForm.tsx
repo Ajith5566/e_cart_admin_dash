@@ -1,57 +1,194 @@
 // components/caseStudy/Add_service.tsx
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useEffect, useRef, useState } from "react";
 import { toast } from "react-toastify";
 import { useNavigate, useParams } from "react-router-dom";
+import Select from "react-select";
 import {
   addServiceApi,
   getServiceByIdApi,
   updateServiceApi,
+  getAllServicesApi,
+  getAllTechnologiesApi,
 } from "../../services/allAPi";
-
+import type { ServiceProcessItem, ServiceTechnologyItem } from "../../types/serviceTypes";
+import type { MetaFields } from "../../types/types";
 import slugify from "slugify";
 import { imgSrc } from "../../utils/imgSrc";
+import SeoPreview from "../seo/Seo";
+
+type ProcessError = { title: string; description: string };
+type TechnologyError = { technology: string; description: string };
+
+type FormErrors = {
+  title: string;
+  description: string;
+  shortDescription: string;
+  introTitle: string;
+  introDescription: string;
+  process: ProcessError[];
+  technologies: TechnologyError[];
+};
+
+const emptyErrors: FormErrors = {
+  title: "",
+  description: "",
+  shortDescription: "",
+  introTitle: "",
+  introDescription: "",
+  process: [],
+  technologies: [],
+};
+
+const emptyMeta: MetaFields = {
+  slug: "",
+  meta_title: "",
+  meta_keywords: [],
+  meta_description: "",
+  canonical_url: "",
+  og_title: "",
+  og_description: "",
+  og_image: null,
+  twitter_title: "",
+  twitter_description: "",
+  twitter_image: null,
+  schema_markup: "",
+  allow_indexing: true,
+  allow_following: true,
+  include_sitemap: true,
+  sitemap_priority: "0.5",
+  change_frequency: "daily",
+};
+
+const SEO_BASE_URL = "https://mern-admin-sable.vercel.app/";
 
 export default function Add_service() {
   const { id } = useParams();
   const isEditMode = !!id;
   const navigate = useNavigate();
 
-  const [name, setName] = useState("");
-  const [slugPreview, setSlugPreview] = useState("");
+  const [title, setTitle] = useState("");
+  const [parentService, setParentService] = useState<string | null>(null);
+  const [parentOptions, setParentOptions] = useState<{ value: string; label: string }[]>([]);
+
+  // top-level fields
+  const [description, setDescription] = useState("");
+  const [bullets, setBullets] = useState<string[]>([]);
+  const [bannerFile, setBannerFile] = useState<File | null>(null);
+  const [bannerPreview, setBannerPreview] = useState("");
+  const [existingBanner, setExistingBanner] = useState("");
+  const bannerRef = useRef<HTMLInputElement | null>(null);
+
+  // leaf fields
+  const [shortDescription, setShortDescription] = useState("");
+  const [tagline, setTagline] = useState("");
+  const [introTitle, setIntroTitle] = useState("");
+  const [introDescription, setIntroDescription] = useState("");
+  const [process, setProcess] = useState<ServiceProcessItem[]>([]);
+  const [technologies, setTechnologies] = useState<ServiceTechnologyItem[]>([]);
+  const [technologyOptions, setTechnologyOptions] = useState<{ value: string; label: string }[]>([]);
+  const [heroFile, setHeroFile] = useState<File | null>(null);
+  const [heroPreview, setHeroPreview] = useState("");
+  const [existingHero, setExistingHero] = useState("");
+  const heroRef = useRef<HTMLInputElement | null>(null);
+
+  // ── SEO / Meta ──
+  const [meta, setMeta] = useState<MetaFields>(emptyMeta);
+  const [slugTouched, setSlugTouched] = useState(false);
+  const [originalSlug, setOriginalSlug] = useState("");
+  const [metaTitleTouched, setMetaTitleTouched] = useState(false);
+  const [metaDescriptionTouched, setMetaDescriptionTouched] = useState(false);
+
+  const [displayOrder, setDisplayOrder] = useState(0);
+  const [featured, setFeatured] = useState(false);
   const [status, setStatus] = useState(true);
+
   const [loading, setLoading] = useState(false);
   const [loadingData, setLoadingData] = useState(!!id);
-  const [description, setDescription] = useState("");
+  const [errors, setErrors] = useState<FormErrors>(emptyErrors);
 
-  const [iconFile, setIconFile] = useState<File | null>(null);
-  const [iconPreview, setIconPreview] = useState("");
-  const [existingIcon, setExistingIcon] = useState("");
-  const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const isTopLevel = !parentService;
 
-  const [errors, setErrors] = useState({ name: "", icon: "", description: "" });
+  // slug follows the title until the admin edits it in the SEO panel.
+  // in edit mode it never auto-changes — retitling shouldn't move a live URL.
+ useEffect(() => {
+  const autoDescription = isTopLevel ? description : shortDescription;
 
-  // auto-preview slug from name
+  setMeta((prev) => ({
+    ...prev,
+    slug: slugTouched || isEditMode
+      ? prev.slug
+      : (title.trim() ? slugify(title, { lower: true, strict: true, trim: true }) : ""),
+    meta_title: metaTitleTouched ? prev.meta_title : title,
+    meta_description: metaDescriptionTouched ? prev.meta_description : autoDescription,
+  }));
+}, [
+  title, description, shortDescription, isTopLevel,
+  slugTouched, metaTitleTouched, metaDescriptionTouched, isEditMode,
+]);
+
   useEffect(() => {
-    setSlugPreview(
-      name.trim()
-        ? slugify(name, { lower: true, strict: true, trim: true })
-        : ""
-    );
-  }, [name]);
+    const load = async () => {
+      try {
+        const [svc, tech] = await Promise.all([
+          getAllServicesApi({ topLevelOnly: true }),
+          getAllTechnologiesApi(),
+        ]);
+        setParentOptions(
+          (svc.data.data ?? [])
+            .filter((s: any) => s._id !== id)
+            .map((s: any) => ({ value: s._id, label: s.title }))
+        );
+        setTechnologyOptions((tech.data.data ?? []).map((t: any) => ({ value: t._id, label: t.name })));
+      } catch {
+        toast.error("Failed to load options");
+      }
+    };
+    load();
+  }, [id]);
 
-  // load in edit mode
   useEffect(() => {
     if (!id) { setLoadingData(false); return; }
 
     const fetchService = async () => {
       try {
         const res = await getServiceByIdApi(id);
-        const service = res.data.data ?? res.data;
-        setName(service.name);
-        setSlugPreview(service.slug);
-        setStatus(service.isActive);
-        setExistingIcon(service.icon || "");
-        setDescription(service.description || "");
+        const s = res.data.data ?? (res.data as any);
+
+        setTitle(s.title ?? "");
+        setParentService(s.parentService?._id ?? null);
+        setDescription(s.description ?? "");
+        setBullets(s.bullets ?? []);
+        setExistingBanner(s.bannerImage ?? "");
+        setShortDescription(s.shortDescription ?? "");
+        setTagline(s.tagline ?? "");
+        setIntroTitle(s.introTitle ?? "");
+        setIntroDescription(s.introDescription ?? "");
+        setProcess(s.process ?? []);
+        setTechnologies((s.technologies ?? []).map((t: any) => ({
+          technology: t.technology?._id ?? t.technology,
+          description: t.description ?? "",
+        })));
+        setExistingHero(s.heroImage ?? "");
+        setDisplayOrder(s.displayOrder ?? 0);
+        setFeatured(s.featured ?? false);
+        setStatus(s.isActive);
+
+        // getServiceById returns { ...service, meta }
+        const m = s.meta ?? {};
+        const loadedSlug = m.slug || s.slug || "";
+        setMeta({
+          ...emptyMeta,
+          ...m,
+          slug: loadedSlug,
+          meta_keywords: m.meta_keywords ?? [],
+          og_image: m.og_image || null,
+          twitter_image: m.twitter_image || null,
+        });
+        setOriginalSlug(loadedSlug);
+        setSlugTouched(true);
+if (m.meta_title) setMetaTitleTouched(true);
+if (m.meta_description) setMetaDescriptionTouched(true);
       } catch {
         toast.error("Failed to load service");
         navigate("/admin-dash/service");
@@ -63,45 +200,194 @@ export default function Add_service() {
     fetchService();
   }, [id]);
 
-  const pickIcon = (file: File | undefined | null) => {
+  // ── bullets helpers ──────────────────────────────────
+  const addBullet = () => setBullets((prev) => [...prev, ""]);
+  const updateBullet = (i: number, val: string) => setBullets((prev) => prev.map((b, idx) => (idx === i ? val : b)));
+  const removeBullet = (i: number) => setBullets((prev) => prev.filter((_, idx) => idx !== i));
+
+  // ── process helpers ──────────────────────────────────
+  const addProcessStep = () => setProcess((prev) => [...prev, { title: "", description: "" }]);
+
+  const updateProcessStep = (i: number, field: keyof ServiceProcessItem, val: string) => {
+    setProcess((prev) => prev.map((p, idx) => (idx === i ? { ...p, [field]: val } : p)));
+    // clear the error for the field being edited
+    setErrors((prev) => ({
+      ...prev,
+      process: prev.process.map((e, idx) => (idx === i ? { ...e, [field]: "" } : e)),
+    }));
+  };
+
+  const removeProcessStep = (i: number) => {
+    setProcess((prev) => prev.filter((_, idx) => idx !== i));
+    // keep error indices aligned with the rows
+    setErrors((prev) => ({ ...prev, process: prev.process.filter((_, idx) => idx !== i) }));
+  };
+
+  // ── technologies helpers ──────────────────────────────
+  const addTechnology = () => setTechnologies((prev) => [...prev, { technology: "", description: "" }]);
+
+  const updateTechnology = (i: number, field: keyof ServiceTechnologyItem, val: string) => {
+    setTechnologies((prev) => prev.map((t, idx) => (idx === i ? { ...t, [field]: val } : t)));
+    setErrors((prev) => ({
+      ...prev,
+      technologies: prev.technologies.map((e, idx) => (idx === i ? { ...e, [field]: "" } : e)),
+    }));
+  };
+
+  const removeTechnology = (i: number) => {
+    setTechnologies((prev) => prev.filter((_, idx) => idx !== i));
+    setErrors((prev) => ({ ...prev, technologies: prev.technologies.filter((_, idx) => idx !== i) }));
+  };
+
+  const pickImage = (
+    file: File | undefined | null,
+    setFile: (f: File | null) => void,
+    setPreview: (s: string) => void
+  ) => {
     if (!file) return;
-    const allowed = ["image/jpeg", "image/jpg", "image/png", "image/webp", "image/svg+xml"];
-    if (!allowed.includes(file.type)) {
-      setErrors((p) => ({ ...p, icon: "Only JPG, PNG, WebP or SVG accepted" }));
-      return;
-    }
-    if (file.size > 1 * 1024 * 1024) {
-      setErrors((p) => ({ ...p, icon: "Icon must be under 1 MB" }));
-      return;
-    }
-    setErrors((p) => ({ ...p, icon: "" }));
-    setIconFile(file);
-    setIconPreview(URL.createObjectURL(file));
+    const allowed = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
+    if (!allowed.includes(file.type)) { toast.error("Only JPG, PNG, or WebP images are accepted"); return; }
+    if (file.size > 2 * 1024 * 1024) { toast.error("Image must be under 2 MB"); return; }
+    setFile(file);
+    setPreview(URL.createObjectURL(file));
+  };
+
+  const scrollToId = (elementId: string) => {
+    const el = document.getElementById(elementId);
+    if (!el) return;
+    el.scrollIntoView({ behavior: "smooth", block: "center" });
+    setTimeout(() => (el as HTMLElement).focus?.(), 300);
   };
 
   const validateForm = () => {
-    const next = { name: "", icon: "", description: "" };
-    let ok = true;
+    const next: FormErrors = { ...emptyErrors, process: [], technologies: [] };
+    let firstErrorId = "";
+    const flag = (elementId: string) => { if (!firstErrorId) firstErrorId = elementId; };
 
-    if (!name.trim()) { next.name = "Service name is required"; ok = false; }
-    if (!iconFile && !existingIcon) { next.icon = "Icon is required"; ok = false; }
-    if (!description.trim()) {
-      next.description = "Description is required";
-      ok = false;
+    if (!title.trim()) { next.title = "Service title is required"; flag("title"); }
+
+    if (isTopLevel) {
+      if (!description.trim()) {
+        next.description = "Description is required for a top-level service";
+        flag("description");
+      }
+    } else {
+      if (!shortDescription.trim()) { next.shortDescription = "Short description is required"; flag("shortDescription"); }
+      if (!introTitle.trim()) { next.introTitle = "Intro title is required"; flag("introTitle"); }
+      if (!introDescription.trim()) { next.introDescription = "Intro description is required"; flag("introDescription"); }
+
+      // ── process rows ──
+      next.process = process.map(() => ({ title: "", description: "" }));
+      process.forEach((p, i) => {
+        if (!p.title.trim()) {
+          next.process[i].title = "Step title is required";
+          flag(`process-${i}-title`);
+        }
+        if (!p.description.trim()) {
+          next.process[i].description = "Step description is required";
+          flag(`process-${i}-description`);
+        }
+      });
+
+      // ── technology rows ──
+      next.technologies = technologies.map(() => ({ technology: "", description: "" }));
+      const seen = new Set<string>();
+      technologies.forEach((t, i) => {
+        if (!t.technology) {
+          next.technologies[i].technology = "Select a technology";
+          flag(`technology-${i}`);
+        } else if (seen.has(t.technology)) {
+          next.technologies[i].technology = "This technology is already added";
+          flag(`technology-${i}`);
+        } else {
+          seen.add(t.technology);
+        }
+        if (!t.description.trim()) {
+          next.technologies[i].description = "Description is required";
+          flag(`technology-${i}-description`);
+        }
+      });
     }
 
     setErrors(next);
-    return ok;
+    if (firstErrorId) scrollToId(firstErrorId);
+    return !firstErrorId;
+  };
+
+  // slug lives inside the collapsed SEO panel, so it's reported with a toast
+  // instead of an inline field error the admin can't see
+  const resolveSlug = () => {
+    const raw = (meta.slug || slugify(title, { lower: true, strict: true, trim: true })).trim().toLowerCase();
+    if (!raw) {
+      toast.error("Slug is required — open the SEO section to set it");
+      return null;
+    }
+    if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(raw)) {
+      toast.error("Slug can only contain lowercase letters, numbers and hyphens");
+      return null;
+    }
+    return raw;
   };
 
   const handleSubmit = async () => {
     if (!validateForm()) return;
 
+    const finalSlug = resolveSlug();
+    if (!finalSlug) return;
+
+    if (isEditMode && originalSlug && finalSlug !== originalSlug) {
+      const ok = window.confirm(
+        `The URL will change from "${originalSlug}" to "${finalSlug}". The old URL will redirect to the new one. Continue?`
+      );
+      if (!ok) return;
+    }
+
     const fd = new FormData();
-    fd.append("name", name.trim());
+    fd.append("title", title.trim());
+    fd.append("parentService", parentService ?? "null");
+    fd.append("displayOrder", String(displayOrder));
+    fd.append("featured", String(featured));
     fd.append("status", String(status));
-    fd.append("description", description.trim());
-    if (iconFile) fd.append("icon", iconFile);
+
+    if (isTopLevel) {
+      fd.append("description", description);
+      fd.append("bullets", JSON.stringify(bullets.filter((b) => b.trim())));
+    } else {
+      fd.append("shortDescription", shortDescription);
+      fd.append("tagline", tagline);
+      fd.append("introTitle", introTitle);
+      fd.append("introDescription", introDescription);
+      // rows are validated above, so nothing is silently dropped here
+      fd.append(
+        "process",
+        JSON.stringify(process.map((p) => ({ ...p, title: p.title.trim(), description: p.description.trim() })))
+      );
+      fd.append(
+        "technologies",
+        JSON.stringify(technologies.map((t) => ({ ...t, description: t.description.trim() })))
+      );
+    }
+
+    if (bannerFile) fd.append("bannerImage", bannerFile);
+    if (heroFile) fd.append("heroImage", heroFile);
+
+    // ── META ──
+    // SeoPreview keeps og_image/twitter_image as either a File (freshly picked)
+    // or the saved server path. Files go up as uploads; strings ride along in the
+    // JSON, so an image cleared to "" tells the controller to unlink the old file.
+    const { og_image, twitter_image, ...metaRest } = meta;
+
+    fd.append("meta", JSON.stringify({
+      ...metaRest,
+      slug: finalSlug,
+      // undefined keys are dropped by JSON.stringify — the controller then
+      // fills them in from the uploaded file
+      og_image: og_image instanceof File ? undefined : (og_image ?? ""),
+      twitter_image: twitter_image instanceof File ? undefined : (twitter_image ?? ""),
+    }));
+
+    if (og_image instanceof File) fd.append("og_image", og_image);
+    if (twitter_image instanceof File) fd.append("twitter_image", twitter_image);
 
     try {
       setLoading(true);
@@ -113,19 +399,16 @@ export default function Add_service() {
         toast.success("Service added");
       }
       navigate("/admin-dash/service");
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
       if (err?.response?.status === 409) {
-        toast.error("A service with this name already exists");
+        toast.error(err?.response?.data?.message || "This slug is already in use");
       } else {
-        toast.error("Action failed");
+        toast.error(err?.response?.data?.message || "Action failed");
       }
     } finally {
       setLoading(false);
     }
   };
-
-  const shownIcon = iconPreview || (existingIcon ? imgSrc(existingIcon) : "");
 
   if (loadingData) {
     return (
@@ -140,158 +423,322 @@ export default function Add_service() {
     );
   }
 
+  const shownBanner = bannerPreview || (existingBanner ? imgSrc(existingBanner) : "");
+  const shownHero = heroPreview || (existingHero ? imgSrc(existingHero) : "");
+
   return (
     <div className="p-2">
       <div className="d-flex justify-content-between">
         <h4 className="fw-bold">{isEditMode ? "Edit Service" : "Add Service"}</h4>
-        <button
-          className="btn btn-secondary mb-3"
-          onClick={() => navigate("/admin-dash/service")}
-        >
+        <button className="btn btn-secondary mb-3" onClick={() => navigate("/admin-dash/service")}>
           ← Back to Services
         </button>
       </div>
 
       <div className="p-md-2 mb-4">
         <div className="row">
-
-          {/* LEFT */}
-          <div className="col-md-8">
-
-            <label htmlFor="name" className="form-label">
-              Name <span className="text-danger">*</span>
+          <div className="col-md-6">
+            <label htmlFor="title" className="form-label">
+              Title <span className="text-danger">*</span>
             </label>
             <input
-              id="name"
-              className={`form-control ${errors.name ? "is-invalid" : ""}`}
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="e.g. Digital Marketing"
+              id="title"
+              className={`form-control ${errors.title ? "is-invalid" : ""}`}
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              placeholder="e.g. Digital Engineering"
             />
-            {errors.name && <div className="invalid-feedback">{errors.name}</div>}
+            {errors.title && <div className="invalid-feedback">{errors.title}</div>}
 
-            {/* live slug preview */}
-            {slugPreview && (
+            {meta.slug && (
               <p className="text-muted mt-1 mb-0" style={{ fontSize: "13px" }}>
-                Slug: <code>{slugPreview}</code>
+                Slug: <code>{meta.slug}</code> — edit it in the SEO section below
               </p>
             )}
+          </div>
 
-            <label htmlFor="description" className="form-label mt-3">
-              Description <span className="text-danger">*</span>
-            </label>
-
-            <textarea
-              id="description"
-              rows={4}
-              className={`form-control ${errors.description ? "is-invalid" : ""}`}
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              placeholder="Enter service description"
+          <div className="col-md-6">
+            <label className="form-label">Parent Service</label>
+            <Select
+              options={parentOptions}
+              value={parentOptions.find((o) => o.value === parentService) ?? null}
+              onChange={(v) => setParentService(v?.value ?? null)}
+              isClearable
+              placeholder="None — this is a top-level service"
+              classNamePrefix="react-select"
             />
+            <small className="text-muted">
+              Leave empty to create a top-level service (like &quot;Digital Engineering&quot;). Only top-level services can be picked as a parent.
+            </small>
+          </div>
+        </div>
 
-            {errors.description && (
-              <div className="invalid-feedback">
-                {errors.description}
-              </div>
-            )}
-
-            <label className="form-label mt-3">Status</label>
-            <select
-              className="form-control"
-              style={{ maxWidth: "200px" }}
-              value={status ? "true" : "false"}
-              onChange={(e) => setStatus(e.target.value === "true")}
-            >
+        <div className="row mt-3">
+          <div className="col-md-4">
+            <label className="form-label">Display Order</label>
+            <input type="number" min={0} className="form-control" value={displayOrder} onChange={(e) => setDisplayOrder(Number(e.target.value))} />
+          </div>
+          <div className="col-md-4">
+            <label className="form-label">Status</label>
+            <select className="form-control" value={status ? "true" : "false"} onChange={(e) => setStatus(e.target.value === "true")}>
               <option value="true">Active</option>
               <option value="false">Inactive</option>
             </select>
+          </div>
+          <div className="col-md-4 d-flex align-items-end">
+            <label className="form-check-label d-flex align-items-center gap-2">
+              <input type="checkbox" className="form-check-input" checked={featured} onChange={(e) => setFeatured(e.target.checked)} />
+              Featured
+            </label>
+          </div>
+        </div>
 
-            <div className="mt-4 d-flex gap-2">
-              <button
-                className="btn btn-primary"
-                onClick={handleSubmit}
-                disabled={loading}
-              >
-                {loading ? "Saving..." : isEditMode ? "Update Service" : "Add Service"}
-              </button>
-              {isEditMode && (
-                <button
-                  className="btn btn-secondary"
-                  type="button"
-                  onClick={() => navigate("/admin-dash/service")}
-                  disabled={loading}
-                >
-                  Cancel
-                </button>
+        {isTopLevel ? (
+          <>
+            {/* ── TOP-LEVEL FIELDS ── */}
+            <label htmlFor="description" className="form-label mt-3">
+              Description <span className="text-danger">*</span>
+            </label>
+            <textarea
+              id="description"
+              className={`form-control ${errors.description ? "is-invalid" : ""}`}
+              rows={3}
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+            />
+            {errors.description && <div className="invalid-feedback d-block">{errors.description}</div>}
+
+            <div className="mt-3">
+              <h6>Banner Image</h6>
+              <input ref={bannerRef} type="file" accept="image/*" className="d-none"
+                onChange={(e) => { pickImage(e.target.files?.[0], setBannerFile, setBannerPreview); e.target.value = ""; }} />
+              {shownBanner ? (
+                <div className="d-flex align-items-center gap-3">
+                  <img src={shownBanner} alt="Banner" className="img-thumbnail" style={{ width: "180px", height: "120px", objectFit: "cover" }} />
+                  <div className="d-flex gap-2">
+                    <button type="button" className="btn btn-sm btn-outline-dark" onClick={() => bannerRef.current?.click()}>Change</button>
+                    <button type="button" className="btn btn-sm btn-outline-danger"
+                      onClick={() => { setBannerFile(null); setBannerPreview(""); setExistingBanner(""); }}>
+                      Remove
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div className="upload-box text-center p-5 border" style={{ cursor: "pointer" }} onClick={() => bannerRef.current?.click()}>
+                  <p className="mb-1">Click to select image</p><h4>+</h4>
+                </div>
               )}
             </div>
-          </div>
 
-          {/* RIGHT — Icon */}
-          <div className="col-md-4">
-            <h6>Icon <span className="text-danger">*</span></h6>
-            <p className="text-muted" style={{ fontSize: "12px" }}>
-              JPG, PNG, WebP or SVG · Max 1 MB<br />
-              Recommended: square, transparent background
-            </p>
-
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="image/*,.svg"
-              className="d-none"
-              onChange={(e) => { pickIcon(e.target.files?.[0]); e.target.value = ""; }}
+            <div className="card mt-4 border-0 shadow-sm">
+              <div className="card-header fw-semibold bg-light d-flex justify-content-between align-items-center">
+                <span>Bullets <span className="text-muted" style={{ fontSize: 12 }}>(shown on the Services listing page)</span></span>
+                <button type="button" className="btn btn-sm btn-outline-dark" onClick={addBullet}>+ Add Bullet</button>
+              </div>
+              <div className="card-body">
+                {bullets.map((b, i) => (
+                  <div key={i} className="d-flex gap-2 mb-2">
+                    <input className="form-control" value={b} onChange={(e) => updateBullet(i, e.target.value)} placeholder="e.g. Corporate & Institutional Websites" />
+                    <button type="button" className="btn btn-outline-danger btn-sm" onClick={() => removeBullet(i)}>Remove</button>
+                  </div>
+                ))}
+                {bullets.length === 0 && <p className="text-muted" style={{ fontSize: 13 }}>No bullets yet.</p>}
+              </div>
+            </div>
+          </>
+        ) : (
+          <>
+            {/* ── LEAF FIELDS ── */}
+            <label htmlFor="shortDescription" className="form-label mt-3">
+              Short Description <span className="text-danger">*</span>
+            </label>
+            <textarea
+              id="shortDescription"
+              className={`form-control ${errors.shortDescription ? "is-invalid" : ""}`}
+              rows={2}
+              value={shortDescription}
+              onChange={(e) => setShortDescription(e.target.value)}
             />
+            {errors.shortDescription && <div className="invalid-feedback d-block">{errors.shortDescription}</div>}
 
-            {shownIcon ? (
-              <div>
-                <div
-                  className="border d-flex align-items-center justify-content-center"
-                  style={{ width: "120px", height: "120px", borderRadius: "10px", background: "#f8f9fa" }}
-                >
-                  <img
-                    src={shownIcon}
-                    alt="Icon preview"
-                    style={{ maxWidth: "100px", maxHeight: "100px", objectFit: "contain" }}
-                  />
-                </div>
-                <div className="d-flex gap-2 mt-2">
-                  <button
-                    type="button"
-                    className="btn btn-sm btn-outline-dark"
-                    onClick={() => fileInputRef.current?.click()}
-                  >
-                    Change
-                  </button>
-                  <button
-                    type="button"
-                    className="btn btn-sm btn-outline-danger"
-                    onClick={() => {
-                      setIconFile(null);
-                      setIconPreview("");
-                      setExistingIcon("");
-                    }}
-                  >
-                    Remove
-                  </button>
-                </div>
-              </div>
-            ) : (
-              <div
-                className={`upload-box text-center p-4 border ${errors.icon ? "border-danger" : ""}`}
-                style={{ cursor: "pointer", borderRadius: "10px", width: "120px", height: "120px" }}
-                onClick={() => fileInputRef.current?.click()}
-              >
-                <p className="mb-0 text-primary fw-semibold" style={{ fontSize: "12px" }}>
-                  Click to upload
-                </p>
-                <h5 className="mb-0">+</h5>
-              </div>
-            )}
-            {errors.icon && <div className="text-danger mt-1" style={{ fontSize: "13px" }}>{errors.icon}</div>}
-          </div>
+            <label className="form-label mt-3">Tagline</label>
+            <input className="form-control" value={tagline} onChange={(e) => setTagline(e.target.value)} placeholder="e.g. Your website is the first handshake with every customer..." />
 
+            <div className="mt-3">
+              <h6>Hero Image</h6>
+              <input ref={heroRef} type="file" accept="image/*" className="d-none"
+                onChange={(e) => { pickImage(e.target.files?.[0], setHeroFile, setHeroPreview); e.target.value = ""; }} />
+              {shownHero ? (
+                <div className="d-flex align-items-center gap-3">
+                  <img src={shownHero} alt="Hero" className="img-thumbnail" style={{ width: "180px", height: "120px", objectFit: "cover" }} />
+                  <div className="d-flex gap-2">
+                    <button type="button" className="btn btn-sm btn-outline-dark" onClick={() => heroRef.current?.click()}>Change</button>
+                    <button type="button" className="btn btn-sm btn-outline-danger"
+                      onClick={() => { setHeroFile(null); setHeroPreview(""); setExistingHero(""); }}>
+                      Remove
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div className="upload-box text-center p-5 border" style={{ cursor: "pointer" }} onClick={() => heroRef.current?.click()}>
+                  <p className="mb-1">Click to select image</p><h4>+</h4>
+                </div>
+              )}
+            </div>
+
+            <label htmlFor="introTitle" className="form-label mt-3">
+              Intro Title <span className="text-danger">*</span>
+            </label>
+            <input
+              id="introTitle"
+              className={`form-control ${errors.introTitle ? "is-invalid" : ""}`}
+              value={introTitle}
+              onChange={(e) => setIntroTitle(e.target.value)}
+            />
+            {errors.introTitle && <div className="invalid-feedback">{errors.introTitle}</div>}
+
+            <label htmlFor="introDescription" className="form-label mt-3">
+              Intro Description <span className="text-danger">*</span>
+            </label>
+            <textarea
+              id="introDescription"
+              className={`form-control ${errors.introDescription ? "is-invalid" : ""}`}
+              rows={3}
+              value={introDescription}
+              onChange={(e) => setIntroDescription(e.target.value)}
+            />
+            {errors.introDescription && <div className="invalid-feedback d-block">{errors.introDescription}</div>}
+
+            <div className="card mt-4 border-0 shadow-sm">
+              <div className="card-header fw-semibold bg-light d-flex justify-content-between align-items-center">
+                <span>Process</span>
+                <button type="button" className="btn btn-sm btn-outline-dark" onClick={addProcessStep}>+ Add Step</button>
+              </div>
+              <div className="card-body">
+                {process.map((p, i) => (
+                  <div key={i} className="row g-2 mb-2 align-items-start">
+                    <div className="col-md-3">
+                      <input
+                        id={`process-${i}-title`}
+                        className={`form-control ${errors.process[i]?.title ? "is-invalid" : ""}`}
+                        placeholder="Step title (e.g. Discovery)"
+                        value={p.title}
+                        onChange={(e) => updateProcessStep(i, "title", e.target.value)}
+                      />
+                      {errors.process[i]?.title && (
+                        <div className="invalid-feedback">{errors.process[i]?.title}</div>
+                      )}
+                    </div>
+                    <div className="col-md-7">
+                      <textarea
+                        id={`process-${i}-description`}
+                        className={`form-control ${errors.process[i]?.description ? "is-invalid" : ""}`}
+                        rows={2}
+                        placeholder="Step description"
+                        value={p.description}
+                        onChange={(e) => updateProcessStep(i, "description", e.target.value)}
+                      />
+                      {errors.process[i]?.description && (
+                        <div className="invalid-feedback">{errors.process[i]?.description}</div>
+                      )}
+                    </div>
+                    <div className="col-md-2">
+                      <button type="button" className="btn btn-outline-danger btn-sm" onClick={() => removeProcessStep(i)}>Remove</button>
+                    </div>
+                  </div>
+                ))}
+                {process.length === 0 && <p className="text-muted" style={{ fontSize: 13 }}>No process steps yet.</p>}
+              </div>
+            </div>
+
+            <div className="card mt-4 border-0 shadow-sm">
+              <div className="card-header fw-semibold bg-light d-flex justify-content-between align-items-center">
+                <span>Technologies</span>
+                <button type="button" className="btn btn-sm btn-outline-dark" onClick={addTechnology}>+ Add Technology</button>
+              </div>
+              <div className="card-body">
+                {technologies.map((t, i) => (
+                  <div key={i} className="row g-2 mb-2 align-items-start">
+                    {/* id sits on the wrapper so scrollToId can reach the react-select */}
+                    <div className="col-md-3" id={`technology-${i}`}>
+                      <Select
+                        options={technologyOptions.filter(
+                          (o) => o.value === t.technology || !technologies.some((x) => x.technology === o.value)
+                        )}
+                        value={technologyOptions.find((o) => o.value === t.technology) ?? null}
+                        onChange={(v) => updateTechnology(i, "technology", v?.value ?? "")}
+                        placeholder="Select technology"
+                        classNamePrefix="react-select"
+                        styles={{
+                          control: (base) => ({
+                            ...base,
+                            borderColor: errors.technologies[i]?.technology ? "#dc3545" : base.borderColor,
+                          }),
+                        }}
+                      />
+                      {errors.technologies[i]?.technology && (
+                        <div className="text-danger mt-1" style={{ fontSize: 12 }}>
+                          {errors.technologies[i]?.technology}
+                        </div>
+                      )}
+                    </div>
+                    <div className="col-md-7">
+                      <textarea
+                        id={`technology-${i}-description`}
+                        className={`form-control ${errors.technologies[i]?.description ? "is-invalid" : ""}`}
+                        rows={2}
+                        placeholder="Why this tech is used for this service"
+                        value={t.description}
+                        onChange={(e) => updateTechnology(i, "description", e.target.value)}
+                      />
+                      {errors.technologies[i]?.description && (
+                        <div className="invalid-feedback">{errors.technologies[i]?.description}</div>
+                      )}
+                    </div>
+                    <div className="col-md-2">
+                      <button type="button" className="btn btn-outline-danger btn-sm" onClick={() => removeTechnology(i)}>Remove</button>
+                    </div>
+                  </div>
+                ))}
+                {technologies.length === 0 && <p className="text-muted" style={{ fontSize: 13 }}>No technologies yet.</p>}
+              </div>
+            </div>
+
+            <div className="alert alert-info mt-4" style={{ fontSize: 13 }}>
+              FAQs are managed from the Services list — use the &quot;FAQs&quot; button on this service's row after saving.
+            </div>
+          </>
+        )}
+
+        {/* ── SEO ── */}
+        <div className="mt-4">
+          <h6 className="fw-semibold">SEO</h6>
+          <SeoPreview
+            value={meta}
+            onChange={setMeta}
+            baseUrl={SEO_BASE_URL}
+            onManualEdit={(field) => {
+              if (field === "slug") setSlugTouched(true);
+              if (field === "meta_title") setMetaTitleTouched(true);
+              if (field === "meta_description") setMetaDescriptionTouched(true);
+            }}
+          />
+          {isEditMode && originalSlug && meta.slug !== originalSlug && (
+            <div className="text-warning mt-2" style={{ fontSize: 13 }}>
+              Changing the slug moves this page&apos;s URL. The old one is archived and redirects to the new one.
+            </div>
+          )}
+        </div>
+
+        <div className="mt-4 d-flex gap-2">
+          <button className="btn btn-primary" onClick={handleSubmit} disabled={loading}>
+            {loading ? "Saving..." : isEditMode ? "Update Service" : "Add Service"}
+          </button>
+          {isEditMode && (
+            <button className="btn btn-secondary" type="button" onClick={() => navigate("/admin-dash/service")} disabled={loading}>
+              Cancel
+            </button>
+          )}
         </div>
       </div>
     </div>

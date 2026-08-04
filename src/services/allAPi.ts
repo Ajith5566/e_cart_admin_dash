@@ -13,7 +13,7 @@ import type {
   ModulesResponse,
   PermissionResponse,
 } from "../types/permissionTypes";
-import type { ServiceResponse } from "../types/serviceTypes";
+import type { ServiceResponse, ServiceRelations, ServiceFaqItem } from "../types/serviceTypes";
 import type { TechnologyResponse } from "../types/technologyTypes";
 import type { TestimonialApiResponse, TestimonialResponse } from "../types/testimonialTypes";
 import type {
@@ -29,6 +29,7 @@ import type {
 import { BASE_URL } from "./baseURL";
 import { commonApi } from "./commonAPi";
 import type { ClientResponse } from "../types/clientTypes";
+import type { FaqResponse } from "../types/faqTypes";
 
 export type PagePayload = {
   title: string;
@@ -654,21 +655,42 @@ export const bulkDeleteTechnologiesApi = (ids: string[]) =>
   /* ============================================================
    SERVICES
    ============================================================ */
+/* ============================================================
+   SERVICE APIs
+============================================================ */
+
+
 export const addServiceApi = (data: FormData) =>
   commonApi("POST", `${BASE_URL}/admin/services`, data);
 
-export const getAllServicesApi = () =>
-  commonApi<{ success: boolean; data: ServiceResponse[] }>(
-    "GET", `${BASE_URL}/admin/services`
+export const getAllServicesApi = (params?: { topLevelOnly?: boolean; parentService?: string }) => {
+  const query = new URLSearchParams();
+  if (params?.topLevelOnly) query.set("topLevelOnly", "true");
+  if (params?.parentService) query.set("parentService", params.parentService);
+  const qs = query.toString();
+  return commonApi<{ success: boolean; data: ServiceResponse[] }>(
+    "GET", `${BASE_URL}/admin/services${qs ? `?${qs}` : ""}`
   );
+};
 
 export const getServiceByIdApi = (id: string) =>
   commonApi<{ success: boolean; data: ServiceResponse }>(
     "GET", `${BASE_URL}/admin/services/${id}`
   );
 
+export const getServiceRelationsApi = (id: string) =>
+  commonApi<{ success: boolean; data: ServiceRelations }>(
+    "GET", `${BASE_URL}/admin/services/${id}/relations`
+  );
+
 export const updateServiceApi = (id: string, data: FormData) =>
   commonApi("PUT", `${BASE_URL}/admin/services/${id}`, data);
+
+// dedicated FAQ endpoint — used by the services table's quick-edit modal
+export const updateServiceFaqsApi = (id: string, faqs: ServiceFaqItem[]) =>
+  commonApi<{ success: boolean; message: string; data: ServiceFaqItem[] }>(
+    "PATCH", `${BASE_URL}/admin/services/${id}/faqs`, { faqs }
+  );
 
 export const toggleServiceApi = (id: string) =>
   commonApi("PATCH", `${BASE_URL}/admin/services/${id}/toggle`);
@@ -685,9 +707,6 @@ export const bulkDeleteServicesApi = (ids: string[]) =>
   commonApi<{ success: boolean; message: string; deleted: number }>(
     "POST", `${BASE_URL}/admin/services/bulk-delete`, { ids }
   );
-
-
-
 /* ============================================================
    INDUSTRIES
    ============================================================ */
@@ -850,4 +869,42 @@ export const bulkToggleClientsApi = (ids: string[], isActive: boolean) =>
 export const bulkDeleteClientsApi = (ids: string[]) =>
   commonApi<{ success: boolean; message: string; deleted: number }>(
     "POST", `${BASE_URL}/admin/clients/bulk-delete`, { ids }
+  );
+
+
+  /* ============================================================
+   FAQ APIs
+============================================================ */
+
+
+export const addFaqApi = (data: { question: string; answer: string; displayOrder: number; status: boolean }) =>
+  commonApi("POST", `${BASE_URL}/admin/faqs`, data);
+
+export const getAllFaqsApi = () =>
+  commonApi<{ success: boolean; data: FaqResponse[] }>(
+    "GET", `${BASE_URL}/admin/faqs`
+  );
+
+export const getFaqByIdApi = (id: string) =>
+  commonApi<{ success: boolean; data: FaqResponse }>(
+    "GET", `${BASE_URL}/admin/faqs/${id}`
+  );
+
+export const updateFaqApi = (id: string, data: { question?: string; answer?: string; displayOrder?: number; status?: boolean }) =>
+  commonApi("PUT", `${BASE_URL}/admin/faqs/${id}`, data);
+
+export const toggleFaqApi = (id: string) =>
+  commonApi("PATCH", `${BASE_URL}/admin/faqs/${id}/toggle`);
+
+export const deleteFaqApi = (id: string) =>
+  commonApi("DELETE", `${BASE_URL}/admin/faqs/${id}`);
+
+export const bulkToggleFaqsApi = (ids: string[], isActive: boolean) =>
+  commonApi<{ success: boolean; message: string; modified: number }>(
+    "PATCH", `${BASE_URL}/admin/faqs/bulk-status`, { ids, isActive }
+  );
+
+export const bulkDeleteFaqsApi = (ids: string[]) =>
+  commonApi<{ success: boolean; message: string; deleted: number }>(
+    "POST", `${BASE_URL}/admin/faqs/bulk-delete`, { ids }
   );
