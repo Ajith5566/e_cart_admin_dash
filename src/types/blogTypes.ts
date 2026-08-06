@@ -1,7 +1,11 @@
 import type { MetaFields } from "./types";
 import type { ContentBlock } from "./contentBlockTypes";
+import type { ServiceResponse } from "./serviceTypes";
+import type { CaseStudyResponse } from "./caseStudyTypes";
 
 export type BlogPublicationStatus = "draft" | "published";
+export type BlogFaqItem = { question: string; answer: string };
+
 
 export type BlogTypes = {
   title: string;
@@ -13,6 +17,8 @@ export type BlogTypes = {
   status: boolean; // isActive — visibility toggle, independent of draft/published
   publicationStatus: BlogPublicationStatus;
   image: File | null;
+  services: ServiceResponse[];
+   relatedCaseStudies: Partial<CaseStudyResponse>[];
 };
 
 export type BlogResponse = {
@@ -40,6 +46,9 @@ export type BlogResponse = {
   updatedAt: string;
 
   meta?: MetaFields;
+   faqs: BlogFaqItem[];
+   services: ServiceResponse[];
+   relatedCaseStudies: Partial<CaseStudyResponse>[];
 };
 
 export type BlogApiResponse = {

@@ -11,7 +11,9 @@ import {
   getAllauthorsApi,
   getBlogByIdApi,
   updateBlogApi,
-  removeBlogBlockImageApi, // ⚠️ NEW — add this to services/allAPi, mirrors removeGalleryImageApi
+  removeBlogBlockImageApi,
+  getAllServicesApi,
+  getAllCaseStudiesApi, // ⚠️ NEW — add this to services/allAPi, mirrors removeGalleryImageApi
 } from "../../services/allAPi";
 import { useNavigate, useParams } from "react-router-dom";
 import type { MetaFields } from "../../types/types";
@@ -105,6 +107,12 @@ export default function Add_blog() {
   const [imagePreview, setImagePreview] = useState("");
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
+   // ── relation options
+   const [selectedServices, setSelectedServices] = useState<string[]>([]);
+    const [relatedCaseStudies, setRelatedCaseStudies] = useState<string[]>([]);
+const [serviceOptions, setServiceOptions] = useState<{ value: string; label: string }[]>([]);
+ const [caseStudyOptions, setCaseStudyOptions] = useState<{ value: string; label: string }[]>([]);
+
   const [slugManuallyEdited, setSlugManuallyEdited] = useState(false);
   const [metaTitleManuallyEdited, setMetaTitleManuallyEdited] = useState(false);
   const [metaDescManuallyEdited, setMetaDescManuallyEdited] = useState(false);
@@ -121,6 +129,26 @@ export default function Add_blog() {
     shortDesc: "",
     image: "",
   });
+
+   // ── fetch dropdown options ─────────────────────────────────
+    useEffect(() => {
+      const load = async () => {
+        try {
+          const [ svc, cs] = await Promise.all([
+            getAllServicesApi(),
+            getAllCaseStudiesApi(),
+          ]);
+          
+          setServiceOptions((svc.data.data ?? []).map((s: any) => ({ value: s._id, label: s.title })));
+          setCaseStudyOptions((cs.data.data ?? [])
+            .filter((c: any) => c._id !== id)
+            .map((c: any) => ({ value: c._id, label: c.title })));
+        } catch {
+          toast.error("Failed to load options");
+        }
+      };
+      load();
+    }, [id]);
 
   useEffect(() => {
     const fetchAuthors = async () => {
@@ -140,6 +168,8 @@ export default function Add_blog() {
     const fetchBlog = async () => {
       try {
         const res = await getBlogByIdApi(id);
+        console.log(res);
+        
         const blog = res.data.data ?? res.data;
 
         setTitle(blog.title ?? "");
@@ -150,6 +180,8 @@ export default function Add_blog() {
         setViews(blog.views ?? "");
         setIsActive(blog.isActive);
         setExistingImage(blog.image ?? "");
+         setSelectedServices((blog.services ?? []).map((s: any) => s._id));
+        setRelatedCaseStudies((blog.relatedCaseStudies ?? []).map((r: any) => r._id));
 
         const fetchedStatus: BlogPublicationStatus = blog.publicationStatus ?? "draft";
         setPublicationStatus(fetchedStatus);
@@ -349,6 +381,8 @@ export default function Add_blog() {
     if (views !== "") fd.append("views", String(views));
     fd.append("status", String(isActive));
     fd.append("publicationStatus", publicationStatus);
+    fd.append("relatedCaseStudies", JSON.stringify(relatedCaseStudies));
+    fd.append("services",           JSON.stringify(selectedServices));
     if (isEditMode && originalPublicationStatus === "published") {
       fd.append("updateLastContentDate", String(updateLastContentDate));
     }
@@ -573,7 +607,23 @@ export default function Add_blog() {
             />
             <small className="text-muted">Hidden if empty</small>
           </div>
+           <div className="col-md-4">
+                <label className="form-label">Services</label>
+                <Select isMulti options={serviceOptions}
+                  value={serviceOptions.filter((o) => selectedServices.includes(o.value))}
+                  onChange={(v) => setSelectedServices(v.map((o) => o.value))}
+                  placeholder="Select services" classNamePrefix="react-select" />
+              </div>
         </div>
+         <div className="card mb-4 border-0 shadow-sm">
+                  <div className="card-header fw-semibold bg-light">Related Case Studies</div>
+                  <div className="card-body">
+                    <Select isMulti options={caseStudyOptions}
+                      value={caseStudyOptions.filter((o) => relatedCaseStudies.includes(o.value))}
+                      onChange={(v) => setRelatedCaseStudies(v.map((o) => o.value))}
+                      placeholder="Select related case studies" classNamePrefix="react-select" />
+                  </div>
+                </div>
 
         {/* ── Featured image ── */}
         <div className="mt-3">

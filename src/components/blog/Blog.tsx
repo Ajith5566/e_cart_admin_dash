@@ -15,11 +15,13 @@ import { toast } from "react-toastify";
 import { useAuth } from "../../context/useAuth";
 import type { BlogResponse } from "../../types/blogTypes";
 import BlogTable from "./Blog_table";
+import BlogFaqModal from "../blog_author/Blogfaqmodal";
 
 export default function Blogs() {
   const navigate = useNavigate();
   const { can } = useAuth();
   const [blogs, setBlogs] = useState<BlogResponse[]>([]);
+  const [faqModalFor, setFaqModalFor] = useState<BlogResponse | null>(null);
 
   const fetchBlogs = async () => {
     try {
@@ -53,8 +55,10 @@ export default function Blogs() {
         data={blogs}
         onEdit={(blog) => navigate(`/admin-dash/blog/edit/${blog._id}`)}
         canEdit={can("blog", "update")}
+         canFaqs={can("blog", "update")}
         canToggle={can("blog", "status")}
         canDelete={can("blog", "delete")}
+        onFaqs={(blog) => setFaqModalFor(blog)}
         onToggle={async (id) => {
           if (!window.confirm("Are you sure you want to change the status of this blog?")) return;
           try {
@@ -106,6 +110,18 @@ export default function Blogs() {
           }
         }}
       />
+
+      {faqModalFor && (
+              <BlogFaqModal
+                blogId={faqModalFor._id}
+                blogTitle={faqModalFor.title}
+                initialFaqs={faqModalFor.faqs ?? []}
+                onClose={() => setFaqModalFor(null)}
+                onSaved={(faqs) =>
+                  setBlogs((prev) => prev.map((s) => (s._id === faqModalFor._id ? { ...s, faqs } : s)))
+                }
+              />
+            )}
     </div>
   );
 }

@@ -25,9 +25,11 @@ type Props = {
   onEdit: (blog: BlogResponse) => void;
   onToggle: (id: string) => void;
   onDelete: (id: string) => void;
+  onFaqs: (service: BlogResponse) => void;
   canEdit: boolean;
   canToggle: boolean;
   canDelete: boolean;
+   canFaqs: boolean;
   onBulkDelete: (ids: string[]) => Promise<void> | void;
   onBulkToggle: (ids: string[], isActive: boolean) => Promise<void> | void;
 };
@@ -60,9 +62,11 @@ function BlogTable({
   onEdit,
   onToggle,
   onDelete,
+  onFaqs,
   canEdit,
   canToggle,
   canDelete,
+  canFaqs,
   onBulkDelete,
   onBulkToggle,
 }: Props) {
@@ -144,6 +148,24 @@ function BlogTable({
             row.original.author?.name || "-",
             enableSorting: false,   // ✅ only this column sortable
         },
+        {
+      header: "FAQs",
+      id: "faqs",
+      enableSorting: false,
+      cell: ({ row }) =>
+        row.original ? (
+          <button
+            className="btn btn-sm btn-outline-dark"
+            onClick={() => onFaqs(row.original)}
+            disabled={!canFaqs}
+            title={!canFaqs ? "No permission" : undefined}
+          >
+            FAQs ({row.original.faqs?.length ?? 0})
+          </button>
+        ) : (
+          <span className="text-muted" style={{ fontSize: "12px" }}>—</span>
+        ),
+    },
       {
         header: "Posted",
         accessorKey: "createdAt",

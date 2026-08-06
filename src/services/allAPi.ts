@@ -1,7 +1,7 @@
 import type { PaginationMeta } from "../components/hooks/useServerPagination";
 import type { AuthorApiResponse, AuthorResponse } from "../types/author_types";
 import type { BannerApiResponse, BannerResponse } from "../types/bannerTypes";
-import type { BlogApiResponse, BlogResponse } from "../types/blogTypes";
+import type { BlogApiResponse, BlogFaqItem, BlogResponse } from "../types/blogTypes";
 import type { CareerApiResponse, CareerResponse, CareerStatus } from "../types/careerTypes";
 import type { CategoryApiResponse, CategoryResponse } from "../types/categoryTypes";
 import type { EnquiryApiResponse, EnquiryResponse } from "../types/enquiryType";
@@ -310,6 +310,11 @@ export const setBlogPublicationStatusApi = (
   });
 };
  
+// dedicated FAQ endpoint — used by the services table's quick-edit modal
+export const updateBlogFaqsApi = (id: string, faqs: BlogFaqItem[]) =>
+  commonApi<{ success: boolean; message: string; data: BlogFaqItem[] }>(
+    "PATCH", `${BASE_URL}/admin/blogs/${id}/faqs`, { faqs }
+  );
 
 // bulk actions
 export const bulkToggleBlogsApi = (ids: string[], isActive: boolean) =>
