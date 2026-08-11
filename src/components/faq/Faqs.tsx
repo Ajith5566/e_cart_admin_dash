@@ -52,6 +52,7 @@ export default function Faqs() {
       <FaqTable
         data={faqs}
         onEdit={(faq) => navigate(`/admin-dash/faq/edit/${faq._id}`)}
+        onDataReorder={(reordered) => setFaqs(reordered)} 
         canEdit={can("faq", "update")}
         canToggle={can("faq", "status")}
         canDelete={can("faq", "delete")}

@@ -15,7 +15,6 @@ export default function Add_faq() {
 
   const [question, setQuestion] = useState("");
   const [answer, setAnswer] = useState("");
-  const [displayOrder, setDisplayOrder] = useState(0);
   const [status, setStatus] = useState(true);
 
   const [loading, setLoading] = useState(false);
@@ -31,7 +30,6 @@ export default function Add_faq() {
         const f = res.data.data ?? (res.data as any);
         setQuestion(f.question ?? "");
         setAnswer(f.answer ?? "");
-        setDisplayOrder(f.displayOrder ?? 0);
         setStatus(f.isActive);
       } catch {
         toast.error("Failed to load FAQ");
@@ -69,7 +67,7 @@ export default function Add_faq() {
   const handleSubmit = async () => {
     if (!validateForm()) return;
 
-    const payload = { question: question.trim(), answer: answer.trim(), displayOrder, status };
+    const payload = { question: question.trim(), answer: answer.trim(), status };
 
     try {
       setLoading(true);
@@ -137,16 +135,6 @@ export default function Add_faq() {
         {errors.answer && <div className="invalid-feedback d-block">{errors.answer}</div>}
 
         <div className="row mt-3">
-          <div className="col-md-3">
-            <label className="form-label">Display Order</label>
-            <input
-              type="number"
-              min={0}
-              className="form-control"
-              value={displayOrder}
-              onChange={(e) => setDisplayOrder(Number(e.target.value))}
-            />
-          </div>
           <div className="col-md-3">
             <label className="form-label">Status</label>
             <select className="form-control" value={status ? "true" : "false"} onChange={(e) => setStatus(e.target.value === "true")}>

@@ -1,12 +1,16 @@
-// components/testimonials/Add_testimonial.tsx — text + video types
+/* eslint-disable @typescript-eslint/no-explicit-any */
+// components/testimonials/Add_testimonial.tsx — with services + industry
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { useEffect, useState, useRef } from "react";
 import { toast } from "react-toastify";
 import { useNavigate, useParams } from "react-router-dom";
+import Select from "react-select";
 import {
   add_testimonial_Api,
   getTestimonialbyIdApi,
   updatetestimonialApi,
+  getAllServicesApi,
+  getAllIndustriesApi,
 } from "../../services/allAPi";
 import type { TestimonialResponse} from "../../types/testimonialTypes";
 import { imgSrc } from "../../utils/imgSrc";
@@ -16,41 +20,66 @@ const VIMEO_REGEX   = /^(https?:\/\/)?(www\.)?vimeo\.com\/.+/;
 const isValidVideoUrl = (url: string) => YOUTUBE_REGEX.test(url) || VIMEO_REGEX.test(url);
 
 function Add_testimonial() {
-  const [loading, setLoading]     = useState(false);
-  const fileInputRef              = useRef<HTMLInputElement | null>(null);
-  const { id }                    = useParams();
-  const isEditMode                = !!id;
-  const navigate                  = useNavigate();
+  const [loading, setLoading]   = useState(false);
+  const fileInputRef            = useRef<HTMLInputElement | null>(null);
+  const { id }                  = useParams();
+  const isEditMode              = !!id;
+  const navigate                = useNavigate();
 
-  // ── type toggle ───────────────────────────────────
+  // ── type ─────────────────────────────────────────────────
   const [type, setType] = useState<"text" | "video">("text");
 
-  // ── common fields ─────────────────────────────────
+  // ── common fields ─────────────────────────────────────────
   const [name, setName]               = useState("");
   const [designation, setDesignation] = useState("");
   const [company, setCompany]         = useState("");
   const [status, setStatus]           = useState(true);
 
-  // ── image ─────────────────────────────────────────
-  const [previewImage, setPreviewImage]   = useState<string | null>(null);
-  const [existingImages, setExistingImages] = useState<string[]>([]);
-  const [imageFile, setImageFile]         = useState<File | null>(null);
+  // ── relations ─────────────────────────────────────────────
+  const [selectedServices, setSelectedServices]   = useState<string[]>([]);
+  const [selectedIndustry, setSelectedIndustry]   = useState("");
+  const [serviceOptions, setServiceOptions]       = useState<{ value: string; label: string; isChild: boolean }[]>([]);
+  const [industryOptions, setIndustryOptions]     = useState<{ value: string; label: string }[]>([]);
 
-  // ── text testimonial ──────────────────────────────
+  // ── image ─────────────────────────────────────────────────
+  const [previewImage, setPreviewImage]     = useState<string | null>(null);
+  const [existingImages, setExistingImages] = useState<string[]>([]);
+  const [imageFile, setImageFile]           = useState<File | null>(null);
+
+  // ── text testimonial ──────────────────────────────────────
   const [message, setMessage] = useState("");
   const [url, setUrl]         = useState("");
 
-  // ── video testimonial ─────────────────────────────
+  // ── video testimonial ─────────────────────────────────────
   const [videoUrl, setVideoUrl] = useState("");
   const [quote, setQuote]       = useState("");
 
   const [loadingData, setLoadingData] = useState(!!id);
+  const [errors, setErrors] = useState({ name: "", message: "", url: "", videoUrl: "", image: "" });
 
-  const [errors, setErrors] = useState({
-    name: "", message: "", url: "", videoUrl: "", image: "",
-  });
+  // ── load dropdown options ─────────────────────────────────
+  useEffect(() => {
+    const load = async () => {
+      try {
+        const [svcRes, indRes] = await Promise.all([
+          getAllServicesApi(),
+          getAllIndustriesApi(),
+        ]);
+        setServiceOptions((svcRes.data.data ?? []).map((s: any) => ({
+          value:   s._id,
+          label:   s.title ?? s.name,
+          isChild: !!s.parentService,
+        })));
+        setIndustryOptions((indRes.data.data ?? []).map((i: any) => ({
+          value: i._id,
+          label: i.name,
+        })));
+      } catch { toast.error("Failed to load options"); }
+    };
+    load();
+  }, []);
 
-  // ── fetch in edit mode ────────────────────────────
+  // ── fetch in edit mode ────────────────────────────────────
   useEffect(() => {
     if (!id) { setLoadingData(false); return; }
 
@@ -68,6 +97,8 @@ function Add_testimonial() {
         setVideoUrl(t.videoUrl       || "");
         setQuote(t.quote             || "");
         setStatus(t.isActive);
+        setSelectedServices((t.services ?? []).map((s: any) => s._id ?? s));
+        setSelectedIndustry((t.industry as any)?._id ?? t.industry ?? "");
         if (t.image) setExistingImages([t.image]);
       } catch {
         toast.error("Failed to load testimonial");
@@ -93,22 +124,17 @@ function Add_testimonial() {
     }
 
     if (type === "video") {
-      if (!videoUrl.trim()) {
-        next.videoUrl = "Video URL is required"; ok = false;
-      } else if (!isValidVideoUrl(videoUrl.trim())) {
-        next.videoUrl = "Please enter a valid YouTube or Vimeo URL"; ok = false;
-      }
-      if (!imageFile && existingImages.length === 0) {
-        next.image = "Thumbnail is required for video testimonials"; ok = false;
-      }
+      if (!videoUrl.trim()) { next.videoUrl = "Video URL is required"; ok = false; }
+      else if (!isValidVideoUrl(videoUrl.trim())) { next.videoUrl = "Please enter a valid YouTube or Vimeo URL"; ok = false; }
+      if (!imageFile && existingImages.length === 0) { next.image = "Thumbnail is required for video testimonials"; ok = false; }
     }
 
     setErrors(next);
     return ok;
   };
 
-  const removeImage      = () => { setPreviewImage(null); setImageFile(null); };
-  const removeExisting   = () => setExistingImages([]);
+  const removeImage    = () => { setPreviewImage(null); setImageFile(null); };
+  const removeExisting = () => setExistingImages([]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -124,14 +150,12 @@ function Add_testimonial() {
       payload.append("company",       company);
       payload.append("status",        String(status));
       payload.append("existingImage", existingImages[0] || "");
-
-      // text fields
-      payload.append("message", message);
-      payload.append("url",     url || "");
-
-      // video fields
-      payload.append("videoUrl", videoUrl || "");
-      payload.append("quote",    quote    || "");
+      payload.append("message",       message);
+      payload.append("url",           url     || "");
+      payload.append("videoUrl",      videoUrl || "");
+      payload.append("quote",         quote    || "");
+      payload.append("services",      JSON.stringify(selectedServices));
+      payload.append("industry",      selectedIndustry || "");
 
       if (imageFile) payload.append("image", imageFile);
 
@@ -182,46 +206,33 @@ function Add_testimonial() {
         {/* LEFT */}
         <div className="col-md-9 col-12 p-md-4">
 
-          {/* ── TYPE TOGGLE ── */}
-          <div className="mb-4">
-            <div className="d-flex gap-2">
-{!isEditMode && (
-  <div className="mb-4">
-    <label className="form-label fw-semibold">Testimonial Type</label>
-    <div className="d-flex gap-2">
-      <button
-        type="button"
-        className={`btn ${type === "text" ? "btn-dark" : "btn-outline-dark"}`}
-        onClick={() => setType("text")}
-      >
-        ✏️ Text Testimonial
-      </button>
-      <button
-        type="button"
-        className={`btn ${type === "video" ? "btn-dark" : "btn-outline-dark"}`}
-        onClick={() => setType("video")}
-      >
-        ▶️ Video Testimonial
-      </button>
-    </div>
-  </div>
-)}
-
-{isEditMode && (
-  <div className="mb-4">
-    <label className="form-label fw-semibold">Testimonial Type</label>
-    <div>
-      <span className={`badge fs-6 ${type === "video" ? "bg-danger" : "bg-secondary"}`}>
-        {type === "video" ? "▶ Video Testimonial" : "✏️ Text Testimonial"}
-      </span>
-      <p className="text-muted mt-1 mb-0" style={{ fontSize: "12px" }}>
-        Type cannot be changed after creation.
-      </p>
-    </div>
-  </div>
-)}
+          {/* ── TYPE TOGGLE (add only) ── */}
+          {!isEditMode && (
+            <div className="mb-4">
+              <label className="form-label fw-semibold">Testimonial Type</label>
+              <div className="d-flex gap-2">
+                <button type="button" className={`btn ${type === "text" ? "btn-dark" : "btn-outline-dark"}`}
+                  onClick={() => setType("text")}>✏️ Text Testimonial</button>
+                <button type="button" className={`btn ${type === "video" ? "btn-dark" : "btn-outline-dark"}`}
+                  onClick={() => setType("video")}>▶️ Video Testimonial</button>
+              </div>
             </div>
-          </div>
+          )}
+
+          {/* type badge in edit mode */}
+          {isEditMode && (
+            <div className="mb-4">
+              <label className="form-label fw-semibold">Testimonial Type</label>
+              <div>
+                <span className={`badge fs-6 ${type === "video" ? "bg-danger" : "bg-secondary"}`}>
+                  {type === "video" ? "▶ Video Testimonial" : "✏️ Text Testimonial"}
+                </span>
+                <p className="text-muted mt-1 mb-0" style={{ fontSize: "12px" }}>
+                  Type cannot be changed after creation.
+                </p>
+              </div>
+            </div>
+          )}
 
           {/* ── COMMON FIELDS ── */}
           <div className="row">
@@ -240,10 +251,45 @@ function Add_testimonial() {
           <div className="mt-3">
             <label className="form-label">Company</label>
             <input className="form-control" value={company} onChange={(e) => setCompany(e.target.value)}
-              placeholder="e.g. Acme Corp" />
+              placeholder="e.g. Alutech Industries" />
           </div>
 
-          {/* ── TEXT TESTIMONIAL FIELDS ── */}
+          {/* ── RELATIONS ── */}
+          <div className="row mt-3">
+            <div className="col-md-6">
+              <label className="form-label">Services</label>
+              <Select
+                isMulti
+                options={serviceOptions}
+                value={serviceOptions.filter((o) => selectedServices.includes(o.value))}
+                onChange={(v) => setSelectedServices(v.map((o) => o.value))}
+                placeholder="Select services"
+                classNamePrefix="react-select"
+                formatOptionLabel={(option: any) => (
+                  <span style={{
+                    paddingLeft: option.isChild ? "14px" : "0px",
+                    fontSize:    option.isChild ? "13px" : "14px",
+                    color:       option.isChild ? "#555" : "#000",
+                  }}>
+                    {option.isChild ? "↳ " : ""}{option.label}
+                  </span>
+                )}
+              />
+            </div>
+            <div className="col-md-6">
+              <label className="form-label">Industry</label>
+              <Select
+                options={industryOptions}
+                value={industryOptions.find((o) => o.value === selectedIndustry) ?? null}
+                onChange={(v) => setSelectedIndustry(v?.value ?? "")}
+                isClearable
+                placeholder="Select industry"
+                classNamePrefix="react-select"
+              />
+            </div>
+          </div>
+
+          {/* ── TEXT FIELDS ── */}
           {type === "text" && (
             <>
               <div className="mt-3">
@@ -252,7 +298,6 @@ function Add_testimonial() {
                   value={url} onChange={(e) => setUrl(e.target.value)} placeholder="https://..." />
                 {errors.url && <div className="invalid-feedback">{errors.url}</div>}
               </div>
-
               <div className="mt-3">
                 <label className="form-label">Message <span className="text-danger">*</span></label>
                 <textarea id="message" rows={5}
@@ -263,7 +308,7 @@ function Add_testimonial() {
             </>
           )}
 
-          {/* ── VIDEO TESTIMONIAL FIELDS ── */}
+          {/* ── VIDEO FIELDS ── */}
           {type === "video" && (
             <>
               <div className="mt-3">
@@ -275,10 +320,9 @@ function Add_testimonial() {
                 {errors.videoUrl && <div className="invalid-feedback">{errors.videoUrl}</div>}
                 <small className="text-muted">YouTube or Vimeo links accepted</small>
               </div>
-
               <div className="mt-3">
                 <label className="form-label">
-                  Quote <span className="text-muted" style={{ fontSize: "12px" }}>(short text shown alongside the video)</span>
+                  Quote <span className="text-muted" style={{ fontSize: "12px" }}>(shown alongside the video)</span>
                 </label>
                 <textarea rows={3} className="form-control" value={quote}
                   onChange={(e) => setQuote(e.target.value)}
@@ -302,64 +346,35 @@ function Add_testimonial() {
           {/* IMAGE / THUMBNAIL */}
           <div className="mt-4">
             <h6>
-              {type === "video" ? (
-                <>Thumbnail <span className="text-danger">*</span></>
-              ) : (
-                <>Image <span className="text-muted" style={{ fontSize: "12px" }}>(optional)</span></>
-              )}
+              {type === "video" ? (<>Thumbnail <span className="text-danger">*</span></>) : (<>Image <span className="text-muted" style={{ fontSize: "12px" }}>(optional)</span></>)}
             </h6>
             <p className="text-muted" style={{ fontSize: "12px" }}>
-              {type === "video"
-                ? "Thumbnail shown before the video plays. Recommended 16:9."
-                : "Preferred 300×300px. JPG, PNG, WebP · Max 2 MB."}
+              {type === "video" ? "Thumbnail shown before the video plays. Recommended 16:9." : "Preferred 300×300px. JPG, PNG, WebP · Max 2 MB."}
             </p>
 
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="image/*"
-              className="d-none"
-              id="imageUpload"
+            <input ref={fileInputRef} type="file" accept="image/*" className="d-none" id="imageUpload"
               onChange={(e) => {
-                const file = e.target.files?.[0];
-                if (!file) return;
-                setImageFile(file);
-                setPreviewImage(URL.createObjectURL(file));
-                e.target.value = "";
-              }}
-            />
+                const file = e.target.files?.[0]; if (!file) return;
+                setImageFile(file); setPreviewImage(URL.createObjectURL(file)); e.target.value = "";
+              }} />
 
-            {/* upload box — only when no image */}
             {!shownImage && (
               <div className={`upload-box text-center p-5 border ${errors.image ? "border-danger" : ""}`}
                 style={{ cursor: "pointer" }} onClick={() => fileInputRef.current?.click()}>
-                <label htmlFor="imageUpload" style={{ cursor: "pointer" }}>
-                  <p className="text-primary fw-semibold mb-0">Click / Drop file here to upload</p>
-                </label>
+                <p className="text-primary fw-semibold mb-0">Click / Drop file here to upload</p>
               </div>
             )}
             {errors.image && <div className="text-danger mt-1" style={{ fontSize: "13px" }}>{errors.image}</div>}
 
-            {/* preview + change/remove */}
             {shownImage && (
               <div className="mt-2">
-                <img src={shownImage} className="img-thumbnail w-100"
-                  alt={type === "video" ? "Thumbnail" : "Photo"} />
+                <img src={shownImage} className="img-thumbnail w-100" alt={type === "video" ? "Thumbnail" : "Photo"} />
                 <div className="d-flex gap-2 mt-2">
                   <button type="button" className="btn btn-outline-dark btn-sm"
                     onClick={() => document.getElementById("imageUpload")?.click()}>Change</button>
                   <button type="button" className="btn btn-danger btn-sm"
                     onClick={previewImage ? removeImage : removeExisting}>Remove</button>
                 </div>
-                <input ref={fileInputRef} type="file" accept="image/*" className="d-none"
-                  id="imageUpload"
-                  onChange={(e) => {
-                    const file = e.target.files?.[0];
-                    if (!file) return;
-                    setImageFile(file);
-                    setPreviewImage(URL.createObjectURL(file));
-                    e.target.value = "";
-                  }} />
               </div>
             )}
           </div>
@@ -371,7 +386,6 @@ function Add_testimonial() {
           {loading ? "Saving..." : isEditMode ? "Update testimonial" : "Add testimonial"}
         </button>
       </div>
-
     </div>
   );
 }

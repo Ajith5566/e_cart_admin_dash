@@ -131,24 +131,29 @@ const [serviceOptions, setServiceOptions] = useState<{ value: string; label: str
   });
 
    // ── fetch dropdown options ─────────────────────────────────
-    useEffect(() => {
-      const load = async () => {
-        try {
-          const [ svc, cs] = await Promise.all([
-            getAllServicesApi(),
-            getAllCaseStudiesApi(),
-          ]);
-          
-          setServiceOptions((svc.data.data ?? []).map((s: any) => ({ value: s._id, label: s.title })));
-          setCaseStudyOptions((cs.data.data ?? [])
-            .filter((c: any) => c._id !== id)
-            .map((c: any) => ({ value: c._id, label: c.title })));
-        } catch {
-          toast.error("Failed to load options");
-        }
-      };
-      load();
-    }, [id]);
+  useEffect(() => {
+  const load = async () => {
+    try {
+      const [svc, cs] = await Promise.all([
+        getAllServicesApi(),
+        getAllCaseStudiesApi(),
+      ]);
+
+     setServiceOptions((svc.data.data ?? []).map((s: any) => ({
+  value:   s._id,
+  label:   s.title,           // ✅ correct — your schema uses title
+  isChild: !!s.parentService, // ✅ add this for indent
+})));
+
+      setCaseStudyOptions((cs.data.data ?? [])
+        .filter((c: any) => c._id !== id)
+        .map((c: any) => ({ value: c._id, label: c.title }))); // title correct here
+    } catch {
+      toast.error("Failed to load options");
+    }
+  };
+  load();
+}, [id]);
 
   useEffect(() => {
     const fetchAuthors = async () => {
@@ -609,10 +614,23 @@ const [serviceOptions, setServiceOptions] = useState<{ value: string; label: str
           </div>
            <div className="col-md-4">
                 <label className="form-label">Services</label>
-                <Select isMulti options={serviceOptions}
-                  value={serviceOptions.filter((o) => selectedServices.includes(o.value))}
-                  onChange={(v) => setSelectedServices(v.map((o) => o.value))}
-                  placeholder="Select services" classNamePrefix="react-select" />
+                <Select
+  isMulti
+  options={serviceOptions}
+  value={serviceOptions.filter((o) => selectedServices.includes(o.value))}
+  onChange={(v) => setSelectedServices(v.map((o: any) => o.value))}
+  placeholder="Select services"
+  classNamePrefix="react-select"
+  formatOptionLabel={(option: any) => (
+    <span style={{
+      paddingLeft: option.isChild ? "16px" : "0px",  // ✅ indent child
+      fontSize:    option.isChild ? "13px" : "14px", // ✅ slightly smaller
+      color:       option.isChild ? "#555" : "#000", // ✅ grey for child
+    }}>
+      {option.isChild ? "↳ " : ""}{option.label}
+    </span>
+  )}
+/>
               </div>
         </div>
          <div className="card mb-4 border-0 shadow-sm">

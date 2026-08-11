@@ -335,10 +335,7 @@ export const bulkDeleteBlogsApi = (ids: string[]) =>
    TESTIMONIALS
    ============================================================ */
 
-// add
-export const add_testimonial_Api = async (reqBody: unknown) => {
-  return await commonApi("POST", `${BASE_URL}/testimonials`, reqBody);
-};
+
 
 // get all
 export const getAlltestimonialsApi = () => {
@@ -349,11 +346,12 @@ export const getAlltestimonialsApi = () => {
 export const toggletestimonialApi = (id: string) => {
   return commonApi("PUT", `${BASE_URL}/admin/testimonial/${id}/toggle`);
 };
+// ✅ FormData — works with image upload + services array
+export const add_testimonial_Api = (data: FormData) =>
+  commonApi("POST", `${BASE_URL}/testimonials`, data);
 
-// update
-export const updatetestimonialApi = (id: string, data: FormData) => {
-  return commonApi("PUT", `${BASE_URL}/admin/Updatetestimonial/${id}`, data);
-};
+export const updatetestimonialApi = (id: string, data: FormData) =>
+  commonApi("PUT", `${BASE_URL}/admin/Updatetestimonial/${id}`, data);
 
 // delete
 export const deletetestimonialApi = (id: string) => {
@@ -882,12 +880,19 @@ export const bulkDeleteClientsApi = (ids: string[]) =>
 ============================================================ */
 
 
-export const addFaqApi = (data: { question: string; answer: string; displayOrder: number; status: boolean }) =>
+export const addFaqApi = (data: { question: string; answer: string; status: boolean }) =>
   commonApi("POST", `${BASE_URL}/admin/faqs`, data);
 
 export const getAllFaqsApi = () =>
   commonApi<{ success: boolean; data: FaqResponse[] }>(
     "GET", `${BASE_URL}/admin/faqs`
+  );
+
+  export const updateFaqOrderApi = (
+  updates: { id: string; displayOrder: number }[]
+) =>
+  commonApi<{ success: boolean; message: string }>(
+    "PATCH", `${BASE_URL}/admin/faqs/order`, updates
   );
 
 export const getFaqByIdApi = (id: string) =>
