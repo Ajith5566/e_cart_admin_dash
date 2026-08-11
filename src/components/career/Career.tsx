@@ -5,7 +5,7 @@ import {
   bulkDeleteCareersApi,
   deleteCareerApi,
   getAllCareersApi,
-  getAllJobsApi,
+  getAllJobsfilterApi,
 } from "../../services/allAPi";
 import "../common/common_toggle.css";
 import "../common/common_styels.css";
@@ -47,7 +47,7 @@ export default function Careers() {
   // ✅ fetch ALL job postings — so filter shows every posted job, not just ones with applications
   const fetchJobs = async () => {
     try {
-      const res = await getAllJobsApi();
+      const res = await getAllJobsfilterApi();
       setJobs(res.data.data);
     } catch (err) {
       console.error(err);
