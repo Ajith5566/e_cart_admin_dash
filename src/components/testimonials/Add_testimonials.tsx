@@ -48,7 +48,6 @@ function Add_testimonial() {
 
   // ── text testimonial ──────────────────────────────────────
   const [message, setMessage] = useState("");
-  const [url, setUrl]         = useState("");
 
   // ── video testimonial ─────────────────────────────────────
   const [videoUrl, setVideoUrl] = useState("");
@@ -93,7 +92,6 @@ function Add_testimonial() {
         setDesignation(t.designation || "");
         setCompany(t.company         || "");
         setMessage(t.message         || "");
-        setUrl(t.url                 || "");
         setVideoUrl(t.videoUrl       || "");
         setQuote(t.quote             || "");
         setStatus(t.isActive);
@@ -114,13 +112,11 @@ function Add_testimonial() {
   const validateForm = () => {
     const next = { name: "", message: "", url: "", videoUrl: "", image: "" };
     let ok = true;
-    const urlRegex = /^(https?:\/\/)?([\w-]+\.)+[\w-]{2,}(\/.*)?$/;
 
     if (!name.trim()) { next.name = "Name is required"; ok = false; }
 
     if (type === "text") {
       if (!message.trim()) { next.message = "Message is required"; ok = false; }
-      if (url.trim() && !urlRegex.test(url.trim())) { next.url = "Please enter a valid URL"; ok = false; }
     }
 
     if (type === "video") {
@@ -151,7 +147,6 @@ function Add_testimonial() {
       payload.append("status",        String(status));
       payload.append("existingImage", existingImages[0] || "");
       payload.append("message",       message);
-      payload.append("url",           url     || "");
       payload.append("videoUrl",      videoUrl || "");
       payload.append("quote",         quote    || "");
       payload.append("services",      JSON.stringify(selectedServices));
@@ -292,12 +287,6 @@ function Add_testimonial() {
           {/* ── TEXT FIELDS ── */}
           {type === "text" && (
             <>
-              <div className="mt-3">
-                <label className="form-label">URL <span className="text-muted" style={{ fontSize: "12px" }}>(optional)</span></label>
-                <input id="url" className={`form-control ${errors.url ? "is-invalid" : ""}`}
-                  value={url} onChange={(e) => setUrl(e.target.value)} placeholder="https://..." />
-                {errors.url && <div className="invalid-feedback">{errors.url}</div>}
-              </div>
               <div className="mt-3">
                 <label className="form-label">Message <span className="text-danger">*</span></label>
                 <textarea id="message" rows={5}
