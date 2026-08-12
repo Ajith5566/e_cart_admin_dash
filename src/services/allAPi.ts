@@ -581,7 +581,7 @@ export const getActiveJobsApi = () =>
   commonApi<{ success: boolean; data: JobResponse[] }>("GET", `${BASE_URL}/jobs/active`);
 
 export const getAllJobsApi = () =>
-  commonApi<{ success: boolean; data: JobResponse[] }>("GET", `${BASE_URL}/jobs`);
+  commonApi<{ success: boolean; data: JobResponse[] }>("GET", `${BASE_URL}/admin/jobs`);
 
 
 export const getAllJobsfilterApi = () =>
@@ -589,7 +589,7 @@ export const getAllJobsfilterApi = () =>
 
 
 export const getJobByIdApi = (id: string) =>
-  commonApi<{ success: boolean; data: JobResponse }>("GET", `${BASE_URL}/jobs/${id}`);
+  commonApi<{ success: boolean; data: JobResponse }>("GET", `${BASE_URL}/admin/jobs/${id}`);
 
 export const addJobApi = (body: Partial<JobResponse>) =>
   commonApi("POST", `${BASE_URL}/jobs`, body);
