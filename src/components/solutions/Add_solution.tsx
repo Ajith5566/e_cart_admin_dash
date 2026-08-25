@@ -28,7 +28,6 @@ export default function Add_solution() {
 
   const [name, setName] = useState("");
   const [shortDescription, setShortDescription] = useState("");
-  const [displayOrder, setDisplayOrder] = useState(0);
   const [isActive, setIsActive] = useState(true);
 
   const [existingImage, setExistingImage] = useState("");
@@ -68,7 +67,6 @@ export default function Add_solution() {
 
         setName(s.name ?? "");
         setShortDescription(s.shortDescription ?? "");
-        setDisplayOrder(s.displayOrder ?? 0);
         setIsActive(s.isActive);
         setExistingImage(s.image ?? "");
         setKeyPoints((s.keyPoints ?? []).map((kp: any) => ({ icon: kp.icon, text: kp.text })));
@@ -108,7 +106,16 @@ export default function Add_solution() {
   const pickKeyPointIcon = (i: number, file: File | undefined | null) => {
     if (!file) return;
     setKeyPoints((prev) =>
-      prev.map((kp, idx) => (idx === i ? { ...kp, file, previewUrl: URL.createObjectURL(file) } : kp))
+      prev.map((kp, idx) =>
+        idx === i
+          ? {
+            ...kp,
+            file,
+            previewUrl: URL.createObjectURL(file),
+            icon: "", // ✅ clear old icon so new file takes priority
+          }
+          : kp
+      )
     );
   };
 
@@ -161,13 +168,20 @@ export default function Add_solution() {
   };
 
   const handleSubmit = async () => {
-     if (loading) return;
+    if (loading) return;
+    console.log("keyPoints state:", JSON.stringify(keyPoints, null, 2));
+    console.log("imageFile:", imageFile);
     if (!validateForm()) return;
 
     const iconFilesInOrder: File[] = [];
     const keyPointsForPayload = keyPoints.map((kp) => {
+      // ✅ new file takes priority over existing icon
+      if (kp.file) {
+        iconFilesInOrder.push(kp.file);
+        return { icon: "", text: kp.text }; // signal backend to use new file
+      }
+      // no new file — keep existing icon
       if (kp.icon) return { icon: kp.icon, text: kp.text };
-      if (kp.file) iconFilesInOrder.push(kp.file);
       return { icon: "", text: kp.text };
     });
 
@@ -176,7 +190,6 @@ export default function Add_solution() {
     fd.append("shortDescription", shortDescription);
     fd.append("keyPoints", JSON.stringify(keyPointsForPayload));
     fd.append("relatedCaseStudies", JSON.stringify(relatedCaseStudies));
-    fd.append("displayOrder", String(displayOrder));
     fd.append("status", String(isActive));
     if (imageFile) fd.append("image", imageFile);
     for (const f of iconFilesInOrder) fd.append("keyPointIcons", f);
@@ -233,16 +246,6 @@ export default function Add_solution() {
               onChange={(e) => setName(e.target.value)}
             />
             {errors.name && <div className="invalid-feedback">{errors.name}</div>}
-          </div>
-          <div className="col-md-3">
-            <label className="form-label">Display Order</label>
-            <input
-              type="number"
-              min={0}
-              className="form-control"
-              value={displayOrder}
-              onChange={(e) => setDisplayOrder(Number(e.target.value))}
-            />
           </div>
           <div className="col-md-3">
             <label className="form-label">Status</label>

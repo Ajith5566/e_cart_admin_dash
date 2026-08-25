@@ -17,7 +17,6 @@ import { useAuth } from "../../context/useAuth";
 import type { SolutionResponse } from "../../types/solutionTypes";
 import SolutionTable from "./SolutionTable";
 
-
 export default function Solutions() {
   const navigate = useNavigate();
   const { can } = useAuth();
@@ -53,6 +52,7 @@ export default function Solutions() {
       <SolutionTable
         data={solutions}
         onEdit={(solution) => navigate(`/admin-dash/solution/edit/${solution._id}`)}
+        onDataReorder={(reordered) => setSolutions(reordered)}
         canEdit={can("solution", "update")}
         canToggle={can("solution", "status")}
         canDelete={can("solution", "delete")}
@@ -65,17 +65,18 @@ export default function Solutions() {
           }
         }}
         onDelete={async (id) => {
-          if (!window.confirm("Delete this solution? This cannot be undone.")) return;
+          if (!window.confirm("Delete this solution?")) return;
           try {
             await deleteSolutionApi(id);
             fetchSolutions();
             toast.success("Solution deleted");
-          } catch {
-            toast.error("Delete failed");
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          } catch (err: any) {
+            toast.error(err?.response?.data?.message || "Delete failed");
           }
         }}
         onBulkDelete={async (ids) => {
-          if (!window.confirm(`Delete ${ids.length} solution(s)? This cannot be undone.`)) return;
+          if (!window.confirm(`Delete ${ids.length} solution(s)?`)) return;
           try {
             const res = await bulkDeleteSolutionsApi(ids);
             toast.success(res.data.message);

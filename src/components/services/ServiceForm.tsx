@@ -4,6 +4,8 @@ import { useEffect, useRef, useState } from "react";
 import { toast } from "react-toastify";
 import { useNavigate, useParams } from "react-router-dom";
 import Select from "react-select";
+import { lazy, Suspense } from "react"; // add lazy, Suspense to your existing React import
+import "react-quill-new/dist/quill.snow.css";
 import {
   addServiceApi,
   getServiceByIdApi,
@@ -16,6 +18,12 @@ import type { MetaFields } from "../../types/types";
 import slugify from "slugify";
 import { imgSrc } from "../../utils/imgSrc";
 import SeoPreview from "../seo/Seo";
+import { Modules } from "../quillmodule";
+
+
+const ReactQuill = lazy(() => import("react-quill-new"));
+
+
 
 type ProcessError = { title: string; description: string };
 type TechnologyError = { technology: string; description: string };
@@ -562,7 +570,16 @@ if (m.meta_description) setMetaDescriptionTouched(true);
             {errors.shortDescription && <div className="invalid-feedback d-block">{errors.shortDescription}</div>}
 
             <label className="form-label mt-3">Tagline</label>
-            <input className="form-control" value={tagline} onChange={(e) => setTagline(e.target.value)} placeholder="e.g. Your website is the first handshake with every customer..." />
+<Suspense fallback={<div>Loading editor...</div>}>
+  <ReactQuill
+    className="custom-quill"
+    value={tagline}
+    onChange={setTagline}
+    modules={Modules}
+    theme="snow"
+    placeholder="e.g. Your website is the first handshake with every customer..."
+  />
+</Suspense>
 
             <div className="mt-3">
               <h6>Hero Image</h6>

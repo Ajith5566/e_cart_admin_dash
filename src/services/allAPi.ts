@@ -764,6 +764,13 @@ export const getAllSolutionsApi = () => {
   return commonApi<SolutionApiResponse>("GET", `${BASE_URL}/get/solutions`);
 };
 
+export const updateSolutionOrderApi = (
+  updates: { id: string; displayOrder: number }[]
+) =>
+  commonApi<{ success: boolean; message: string }>(
+    "PATCH", `${BASE_URL}/admin/solutions/order`, updates
+  );
+  
 export const getSolutionByIdApi = (id: string) => {
   return commonApi<{ success: boolean; data: SolutionResponse }>(
     "GET",
