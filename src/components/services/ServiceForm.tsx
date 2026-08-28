@@ -12,6 +12,7 @@ import {
   updateServiceApi,
   getAllServicesApi,
   getAllTechnologiesApi,
+  getAllIndustriesApi,
 } from "../../services/allAPi";
 import type { ServiceProcessItem, ServiceTechnologyItem } from "../../types/serviceTypes";
 import type { MetaFields } from "../../types/types";
@@ -36,6 +37,7 @@ type FormErrors = {
   introDescription: string;
   process: ProcessError[];
   technologies: TechnologyError[];
+  industry: string;
 };
 
 const emptyErrors: FormErrors = {
@@ -46,6 +48,7 @@ const emptyErrors: FormErrors = {
   introDescription: "",
   process: [],
   technologies: [],
+  industry: ""
 };
 
 const emptyMeta: MetaFields = {
@@ -95,6 +98,9 @@ export default function Add_service() {
   const [process, setProcess] = useState<ServiceProcessItem[]>([]);
   const [technologies, setTechnologies] = useState<ServiceTechnologyItem[]>([]);
   const [technologyOptions, setTechnologyOptions] = useState<{ value: string; label: string }[]>([]);
+
+  const [industries, setIndustries] = useState<string[]>([]);
+  const [industryOptions, setIndustryOptions] = useState<{ value: string; label: string }[]>([]);
   const [heroFile, setHeroFile] = useState<File | null>(null);
   const [heroPreview, setHeroPreview] = useState("");
   const [existingHero, setExistingHero] = useState("");
@@ -117,23 +123,38 @@ export default function Add_service() {
 
   const isTopLevel = !parentService;
 
+  useEffect(() => {
+    const load = async () => {
+      try {
+        const [ind] = await Promise.all([
+          getAllIndustriesApi(),
+        ]);
+        setIndustryOptions((ind.data.data ?? []).map((i: any) => ({ value: i._id, label: i.name })));
+      } catch {
+        toast.error("Failed to load options");
+      }
+    };
+    load();
+  }, [id]);
+
+
   // slug follows the title until the admin edits it in the SEO panel.
   // in edit mode it never auto-changes — retitling shouldn't move a live URL.
- useEffect(() => {
-  const autoDescription = isTopLevel ? description : shortDescription;
+  useEffect(() => {
+    const autoDescription = isTopLevel ? description : shortDescription;
 
-  setMeta((prev) => ({
-    ...prev,
-    slug: slugTouched || isEditMode
-      ? prev.slug
-      : (title.trim() ? slugify(title, { lower: true, strict: true, trim: true }) : ""),
-    meta_title: metaTitleTouched ? prev.meta_title : title,
-    meta_description: metaDescriptionTouched ? prev.meta_description : autoDescription,
-  }));
-}, [
-  title, description, shortDescription, isTopLevel,
-  slugTouched, metaTitleTouched, metaDescriptionTouched, isEditMode,
-]);
+    setMeta((prev) => ({
+      ...prev,
+      slug: slugTouched || isEditMode
+        ? prev.slug
+        : (title.trim() ? slugify(title, { lower: true, strict: true, trim: true }) : ""),
+      meta_title: metaTitleTouched ? prev.meta_title : title,
+      meta_description: metaDescriptionTouched ? prev.meta_description : autoDescription,
+    }));
+  }, [
+    title, description, shortDescription, isTopLevel,
+    slugTouched, metaTitleTouched, metaDescriptionTouched, isEditMode,
+  ]);
 
   useEffect(() => {
     const load = async () => {
@@ -173,6 +194,7 @@ export default function Add_service() {
         setIntroTitle(s.introTitle ?? "");
         setIntroDescription(s.introDescription ?? "");
         setProcess(s.process ?? []);
+         setIndustries((s.industries ?? []).map((s: any) => s._id));
         setTechnologies((s.technologies ?? []).map((t: any) => ({
           technology: t.technology?._id ?? t.technology,
           description: t.description ?? "",
@@ -195,8 +217,8 @@ export default function Add_service() {
         });
         setOriginalSlug(loadedSlug);
         setSlugTouched(true);
-if (m.meta_title) setMetaTitleTouched(true);
-if (m.meta_description) setMetaDescriptionTouched(true);
+        if (m.meta_title) setMetaTitleTouched(true);
+        if (m.meta_description) setMetaDescriptionTouched(true);
       } catch {
         toast.error("Failed to load service");
         navigate("/admin-dash/service");
@@ -273,6 +295,10 @@ if (m.meta_description) setMetaDescriptionTouched(true);
     const flag = (elementId: string) => { if (!firstErrorId) firstErrorId = elementId; };
 
     if (!title.trim()) { next.title = "Service title is required"; flag("title"); }
+   if (industries.length === 0) {
+  next.industry = "Industry is required";
+  flag("industry");
+}
 
     if (isTopLevel) {
       if (!description.trim()) {
@@ -375,7 +401,7 @@ if (m.meta_description) setMetaDescriptionTouched(true);
         JSON.stringify(technologies.map((t) => ({ ...t, description: t.description.trim() })))
       );
     }
-
+    fd.append("industries", JSON.stringify(industries));
     if (bannerFile) fd.append("bannerImage", bannerFile);
     if (heroFile) fd.append("heroImage", heroFile);
 
@@ -570,16 +596,16 @@ if (m.meta_description) setMetaDescriptionTouched(true);
             {errors.shortDescription && <div className="invalid-feedback d-block">{errors.shortDescription}</div>}
 
             <label className="form-label mt-3">Tagline</label>
-<Suspense fallback={<div>Loading editor...</div>}>
-  <ReactQuill
-    className="custom-quill"
-    value={tagline}
-    onChange={setTagline}
-    modules={Modules}
-    theme="snow"
-    placeholder="e.g. Your website is the first handshake with every customer..."
-  />
-</Suspense>
+            <Suspense fallback={<div>Loading editor...</div>}>
+              <ReactQuill
+                className="custom-quill"
+                value={tagline}
+                onChange={setTagline}
+                modules={Modules}
+                theme="snow"
+                placeholder="e.g. Your website is the first handshake with every customer..."
+              />
+            </Suspense>
 
             <div className="mt-3">
               <h6>Hero Image</h6>
@@ -719,6 +745,25 @@ if (m.meta_description) setMetaDescriptionTouched(true);
                 ))}
                 {technologies.length === 0 && <p className="text-muted" style={{ fontSize: 13 }}>No technologies yet.</p>}
               </div>
+            </div>
+            <div className="col-md-6">
+              <label className="form-label">
+                Industry <span className="text-danger">*</span>
+              </label>
+              <div id="industry" tabIndex={-1}>
+                <Select
+                  isMulti                                           // ✅ multi
+                  options={industryOptions}
+                  value={industryOptions.filter((o) => industries.includes(o.value))}
+                  onChange={(v) => setIndustries(v.map((o) => o.value))}
+                  placeholder="Select industries"
+                  classNamePrefix="react-select"
+                  styles={errors.industry ? { control: (base) => ({ ...base, borderColor: "#dc3545" }) } : undefined}
+                />
+              </div>
+              {errors.industry && (
+                <div className="text-danger mt-1" style={{ fontSize: "13px" }}>{errors.industry}</div>
+              )}
             </div>
 
             <div className="alert alert-info mt-4" style={{ fontSize: 13 }}>

@@ -1,5 +1,6 @@
 // types/serviceTypes.ts
 import type { MetaFields } from "./types";
+import type { IndustryResponse } from "./industryTypes"; 
 
 export type ServiceProcessItem = { title: string; description: string };
 export type ServiceTechnologyItem = { technology: string; description: string };
@@ -16,6 +17,7 @@ export type ServiceResponse = {
   bannerImage: string;
   bullets: string[];
 
+
   // leaf fields
   shortDescription: string;
   tagline: string;
@@ -25,7 +27,7 @@ export type ServiceResponse = {
   process: ServiceProcessItem[];
   technologies: { technology: { _id: string; name: string; icon: string } | null; description: string }[];
   faqs: ServiceFaqItem[];
-
+  industries:IndustryResponse[];
   featured: boolean;
   displayOrder: number;
   isActive: boolean;
