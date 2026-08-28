@@ -4,7 +4,7 @@ import { useEffect, useState, lazy, Suspense } from 'react'
 import "react-quill-new/dist/quill.snow.css";
 import { toast } from 'react-toastify';
 import { addPageApi, getPageByIdApi, updatePageApi } from '../../services/allAPi';
-import { Modules } from '../quillmodule';
+import { cleanQuill, Modules } from '../quillmodule';
 import { useNavigate, useParams } from "react-router-dom";
 import type { MetaFields } from '../../types/types';
 import SeoPreview from '../seo/Seo';
@@ -336,7 +336,7 @@ function Add_page() {
             <ReactQuill
               className="custom-quill"
               value={description}
-              onChange={setDescription}
+              onChange={(v) => setDescription(cleanQuill(v))}
               modules={Modules}
               theme="snow"
             />

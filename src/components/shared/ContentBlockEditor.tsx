@@ -14,7 +14,7 @@ import {
   createEmptyBlock,
 } from "../../types/contentBlockTypes";
 import { imgSrc } from "../../utils/imgSrc";
-import { Modules } from "../quillmodule";
+import { cleanQuill, Modules } from "../quillmodule";
 
 const ReactQuill = lazy(() => import("react-quill-new"));
 
@@ -234,7 +234,7 @@ export default function ContentBlockEditor({
                       <ReactQuill
                         className={`custom-quill ${contentMissing ? "is-invalid" : ""}`}
                         value={block.html || ""}
-                        onChange={(html) => updateBlock(block.blockId, { html })}
+                       onChange={(html) => updateBlock(block.blockId, { html: cleanQuill(html) })}
                         modules={Modules}
                         theme="snow"
                       />
@@ -246,7 +246,7 @@ export default function ContentBlockEditor({
                       <ReactQuill
                         className={`custom-quill ${contentMissing ? "is-invalid" : ""}`}
                         value={block.html || ""}
-                        onChange={(html) => updateBlock(block.blockId, { html })}
+                        onChange={(html) => updateBlock(block.blockId, { html: cleanQuill(html) })}
                         modules={QuoteModules}
                         theme="snow"
                         placeholder="Enter a highlight quote..."
