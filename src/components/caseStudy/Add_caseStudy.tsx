@@ -16,7 +16,7 @@ import {
   getAllTechnologiesApi,
   getAllSolutionsApi,
 } from "../../services/allAPi";
-import { Modules } from "../quillmodule";
+import { cleanQuill, Modules } from "../quillmodule";
 import type { MetaFields } from "../../types/types";
 import type {
   CaseStudyGalleryItem,
@@ -533,7 +533,7 @@ export default function Add_caseStudy() {
                   <ReactQuill
                     className="custom-quill"
                     value={tagline}
-                    onChange={setTagline}
+                    onChange={(v) => setTagline(cleanQuill(v))}
                     modules={Modules}
                     theme="snow"
                     placeholder="e.g. Your website is the first handshake with every customer..."
@@ -780,7 +780,7 @@ export default function Add_caseStudy() {
             <div className="card-body">
               <Suspense fallback={<div>Loading editor...</div>}>
                 <ReactQuill className={`custom-quill ${error ? "is-invalid" : ""}`}
-                  value={value} onChange={setter} modules={Modules} theme="snow" />
+                  value={value}  onChange={(v) => setter(cleanQuill(v))} modules={Modules} theme="snow" />
               </Suspense>
               {error && (
                 <div className="text-danger mt-1" style={{ fontSize: "13px" }}>{error}</div>

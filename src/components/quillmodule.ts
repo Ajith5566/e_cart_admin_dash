@@ -27,7 +27,11 @@ export const Modules = {
     ["code-block"],
 
     ["clean"],
+    
   ],
+   clipboard: {
+    matchVisual: false, // ✅ strips visual formatting on paste
+  },
 
   // ✅ HTML source code view button
 htmlEditButton: {
@@ -42,3 +46,10 @@ htmlEditButton: {
   editorModules: {},
 },
 };
+
+
+// quillmodule.ts — add a wrapper
+export const cleanQuill = (html: string) =>
+  html.replace(/&nbsp;/g, " ")
+      .replace(/<p><br><\/p>/g, "")
+      .trim();

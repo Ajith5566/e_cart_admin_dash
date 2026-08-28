@@ -19,7 +19,7 @@ import type { MetaFields } from "../../types/types";
 import slugify from "slugify";
 import { imgSrc } from "../../utils/imgSrc";
 import SeoPreview from "../seo/Seo";
-import { Modules } from "../quillmodule";
+import { cleanQuill, Modules } from "../quillmodule";
 
 
 const ReactQuill = lazy(() => import("react-quill-new"));
@@ -600,7 +600,7 @@ export default function Add_service() {
               <ReactQuill
                 className="custom-quill"
                 value={tagline}
-                onChange={setTagline}
+                onChange={(v) => setTagline(cleanQuill(v))}
                 modules={Modules}
                 theme="snow"
                 placeholder="e.g. Your website is the first handshake with every customer..."
