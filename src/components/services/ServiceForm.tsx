@@ -113,7 +113,6 @@ export default function Add_service() {
   const [metaTitleTouched, setMetaTitleTouched] = useState(false);
   const [metaDescriptionTouched, setMetaDescriptionTouched] = useState(false);
 
-  const [displayOrder, setDisplayOrder] = useState(0);
   const [featured, setFeatured] = useState(false);
   const [status, setStatus] = useState(true);
 
@@ -200,7 +199,6 @@ export default function Add_service() {
           description: t.description ?? "",
         })));
         setExistingHero(s.heroImage ?? "");
-        setDisplayOrder(s.displayOrder ?? 0);
         setFeatured(s.featured ?? false);
         setStatus(s.isActive);
 
@@ -379,7 +377,6 @@ export default function Add_service() {
     const fd = new FormData();
     fd.append("title", title.trim());
     fd.append("parentService", parentService ?? "null");
-    fd.append("displayOrder", String(displayOrder));
     fd.append("featured", String(featured));
     fd.append("status", String(status));
 
@@ -508,10 +505,6 @@ export default function Add_service() {
         </div>
 
         <div className="row mt-3">
-          <div className="col-md-4">
-            <label className="form-label">Display Order</label>
-            <input type="number" min={0} className="form-control" value={displayOrder} onChange={(e) => setDisplayOrder(Number(e.target.value))} />
-          </div>
           <div className="col-md-4">
             <label className="form-label">Status</label>
             <select className="form-control" value={status ? "true" : "false"} onChange={(e) => setStatus(e.target.value === "true")}>
