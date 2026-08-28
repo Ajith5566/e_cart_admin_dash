@@ -30,6 +30,8 @@ export type CaseStudyResponse = {
   _id: string;
   title: string;
   slug: string;
+  location:string;
+  tagline:string;
   shortDescription: string;
   clientName: string;
   clientCompany: string;

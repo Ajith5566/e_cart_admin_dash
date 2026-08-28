@@ -72,9 +72,10 @@ export default function Add_caseStudy() {
   const [shortDescription, setShortDescription] = useState("");
   const [status, setStatus] = useState(true);
   const [featured, setFeatured] = useState(false);
-  const [displayOrder, setDisplayOrder] = useState(0); // ✅ ADD — matches backend field
   const [loading, setLoading] = useState(false);
   const [loadingData, setLoadingData] = useState(!!id);
+  const [location, setLocation] = useState("");
+    const [tagline, setTagline] = useState("");
 
   // ── client ────────────────────────────────────────────────
   const [clientName, setClientName] = useState("");
@@ -183,10 +184,11 @@ export default function Add_caseStudy() {
         const cs = res.data.data;
 
         setTitle(cs.title ?? "");
+        setLocation(cs.location ?? "");
+          setTagline(cs.tagline ?? "");
         setShortDescription(cs.shortDescription ?? "");
         setStatus(cs.isActive);
         setFeatured(cs.featured ?? false);
-        setDisplayOrder(cs.displayOrder ?? 0); // ✅ ADD
         setClientName(cs.clientName ?? "");
         setClientCompany(cs.clientCompany ?? "");
         setClientDesignation(cs.clientDesignation ?? "");
@@ -397,7 +399,8 @@ export default function Add_caseStudy() {
     fd.append("shortDescription",   shortDescription);
     fd.append("status",             String(status));
     fd.append("featured",           String(featured));
-    fd.append("displayOrder",       String(displayOrder)); // ✅ ADD — matches backend field
+    fd.append("tagline",            tagline          );
+    fd.append("location" ,            location);
     fd.append("clientName",         clientName);
     fd.append("clientCompany",      clientCompany);
     fd.append("clientDesignation",  clientDesignation);
@@ -512,9 +515,9 @@ export default function Add_caseStudy() {
                 </select>
               </div>
               <div className="col-md-2">
-                <label className="form-label">Display Order</label>
-                <input type="number" min={0} className="form-control"
-                  value={displayOrder} onChange={(e) => setDisplayOrder(Number(e.target.value))} />
+                <label className="form-label">Location</label>
+                <input type="text"  className="form-control"
+                  value={location} onChange={(e) => setLocation((e.target.value))} />
               </div>
             </div>
 
@@ -525,6 +528,17 @@ export default function Add_caseStudy() {
               </div>
             </div>
 
+                            <label className="form-label mt-3">Tagline</label>
+                <Suspense fallback={<div>Loading editor...</div>}>
+                  <ReactQuill
+                    className="custom-quill"
+                    value={tagline}
+                    onChange={setTagline}
+                    modules={Modules}
+                    theme="snow"
+                    placeholder="e.g. Your website is the first handshake with every customer..."
+                  />
+                </Suspense>
             <div className="mt-3">
               <label className="form-check-label d-flex align-items-center gap-2">
                 <input type="checkbox" className="form-check-input" checked={featured}
