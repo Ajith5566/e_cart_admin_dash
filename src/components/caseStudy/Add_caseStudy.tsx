@@ -75,7 +75,7 @@ export default function Add_caseStudy() {
   const [loading, setLoading] = useState(false);
   const [loadingData, setLoadingData] = useState(!!id);
   const [location, setLocation] = useState("");
-    const [tagline, setTagline] = useState("");
+  const [tagline, setTagline] = useState("");
 
   // ── client ────────────────────────────────────────────────
   const [clientName, setClientName] = useState("");
@@ -114,9 +114,9 @@ export default function Add_caseStudy() {
   const [existingGallery, setExistingGallery] = useState<CaseStudyGalleryItem[]>([]);
 
   const bannerRef = useRef<HTMLInputElement | null>(null);
-  const logoRef   = useRef<HTMLInputElement | null>(null);
-  const galleryRef= useRef<HTMLInputElement | null>(null);
-  const thumbRef  = useRef<HTMLInputElement | null>(null);
+  const logoRef = useRef<HTMLInputElement | null>(null);
+  const galleryRef = useRef<HTMLInputElement | null>(null);
+  const thumbRef = useRef<HTMLInputElement | null>(null);
 
   // ── content sections ──────────────────────────────────────
   const [overview, setOverview] = useState("");
@@ -185,7 +185,7 @@ export default function Add_caseStudy() {
 
         setTitle(cs.title ?? "");
         setLocation(cs.location ?? "");
-          setTagline(cs.tagline ?? "");
+        setTagline(cs.tagline ?? "");
         setShortDescription(cs.shortDescription ?? "");
         setStatus(cs.isActive);
         setFeatured(cs.featured ?? false);
@@ -395,39 +395,39 @@ export default function Add_caseStudy() {
     delete metaWithoutImages.twitter_image;
 
     const fd = new FormData();
-    fd.append("title",              title.trim());
-    fd.append("shortDescription",   shortDescription);
-    fd.append("status",             String(status));
-    fd.append("featured",           String(featured));
-    fd.append("tagline",            tagline          );
-    fd.append("location" ,            location);
-    fd.append("clientName",         clientName);
-    fd.append("clientCompany",      clientCompany);
-    fd.append("clientDesignation",  clientDesignation);
-    fd.append("industry",           industry);
-    fd.append("timeline",           timeline);
-    fd.append("websiteUrl",         websiteUrl);
-    fd.append("overview",           overview);
-    fd.append("challenge",          challenge);
-    fd.append("proposedSolution",   proposedSolution);
-    fd.append("implementation",     implementation);
-    fd.append("outcome",            outcome);
-    fd.append("services",           JSON.stringify(selectedServices));
-    fd.append("technologies",       JSON.stringify(selectedTechnologies));
-    fd.append("solutions",          JSON.stringify(selectedSolutions));
+    fd.append("title", title.trim());
+    fd.append("shortDescription", shortDescription);
+    fd.append("status", String(status));
+    fd.append("featured", String(featured));
+    fd.append("tagline", tagline);
+    fd.append("location", location);
+    fd.append("clientName", clientName);
+    fd.append("clientCompany", clientCompany);
+    fd.append("clientDesignation", clientDesignation);
+    fd.append("industry", industry);
+    fd.append("timeline", timeline);
+    fd.append("websiteUrl", websiteUrl);
+    fd.append("overview", overview);
+    fd.append("challenge", challenge);
+    fd.append("proposedSolution", proposedSolution);
+    fd.append("implementation", implementation);
+    fd.append("outcome", outcome);
+    fd.append("services", JSON.stringify(selectedServices));
+    fd.append("technologies", JSON.stringify(selectedTechnologies));
+    fd.append("solutions", JSON.stringify(selectedSolutions));
     fd.append("relatedCaseStudies", JSON.stringify(relatedCaseStudies));
-    fd.append("statistics",         JSON.stringify(cleanedStatistics));
-    fd.append("meta",               JSON.stringify(metaWithoutImages));
+    fd.append("statistics", JSON.stringify(cleanedStatistics));
+    fd.append("meta", JSON.stringify(metaWithoutImages));
 
-    fd.append("testimonial_clientName",  testimonial.clientName);
-    fd.append("testimonial_company",     testimonial.company);
+    fd.append("testimonial_clientName", testimonial.clientName);
+    fd.append("testimonial_company", testimonial.company);
     fd.append("testimonial_designation", testimonial.designation);
-    fd.append("testimonial_quote",       testimonial.quote);
-    fd.append("testimonial_video",       testimonial.video);
+    fd.append("testimonial_quote", testimonial.quote);
+    fd.append("testimonial_video", testimonial.video);
 
     if (bannerFile) fd.append("bannerImage", bannerFile);
-    if (logoFile)   fd.append("logo", logoFile);
-    if (thumbFile)  fd.append("testimonial_thumbnail", thumbFile);
+    if (logoFile) fd.append("logo", logoFile);
+    if (thumbFile) fd.append("testimonial_thumbnail", thumbFile);
     if (meta.og_image instanceof File) fd.append("og_image", meta.og_image);
     if (meta.twitter_image instanceof File) fd.append("twitter_image", meta.twitter_image);
 
@@ -516,7 +516,7 @@ export default function Add_caseStudy() {
               </div>
               <div className="col-md-2">
                 <label className="form-label">Location</label>
-                <input type="text"  className="form-control"
+                <input type="text" className="form-control"
                   value={location} onChange={(e) => setLocation((e.target.value))} />
               </div>
             </div>
@@ -528,17 +528,17 @@ export default function Add_caseStudy() {
               </div>
             </div>
 
-                            <label className="form-label mt-3">Tagline</label>
-                <Suspense fallback={<div>Loading editor...</div>}>
-                  <ReactQuill
-                    className="custom-quill"
-                    value={tagline}
-                    onChange={(v) => setTagline(cleanQuill(v))}
-                    modules={Modules}
-                    theme="snow"
-                    placeholder="e.g. Your website is the first handshake with every customer..."
-                  />
-                </Suspense>
+            <label className="form-label mt-3">headline</label>
+            <Suspense fallback={<div>Loading editor...</div>}>
+              <ReactQuill
+                className="custom-quill"
+                value={tagline}
+                onChange={(v) => setTagline(cleanQuill(v))}
+                modules={Modules}
+                theme="snow"
+                placeholder="e.g. Your website is the first handshake with every customer..."
+              />
+            </Suspense>
             <div className="mt-3">
               <label className="form-check-label d-flex align-items-center gap-2">
                 <input type="checkbox" className="form-check-input" checked={featured}
@@ -780,7 +780,7 @@ export default function Add_caseStudy() {
             <div className="card-body">
               <Suspense fallback={<div>Loading editor...</div>}>
                 <ReactQuill className={`custom-quill ${error ? "is-invalid" : ""}`}
-                  value={value}  onChange={(v) => setter(cleanQuill(v))} modules={Modules} theme="snow" />
+                  value={value} onChange={(v) => setter(cleanQuill(v))} modules={Modules} theme="snow" />
               </Suspense>
               {error && (
                 <div className="text-danger mt-1" style={{ fontSize: "13px" }}>{error}</div>
