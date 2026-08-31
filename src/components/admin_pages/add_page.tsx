@@ -140,15 +140,14 @@ function Add_page() {
     toast.info("URL will be updated. Old links will redirect automatically.");
   };
 
-  const isEditorEmpty = (html: string) => {
+ /*  const isEditorEmpty = (html: string) => {
     const text = html.replace(/<[^>]+>/g, "").trim();
     return text.length === 0;
-  };
+  }; */
 
   const [errors, setErrors] = useState({
     title: "",
     shortDesc: "",
-    description: "",
   });
 
   const validateForm = () => {
@@ -160,16 +159,8 @@ function Add_page() {
       isValid = false;
     }
 
-    if (!shortDesc.trim()) {
-      newErrors.shortDesc = "Short description is required";
-      isValid = false;
-    } else if (shortDesc.length > 150) {
+    if (shortDesc.length > 150) {
       newErrors.shortDesc = "Short description cannot exceed 150 characters";
-      isValid = false;
-    }
-
-    if (!description.trim() || description === "<p><br></p>" || isEditorEmpty(description)) {
-      newErrors.description = "Description is required";
       isValid = false;
     }
 
@@ -319,7 +310,7 @@ function Add_page() {
         )}
 
         <label htmlFor="shortDesc" className="form-label mt-3">
-          Short description <span className="text-danger">*</span>
+          Short description 
         </label>
         <textarea
           id="shortDesc"
@@ -331,7 +322,7 @@ function Add_page() {
         {errors.shortDesc && <div className="invalid-feedback">{errors.shortDesc}</div>}
 
         <div className="mt-3" id="description">
-          <h6>Description <span className="text-danger">*</span></h6>
+          <h6>Description </h6>
           <Suspense fallback={<div>Loading editor...</div>}>
             <ReactQuill
               className="custom-quill"
@@ -341,9 +332,6 @@ function Add_page() {
               theme="snow"
             />
           </Suspense>
-          {errors.description && (
-            <div className="text-danger mt-1">{errors.description}</div>
-          )}
         </div>
 
         <div className="mt-5">
