@@ -135,6 +135,7 @@ export default function Add_caseStudy() {
   const [thumbFile, setThumbFile] = useState<File | null>(null);
   const [thumbPreview, setThumbPreview] = useState("");
   const [existingThumb, setExistingThumb] = useState("");
+  const [removeThumbnail, setRemoveThumbnail] = useState(false);
 
   // ── SEO ───────────────────────────────────────────────────
   const [meta, setMeta] = useState<MetaFields>({});
@@ -424,7 +425,7 @@ export default function Add_caseStudy() {
     fd.append("testimonial_designation", testimonial.designation);
     fd.append("testimonial_quote", testimonial.quote);
     fd.append("testimonial_video", testimonial.video);
-
+    fd.append("removeThumbnail", String(removeThumbnail));
     if (bannerFile) fd.append("bannerImage", bannerFile);
     if (logoFile) fd.append("logo", logoFile);
     if (thumbFile) fd.append("testimonial_thumbnail", thumbFile);
@@ -870,7 +871,7 @@ export default function Add_caseStudy() {
                     <div className="d-flex gap-2 mt-1">
                       <button type="button" className="btn btn-sm btn-outline-dark" onClick={() => thumbRef.current?.click()}>Change</button>
                       <button type="button" className="btn btn-sm btn-outline-danger"
-                        onClick={() => { setThumbFile(null); setThumbPreview(""); setExistingThumb(""); }}>Remove</button>
+                        onClick={() => { setThumbFile(null); setThumbPreview(""); setExistingThumb("");  setRemoveThumbnail(true); }}>Remove</button>
                     </div>
                   </div>
                 ) : (
