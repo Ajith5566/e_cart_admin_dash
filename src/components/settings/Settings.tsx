@@ -16,6 +16,7 @@ type SettingsData = {
     projectsCompleted: string;
     clientSatisfaction: string;
     expertTeamMembers: string;
+    countriesServed:string;
 };
 
 export default function Settings() {
@@ -36,6 +37,7 @@ export default function Settings() {
         projectsCompleted: "",
         clientSatisfaction: "",
         expertTeamMembers: "",
+        countriesServed:""
     });
 
     const [errors, setErrors] = useState({
@@ -279,14 +281,18 @@ export default function Settings() {
                                     <input name="projectsCompleted" value={formData.projectsCompleted} onChange={handleChange} className="form-control" placeholder="e.g. 460+" />
                                 </div>
 
-                                <div className="col-md-3 mb-3">
+                                <div className="col-md-3 mb-2">
                                     <label className="form-label">Client Satisfaction</label>
                                     <input name="clientSatisfaction" value={formData.clientSatisfaction} onChange={handleChange} className="form-control" placeholder="e.g. 95%" />
                                 </div>
 
-                                <div className="col-md-3 mb-3">
+                                <div className="col-md-3 mb-2">
                                     <label className="form-label">Expert Team Members</label>
                                     <input name="expertTeamMembers" value={formData.expertTeamMembers} onChange={handleChange} className="form-control" placeholder="e.g. 50+" />
+                                </div>
+                                 <div className="col-md-3 mb-2">
+                                    <label className="form-label">Countries Served</label>
+                                    <input name="countriesServed" value={formData.countriesServed} onChange={handleChange} className="form-control" placeholder="e.g. 50+" />
                                 </div>
 
                             </div>
