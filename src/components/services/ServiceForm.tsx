@@ -293,7 +293,7 @@ export default function Add_service() {
     const flag = (elementId: string) => { if (!firstErrorId) firstErrorId = elementId; };
 
     if (!title.trim()) { next.title = "Service title is required"; flag("title"); }
-   if (industries.length === 0) {
+   if (!isTopLevel &&industries.length === 0) {
   next.industry = "Industry is required";
   flag("industry");
 }
@@ -362,7 +362,13 @@ export default function Add_service() {
   };
 
   const handleSubmit = async () => {
-    if (!validateForm()) return;
+     console.log("handleSubmit called"); // ✅ ADD
+    if (!validateForm()) {
+       console.log("validation failed"); // ✅ ADD
+       return;
+    }
+   
+     console.log("validation passed"); // ✅ ADD
 
     const finalSlug = resolveSlug();
     if (!finalSlug) return;
