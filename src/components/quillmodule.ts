@@ -56,6 +56,6 @@ htmlEditButton: {
 
 export const cleanQuill = (html: string) =>
   html
-    .replace(/&nbsp;/g, "\u00A0")    // ✅ replace &nbsp; entity with actual non-breaking space character
-    .replace(/<p><br><\/p>/g, "")    // ✅ remove empty paragraphs
+    .replace(/&nbsp;/g, "\u00A0")
+    .replace(/(<p><br><\/p>)+$/, "")  // ✅ only remove trailing empty paragraphs
     .trim();
