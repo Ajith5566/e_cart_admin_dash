@@ -4,7 +4,6 @@ import { useEffect, useState, lazy, Suspense } from 'react'
 import "react-quill-new/dist/quill.snow.css";
 import { toast } from 'react-toastify';
 import { addPageApi, getPageByIdApi, updatePageApi } from '../../services/allAPi';
-import { cleanQuill, Modules } from '../quillmodule';
 import { useNavigate, useParams } from "react-router-dom";
 import type { MetaFields } from '../../types/types';
 import SeoPreview from '../seo/Seo';
@@ -19,8 +18,10 @@ type PageType = {
   isActive: boolean;
   meta?: MetaFields;
 };
+// before
 
-const ReactQuill = lazy(() => import("react-quill-new"));
+const RichEditor = lazy(() => import('../editor/TiptapEditor'));
+
 
 function Add_page() {
 
@@ -321,18 +322,17 @@ function Add_page() {
         />
         {errors.shortDesc && <div className="invalid-feedback">{errors.shortDesc}</div>}
 
-        <div className="mt-3" id="description">
-          <h6>Description </h6>
-          <Suspense fallback={<div>Loading editor...</div>}>
-            <ReactQuill
-              className="custom-quill"
-              value={description}
-              onChange={(v) => setDescription(cleanQuill(v))}
-              modules={Modules}
-              theme="snow"
-            />
-          </Suspense>
-        </div>
+<div className="mt-3" id="description">
+  <h6>Description</h6>
+  <Suspense fallback={<div>Loading editor...</div>}>
+    <RichEditor
+      value={description}
+      onChange={setDescription}
+      placeholder="Write description..."
+      minHeight={200}
+    />
+  </Suspense>
+</div>
 
         <div className="mt-5">
           <SeoPreview
