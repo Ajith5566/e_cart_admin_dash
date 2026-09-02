@@ -49,7 +49,13 @@ htmlEditButton: {
 
 
 // quillmodule.ts — add a wrapper
-export const cleanQuill = (html: string) =>
+/* export const cleanQuill = (html: string) =>
   html.replace(/&nbsp;/g, " ")
       .replace(/<p><br><\/p>/g, "")
-      .trim();
+      .trim(); */
+
+export const cleanQuill = (html: string) =>
+  html
+    .replace(/&nbsp;/g, "\u00A0")    // ✅ replace &nbsp; entity with actual non-breaking space character
+    .replace(/<p><br><\/p>/g, "")    // ✅ remove empty paragraphs
+    .trim();
