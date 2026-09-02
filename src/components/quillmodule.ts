@@ -56,6 +56,5 @@ htmlEditButton: {
 
 export const cleanQuill = (html: string) =>
   html
-    .replace(/&nbsp;/g, "\u00A0")
-    .replace(/(<p><br><\/p>)+$/, "")  // ✅ only remove trailing empty paragraphs
+    .replace(/&nbsp;/g, "\u00A0") // ✅ only clean &nbsp;
     .trim();
