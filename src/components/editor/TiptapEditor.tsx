@@ -385,11 +385,10 @@ export default function RichEditor({ value, onChange, placeholder = "Start typin
       },
     },
     onUpdate: ({ editor }) => {
-      /* const html = cleanEditorHtml(editor.getHTML()); */
+      const html = cleanEditorHtml(editor.getHTML());
       isInternalChange.current = true;
-       onChange(editor.getText());
-     /*  onChange(html);
-      if (showHtml) setHtmlValue(html); */
+      onChange(html);
+      if (showHtml) setHtmlValue(html);
     },
   });
 
@@ -398,7 +397,7 @@ export default function RichEditor({ value, onChange, placeholder = "Start typin
   // otherwise every keystroke would force-reset the doc and wipe out things
   // like a blank line you just typed, or jump the cursor.
   useEffect(() => {
-    if (!editor) return;
+    if (!editor || editor.isDestroyed) return;
     if (isInternalChange.current) {
       isInternalChange.current = false;
       return;
@@ -409,7 +408,7 @@ export default function RichEditor({ value, onChange, placeholder = "Start typin
 
   // toggle HTML view
   const toggleHtml = useCallback(() => {
-    if (!editor) return;
+     if (!editor || editor.isDestroyed) return;
     if (!showHtml) {
       setHtmlValue(editor.getHTML());
       setShowHtml(true);
