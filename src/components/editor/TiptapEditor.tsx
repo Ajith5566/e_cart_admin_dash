@@ -412,19 +412,25 @@ export default function RichEditor({ value, onChange, placeholder = "Start typin
       },
     },
     onUpdate: ({ editor }) => {
+       if (editor.isDestroyed) return;
       const html = cleanEditorHtml(editor.getHTML());
       isInternalChange.current = true;
       onChange(html);
       if (showHtml) setHtmlValue(html);
     },
   });
+  useEffect(() => {
+  return () => {
+    editor?.destroy(); // ✅ cleanup on unmount
+  };
+}, [editor]);
 
   // sync external value (edit mode prefill / switching records) — but skip
   // this when the change we're reacting to just came from the editor itself,
   // otherwise every keystroke would force-reset the doc and wipe out things
   // like a blank line you just typed, or jump the cursor.
   useEffect(() => {
-    if (!editor) return;
+    if (!editor || editor.isDestroyed) return; // ✅ guard
     if (isInternalChange.current) {
       isInternalChange.current = false;
       return;
