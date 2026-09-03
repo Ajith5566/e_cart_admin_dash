@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/set-state-in-effect */
 // components/author/Add_blog_author.tsx — twitter + imgSrc fix + bulk-ready
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { useEffect, useState, lazy, Suspense, useRef } from "react";

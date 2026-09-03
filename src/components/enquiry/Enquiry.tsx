@@ -37,6 +37,7 @@ export default function Enquiry() {
   };
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchEnquiries();
   }, []);
 

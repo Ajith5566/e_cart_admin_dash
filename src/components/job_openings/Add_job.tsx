@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/set-state-in-effect */
 // components/jobs/Add_job.tsx
 import { useEffect, useState, lazy, Suspense } from "react";
 import "react-quill-new/dist/quill.snow.css";

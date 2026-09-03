@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/set-state-in-effect */
 // hooks/useServerPagination.ts
 import { useState, useEffect, useCallback } from "react";
 

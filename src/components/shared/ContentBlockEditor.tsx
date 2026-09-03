@@ -4,8 +4,7 @@
 // Quote blocks with drag-and-drop reordering. Uses native HTML5 drag-and-drop —
 // no extra dependency required.
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { useRef, useState, lazy, Suspense } from "react";
-import "react-quill-new/dist/quill.snow.css";
+import { lazy, useRef, useState } from "react";
 import {
   type ContentBlock,
   type ContentBlockType,
@@ -14,27 +13,7 @@ import {
   createEmptyBlock,
 } from "../../types/contentBlockTypes";
 import { imgSrc } from "../../utils/imgSrc";
-import { cleanQuill, Modules } from "../quillmodule";
-
-const ReactQuill = lazy(() => import("react-quill-new"));
-
-/* const EditorModules = {
-  toolbar: [
-    [{ header: [1, 2, 3, false] }],
-    ["bold", "italic", "underline", "strike"],
-    [{ list: "ordered" }, { list: "bullet" }],
-    ["link", "image"],
-    ["clean"],
-  ],
-};
- */
-const QuoteModules = {
-  toolbar: [
-    ["bold", "italic", "underline"],
-    [{ list: "ordered" }, { list: "bullet" }],
-    ["clean"],
-  ],
-};
+const RichEditor = lazy(() => import('../editor/TiptapEditor'));
 
 const BLOCK_TYPES: ContentBlockType[] = ["editor", "gallery", "youtube", "quote"];
 
@@ -230,28 +209,27 @@ export default function ContentBlockEditor({
                   )}
 
                   {block.type === "editor" && (
-                    <Suspense fallback={<div>Loading editor...</div>}>
-                      <ReactQuill
-                        className={`custom-quill ${contentMissing ? "is-invalid" : ""}`}
+                    <div className={contentMissing ? "is-invalid" : ""}>
+                      <RichEditor
                         value={block.html || ""}
-                       onChange={(html) => updateBlock(block.blockId, { html: cleanQuill(html) })}
-                        modules={Modules}
-                        theme="snow"
+                        onChange={(html) => updateBlock(block.blockId, { html })}
+                        placeholder="Start typing..."
+                        minHeight={200}
+                        maxHeight={500}
                       />
-                    </Suspense>
+                    </div>
                   )}
 
                   {block.type === "quote" && (
-                    <Suspense fallback={<div>Loading editor...</div>}>
-                      <ReactQuill
-                        className={`custom-quill ${contentMissing ? "is-invalid" : ""}`}
+                    <div className={contentMissing ? "is-invalid" : ""}>
+                      <RichEditor
                         value={block.html || ""}
-                        onChange={(html) => updateBlock(block.blockId, { html: cleanQuill(html) })}
-                        modules={QuoteModules}
-                        theme="snow"
+                        onChange={(html) => updateBlock(block.blockId, { html })}
                         placeholder="Enter a highlight quote..."
+                        minHeight={120}
+                        maxHeight={300}
                       />
-                    </Suspense>
+                    </div>
                   )}
                   {contentMissing && <div className="text-danger mt-1" style={{ fontSize: "13px" }}>Content is required</div>}
 

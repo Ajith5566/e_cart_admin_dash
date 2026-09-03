@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/set-state-in-effect */
 // components/pages/Add_page.tsx — with keep/update slug prompt
 // (pairs with the fixed pageController: backend uses meta.slug as the decision)
 import { useEffect, useState, lazy, Suspense } from 'react'

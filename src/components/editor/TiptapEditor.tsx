@@ -378,10 +378,11 @@ type Props = {
   onChange:     (html: string) => void;
   placeholder?: string;
   minHeight?:   number;
+   maxHeight?:   number;   // NEW
   className?:   string;
 };
 
-export default function RichEditor({ value, onChange, placeholder = "Start typing...", minHeight = 200, className = "" }: Props) {
+export default function RichEditor({ value, onChange, placeholder = "Start typing...", minHeight = 200, maxHeight = 500, className = "" }: Props) {
   const imageInputRef            = useRef<HTMLInputElement>(null);
   const [showHtml, setShowHtml]  = useState(false);
   const [htmlValue, setHtmlValue] = useState("");
@@ -647,7 +648,7 @@ export default function RichEditor({ value, onChange, placeholder = "Start typin
           </div>
         </div>
       ) : (
-        <EditorContent editor={editor} style={{ minHeight, padding: "12px 14px", fontSize: "14px", lineHeight: "1.5", color: "#1e293b" }} />
+        <EditorContent editor={editor} style={{ minHeight,maxHeight,overflowY: "auto", padding: "12px 14px", fontSize: "14px", lineHeight: "1.5", color: "#1e293b" }} />
       )}
 
       <style>{`

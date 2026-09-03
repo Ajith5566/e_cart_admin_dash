@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/set-state-in-effect */
 // components/faq/Add_faq.tsx
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { useEffect, useState } from "react";

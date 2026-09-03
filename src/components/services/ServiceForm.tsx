@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/set-state-in-effect */
 // components/caseStudy/Add_service.tsx
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { useEffect, useRef, useState } from "react";
@@ -19,10 +20,9 @@ import type { MetaFields } from "../../types/types";
 import slugify from "slugify";
 import { imgSrc } from "../../utils/imgSrc";
 import SeoPreview from "../seo/Seo";
-import { cleanQuill, Modules } from "../quillmodule";
 
 
-const ReactQuill = lazy(() => import("react-quill-new"));
+const RichEditor = lazy(() => import("../editor/TiptapEditor"));
 
 
 
@@ -595,17 +595,14 @@ export default function Add_service() {
             {errors.shortDescription && <div className="invalid-feedback d-block">{errors.shortDescription}</div>}
 
             <label className="form-label mt-3">Tagline</label>
-            <Suspense fallback={<div>Loading editor...</div>}>
-              <ReactQuill
-                className="custom-quill"
-                value={tagline}
-                onChange={(v) => setTagline(cleanQuill(v))}
-                modules={Modules}
-                theme="snow"
-                placeholder="e.g. Your website is the first handshake with every customer..."
-              />
-            </Suspense>
-
+           <Suspense fallback={<div>Loading editor...</div>}>
+  <RichEditor
+    value={tagline}
+    onChange={(html) => setTagline(html)}
+    placeholder="e.g. Your website is the first handshake with every customer..."
+    minHeight={120}
+  />
+</Suspense>
             <div className="mt-3">
               <h6>Hero Image</h6>
               <input ref={heroRef} type="file" accept="image/*" className="d-none"

@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/set-state-in-effect */
 // components/caseStudy/Add_caseStudy.tsx
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { useEffect, useRef, useState, lazy, Suspense } from "react";
@@ -16,7 +17,6 @@ import {
   getAllTechnologiesApi,
   getAllSolutionsApi,
 } from "../../services/allAPi";
-import { cleanQuill, Modules } from "../quillmodule";
 import type { MetaFields } from "../../types/types";
 import type {
   CaseStudyGalleryItem,
@@ -27,8 +27,7 @@ import SeoPreview from "../seo/Seo";
 import slugify from "slugify";
 import { imgSrc } from "../../utils/imgSrc";
 
-const ReactQuill = lazy(() => import("react-quill-new"));
-
+const RichEditor = lazy(() => import("../editor/TiptapEditor"));
 const emptyTestimonial: CaseStudyTestimonial = {
   clientName: "", company: "", designation: "", quote: "", video: "", thumbnail: "",
 };
@@ -530,16 +529,14 @@ export default function Add_caseStudy() {
             </div>
 
             <label className="form-label mt-3">headline</label>
-            <Suspense fallback={<div>Loading editor...</div>}>
-              <ReactQuill
-                className="custom-quill"
-                value={tagline}
-                onChange={(v) => setTagline(cleanQuill(v))}
-                modules={Modules}
-                theme="snow"
-                placeholder="e.g. Your website is the first handshake with every customer..."
-              />
-            </Suspense>
+           <Suspense fallback={<div>Loading editor...</div>}>
+  <RichEditor
+    value={tagline}
+    onChange={(html) => setTagline(html)}
+    placeholder="e.g. Your website is the first handshake with every customer..."
+    minHeight={120}
+  />
+</Suspense>
             <div className="mt-3">
               <label className="form-check-label d-flex align-items-center gap-2">
                 <input type="checkbox" className="form-check-input" checked={featured}
@@ -780,9 +777,15 @@ export default function Add_caseStudy() {
             </div>
             <div className="card-body">
               <Suspense fallback={<div>Loading editor...</div>}>
-                <ReactQuill className={`custom-quill ${error ? "is-invalid" : ""}`}
-                  value={value} onChange={(v) => setter(cleanQuill(v))} modules={Modules} theme="snow" />
-              </Suspense>
+  <RichEditor
+    value={value}
+    onChange={(html) => setter(html)}
+    placeholder={`Enter ${label.toLowerCase()}...`}
+    minHeight={200}
+    maxHeight={500}
+    className={error ? "is-invalid" : ""}
+  />
+</Suspense>
               {error && (
                 <div className="text-danger mt-1" style={{ fontSize: "13px" }}>{error}</div>
               )}

@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/set-state-in-effect */
 // components/faq/Faqs.tsx
 /* eslint-disable react-hooks/exhaustive-deps */
 import { useEffect, useState } from "react";

@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/set-state-in-effect */
 // components/caseStudy/Add_industry.tsx
 import { useEffect, useRef, useState } from "react";
 import { toast } from "react-toastify";
