@@ -385,10 +385,11 @@ export default function RichEditor({ value, onChange, placeholder = "Start typin
       },
     },
     onUpdate: ({ editor }) => {
-      const html = cleanEditorHtml(editor.getHTML());
+      /* const html = cleanEditorHtml(editor.getHTML()); */
       isInternalChange.current = true;
-      onChange(html);
-      if (showHtml) setHtmlValue(html);
+       onChange(editor.getText());
+     /*  onChange(html);
+      if (showHtml) setHtmlValue(html); */
     },
   });
 
