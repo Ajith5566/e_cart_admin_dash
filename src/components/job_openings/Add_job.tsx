@@ -4,12 +4,11 @@ import { useEffect, useState, lazy, Suspense } from "react";
 import "react-quill-new/dist/quill.snow.css";
 import { toast } from "react-toastify";
 import { addJobApi, getJobByIdApi, updateJobApi } from "../../services/allAPi";
-import { cleanQuill, Modules } from "../quillmodule";
 import { useNavigate, useParams } from "react-router-dom";
 import type { JobType } from "../../types/jobTypes";
 
 
-const ReactQuill = lazy(() => import("react-quill-new"));
+const RichEditor = lazy(() => import("../editor/TiptapEditor"));
 
 const JOB_TYPES: JobType[] = ["Full time", "Part time", "Contract", "Internship", "Remote"];
 
@@ -267,13 +266,13 @@ export default function Add_job() {
         <div className="mt-3" id="description">
           <h6>Description <span className="text-danger">*</span></h6>
           <Suspense fallback={<div>Loading editor...</div>}>
-            <ReactQuill
-              className="custom-quill"
-              value={description}
-              onChange={(v) => setDescription(cleanQuill(v))}
-              modules={Modules}
-              theme="snow"
-            />
+           <RichEditor
+  value={description}
+  onChange={setDescription}
+  placeholder="Write description..."
+  minHeight={200}
+  className={errors.description ? "is-invalid" : ""}
+/>
           </Suspense>
           {errors.description && (
             <div className="text-danger mt-1">{errors.description}</div>
