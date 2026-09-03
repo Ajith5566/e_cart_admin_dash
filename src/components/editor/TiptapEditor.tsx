@@ -15,14 +15,13 @@ import { Highlight } from "@tiptap/extension-highlight";
 import Subscript from "@tiptap/extension-subscript";
 import Superscript from "@tiptap/extension-superscript";
 import Youtube from "@tiptap/extension-youtube";
-import { cleanEditorHtml, sanitizePastedHtml } from "./cleanEditorHtml"; // see file for the inline-mark whitespace fix
+import { cleanEditorHtml, sanitizePastedHtml } from "./cleanEditorHtml";
 import { ResizableImage } from "./ResizableImage";
 
-// Same reasoning as Link below: default inclusive behaviour makes the
-// underline mark bleed onto whatever you type right after underlined text
-// (very noticeable right after pasted content, e.g. "...the[u] service.[/u]"
-// where a trailing space got absorbed into the mark). Non-inclusive stops
-// new text past the mark's edge from inheriting it.
+// ── Font size extension (adds a `fontSize` attribute to textStyle marks) ──
+// Default inclusive behaviour makes the underline mark bleed onto whatever
+// you type right after underlined text (e.g. right after pasted content).
+// Non-inclusive stops new text past the mark's edge from inheriting it.
 const Underline = UnderlineExtension.extend({
   inclusive: false,
 });
@@ -39,7 +38,6 @@ const Link = LinkExtension.extend({
   inclusive: false,
 });
 
-// ── Font size extension (adds a `fontSize` attribute to textStyle marks) ──
 const FontSize = Extension.create({
   name: "fontSize",
   addOptions() {
@@ -88,15 +86,6 @@ const FontSize = Extension.create({
 // any nbsp characters back to plain spaces directly in the live document as
 // you type, so the gap never appears on screen — it doesn't rely on the
 // editor being resynced from an external value.
-//
-// It also fixes a related browser quirk: when you type "word " and press
-// Enter, Chrome/contenteditable frequently carries that trailing space over
-// as a *leading* &nbsp; on the new line rather than dropping it. Once
-// converted to a plain space that leading character just sits there as
-// real indentation at the start of the new paragraph/heading. This plugin
-// strips a leading space/nbsp run from the start of a text block whenever
-// there is real content after it, so new lines start flush left. A block
-// that is *entirely* whitespace (a deliberate blank line) is left alone.
 const NoNbsp = Extension.create({
   name: "noNbsp",
   addProseMirrorPlugins() {
@@ -106,9 +95,6 @@ const NoNbsp = Extension.create({
           if (!transactions.some((tr) => tr.docChanged)) return null;
           let changed = false;
           const tr = newState.tr;
-
-          // 1) nbsp -> plain space, in place (same length, so positions
-          //    computed against newState.doc stay valid for step 2 below).
           newState.doc.descendants((node, pos) => {
             if (node.isText && node.text && node.text.indexOf("\u00A0") !== -1) {
               const cleanText = node.text.replace(/\u00A0/g, " ");
@@ -118,23 +104,6 @@ const NoNbsp = Extension.create({
               }
             }
           });
-
-          // 2) trim a leading space run at the start of any text block,
-          //    but only when there's real content after it — leaves
-          //    genuinely blank lines untouched.
-          newState.doc.descendants((node, pos) => {
-            if (!node.isTextblock) return;
-            const firstChild = node.firstChild;
-            if (!firstChild || !firstChild.isText || !firstChild.text) return;
-            const match = firstChild.text.match(/^[ \u00A0]+/);
-            if (match && match[0].length < firstChild.text.length) {
-              const from = pos + 1; // +1 to step inside the block node
-              const to = from + match[0].length;
-              tr.delete(from, to);
-              changed = true;
-            }
-          });
-
           return changed ? tr : null;
         },
       }),
@@ -378,11 +347,10 @@ type Props = {
   onChange:     (html: string) => void;
   placeholder?: string;
   minHeight?:   number;
-   maxHeight?:   number;   // NEW
   className?:   string;
 };
 
-export default function RichEditor({ value, onChange, placeholder = "Start typing...", minHeight = 200, maxHeight = 500, className = "" }: Props) {
+export default function RichEditor({ value, onChange, placeholder = "Start typing...", minHeight = 200, className = "" }: Props) {
   const imageInputRef            = useRef<HTMLInputElement>(null);
   const [showHtml, setShowHtml]  = useState(false);
   const [htmlValue, setHtmlValue] = useState("");
@@ -390,7 +358,11 @@ export default function RichEditor({ value, onChange, placeholder = "Start typin
 
   const editor = useEditor({
     extensions: [
-      StarterKit.configure({ heading: { levels: [1, 2, 3, 4, 5, 6] } }),
+      StarterKit.configure({
+        heading: { levels: [1, 2, 3, 4, 5, 6] },
+        link: false,      // we register our own non-inclusive Link below — StarterKit v3 bundles one by default
+        underline: false, // same reasoning for Underline
+      }),
       NoNbsp,
       Underline,
       Link.configure({ openOnClick: false, HTMLAttributes: { target: "_blank", rel: "noopener noreferrer" } }),
@@ -412,25 +384,19 @@ export default function RichEditor({ value, onChange, placeholder = "Start typin
       },
     },
     onUpdate: ({ editor }) => {
-       if (editor.isDestroyed) return;
       const html = cleanEditorHtml(editor.getHTML());
       isInternalChange.current = true;
       onChange(html);
       if (showHtml) setHtmlValue(html);
     },
   });
-  useEffect(() => {
-  return () => {
-    editor?.destroy(); // ✅ cleanup on unmount
-  };
-}, [editor]);
 
   // sync external value (edit mode prefill / switching records) — but skip
   // this when the change we're reacting to just came from the editor itself,
   // otherwise every keystroke would force-reset the doc and wipe out things
   // like a blank line you just typed, or jump the cursor.
   useEffect(() => {
-    if (!editor || editor.isDestroyed) return; // ✅ guard
+    if (!editor) return;
     if (isInternalChange.current) {
       isInternalChange.current = false;
       return;
@@ -654,12 +620,12 @@ export default function RichEditor({ value, onChange, placeholder = "Start typin
           </div>
         </div>
       ) : (
-        <EditorContent editor={editor} style={{ minHeight,maxHeight,overflowY: "auto", padding: "12px 14px", fontSize: "14px", lineHeight: "1.5", color: "#1e293b" }} />
+        <EditorContent editor={editor} style={{ minHeight, padding: "12px 14px", fontSize: "14px", lineHeight: "1.7", color: "#1e293b" }} />
       )}
 
       <style>{`
         .tiptap { outline: none; }
-        .tiptap p { margin: 0; }
+        .tiptap p { margin: 0 0 0.4rem; }
         .tiptap p:last-child { margin-bottom: 0; }
         .tiptap h1 { font-size: 2rem;    font-weight: 700; margin: 1rem 0 0.4rem;  line-height: 1.2; }
         .tiptap h2 { font-size: 1.5rem;  font-weight: 700; margin: 0.9rem 0 0.35rem; }
@@ -674,23 +640,7 @@ export default function RichEditor({ value, onChange, placeholder = "Start typin
         .tiptap code { background: #f1f5f9; border-radius: 3px; padding: 1px 5px; font-family: ui-monospace, monospace; font-size: 0.875em; color: #e11d48; }
         .tiptap pre  { background: #1e293b; color: #e2e8f0; border-radius: 6px; padding: 12px 16px; font-family: ui-monospace, monospace; font-size: 13px; overflow-x: auto; margin-bottom: 0.75rem; }
         .tiptap pre code { background: none; padding: 0; color: inherit; font-size: inherit; }
-        .tiptap a, .tiptap a * {
-          color: #2563eb !important;
-          text-decoration: underline;
-          cursor: pointer;
-        }
-        .tiptap a:hover, .tiptap a:hover * { color: #1d4ed8 !important; }
-        .tiptap a::after {
-          content: "";
-          display: inline-block;
-          width: 10px;
-          height: 10px;
-          margin-left: 2px;
-          vertical-align: middle;
-          background-repeat: no-repeat;
-          background-size: contain;
-          background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%232563eb' stroke-width='3'><path d='M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71'/><path d='M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71'/></svg>");
-        }
+        .tiptap a { color: #2563eb; text-decoration: underline; }
         .tiptap img { max-width: 100%; height: auto; border-radius: 4px; margin: 0.5rem 0; display: block; }
         .tiptap iframe { width: 100%; aspect-ratio: 16/9; border-radius: 6px; margin: 0.5rem 0; border: none; }
         .tiptap p.is-editor-empty:first-child::before { content: attr(data-placeholder); float: left; color: #94a3b8; pointer-events: none; height: 0; }
