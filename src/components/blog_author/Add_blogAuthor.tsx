@@ -5,7 +5,6 @@ import { useEffect, useState, lazy, Suspense, useRef } from "react";
 import "react-quill-new/dist/quill.snow.css";
 import { toast } from "react-toastify";
 import { useNavigate, useParams } from "react-router-dom";
-import { Modules } from "../quillmodule";
 import {
   add_author_Api,
   getAuthorByIdApi,
@@ -13,8 +12,7 @@ import {
 } from "../../services/allAPi";
 import type { AuthorResponse, AuthorTypes } from "../../types/author_types";
 import { imgSrc } from "../../utils/imgSrc"; // ✅ resolves local paths
-
-const ReactQuill = lazy(() => import("react-quill-new"));
+const RichEditor = lazy(() => import("../editor/TiptapEditor"));
 
 function Add_blog_author() {
   const [loading, setLoading] = useState(false);
@@ -215,13 +213,12 @@ function Add_blog_author() {
           <div className="mt-4">
             <h6>Description</h6>
             <Suspense fallback={<div>Loading editor...</div>}>
-              <ReactQuill
-                className="custom-quill"
-                value={formData.description}
-                onChange={(value) => setFormData({ ...formData, description: value })}
-                modules={Modules}
-                theme="snow"
-              />
+             <RichEditor
+  value={formData.description}
+  onChange={(value) => setFormData({ ...formData, description: value })}
+  placeholder="Write job description..."
+  minHeight={200}
+/>
             </Suspense>
           </div>
 
