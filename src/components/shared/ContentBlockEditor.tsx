@@ -195,7 +195,7 @@ export default function ContentBlockEditor({
                   {(block.type === "editor" || block.type === "quote") && (
                     <>
                       <label className="form-label">
-                        Label <span className="text-danger">*</span>
+                        Label(The label is used solely to identify and distinguish the block within the admin panel.) <span className="text-danger">*</span>
                       </label>
                       <input
                         type="text"

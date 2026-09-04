@@ -127,7 +127,6 @@ export default function Add_blog() {
   const [errors, setErrors] = useState({
     title: "",
     author: "",
-    shortDesc: "",
     image: "",
   });
 
@@ -313,12 +312,11 @@ export default function Add_blog() {
   };
 
   const validateForm = () => {
-    const next = { title: "", author: "", shortDesc: "", image: "" };
+    const next = { title: "", author: "", image: "" };
     let ok = true;
 
     if (!title.trim()) { next.title = "Title is required"; ok = false; }
     if (!author) { next.author = "Author is required"; ok = false; }
-    if (!shortDesc.trim()) { next.shortDesc = "Short description is required"; ok = false; }
     if (!imageFile && !existingImage) { next.image = "Blog image is required"; ok = false; }
 
     setErrors(next);
@@ -568,16 +566,15 @@ export default function Add_blog() {
 
         {/* ── Short description ── */}
         <label htmlFor="shortDesc" className="form-label mt-3">
-          Short description <span className="text-danger">*</span>
+          Short description
         </label>
         <textarea
           id="shortDesc"
-          className={`form-control mb-1 ${errors.shortDesc ? "is-invalid" : ""}`}
+          className='form-control mb-1'
           value={shortDesc}
           rows={3}
           onChange={(e) => setShortDesc(e.target.value)}
         />
-        {errors.shortDesc && <div className="invalid-feedback">{errors.shortDesc}</div>}
 
         {/* ── Read Time + View Count ── */}
         <div className="row mt-3">
