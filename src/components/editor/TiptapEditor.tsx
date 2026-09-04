@@ -17,6 +17,8 @@ import Superscript from "@tiptap/extension-superscript";
 import Youtube from "@tiptap/extension-youtube";
 import { cleanEditorHtml, sanitizePastedHtml } from "./cleanEditorHtml";
 import { ResizableImage } from "./ResizableImage";
+import { BASE_URL } from "../../services/baseURL";
+import { imgSrc } from "../../utils/imgSrc";
 
 // ── Font size extension (adds a `fontSize` attribute to textStyle marks) ──
 // Default inclusive behaviour makes the underline mark bleed onto whatever
@@ -385,7 +387,8 @@ export default function RichEditor({ value, onChange, placeholder = "Start typin
       },
     },
     onUpdate: ({ editor }) => {
-      const html = cleanEditorHtml(editor.getHTML());
+      let html = cleanEditorHtml(editor.getHTML());
+       html = html.replace(new RegExp(BASE_URL.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g'), '');
       isInternalChange.current = true;
       onChange(html);
       if (showHtml) setHtmlValue(html);
@@ -402,8 +405,13 @@ export default function RichEditor({ value, onChange, placeholder = "Start typin
       isInternalChange.current = false;
       return;
     }
-    if (editor.getHTML() === value) return;
-    editor.commands.setContent(value || "<p></p>");
+     // ✅ prefix relative /uploads/ paths with BASE_URL for display
+  const displayed = (value || "<p></p>").replace(
+    /src="(\/uploads\/[^"]+)"/g,
+    `src="${BASE_URL}$1"`
+  );
+    if (editor.getHTML() === displayed) return;
+   editor.commands.setContent(displayed);
   }, [value]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // toggle HTML view
@@ -422,16 +430,30 @@ export default function RichEditor({ value, onChange, placeholder = "Start typin
   }, [editor, showHtml, htmlValue, onChange]);
 
   // image upload from device
-  const handleImageUpload = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = () => {
-      editor?.chain().focus().setImage({ src: reader.result as string }).run();
-    };
-    reader.readAsDataURL(file);
-    e.target.value = "";
-  }, [editor]);
+const handleImageUpload = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const file = e.target.files?.[0];
+  if (!file) return;
+
+  try {
+    const fd = new FormData();
+    fd.append("image", file);
+
+    const res = await fetch(`${BASE_URL}/admin/upload/editor-image`, {
+      method:  "POST",
+      credentials: "include",
+      body:    fd,
+    });
+
+    const data = await res.json();
+    if (!res.ok) { alert(data.message || "Image upload failed"); return; }
+    // insert with full URL so editor displays it
+if (data.url) editor?.chain().focus().setImage({ src: imgSrc(data.url) }).run();
+  } catch {
+    alert("Image upload failed — please try again");
+  }
+
+  e.target.value = "";
+}, [editor]);
 
   const addLink = useCallback(() => {
     const url = window.prompt("Enter URL:");
