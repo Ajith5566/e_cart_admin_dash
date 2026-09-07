@@ -84,7 +84,7 @@ export default function Add_blog() {
   const [author, setAuthor] = useState("");
   const [authors, setAuthors] = useState<AuthorResponse[]>([]);
   const [shortDesc, setShortDesc] = useState("");
-  const [readTime, setReadTime] = useState(1);
+  const [readTime, setReadTime] = useState(0);
   const [views, setViews] = useState<number | "">("");
 
   // ✅ content blocks replace description / quote / youtubeUrl
@@ -181,7 +181,7 @@ export default function Add_blog() {
         setAuthor(blog.author?._id ?? "");
         setShortDesc(blog.shortDescription ?? "");
         setContentBlocks(blog.contentBlocks ?? []);
-        setReadTime(blog.readTime ?? 1);
+        setReadTime(blog.readTime ?? 0);
         setViews(blog.views ?? "");
         setIsActive(blog.isActive);
         setExistingImage(blog.image ?? "");
@@ -381,7 +381,7 @@ export default function Add_blog() {
     fd.append("author", author);
     fd.append("shortDescription", shortDesc);
     fd.append("contentBlocks", JSON.stringify(blocksForPayload));
-    fd.append("readTime", String(readTime));
+    if (readTime > 0) fd.append("readTime", String(readTime));
     if (views !== "") fd.append("views", String(views));
     fd.append("status", String(isActive));
     fd.append("publicationStatus", publicationStatus);
@@ -580,14 +580,13 @@ export default function Add_blog() {
         <div className="row mt-3">
           <div className="col-md-2">
             <label htmlFor="readTime" className="form-label">
-              Read Time (min) <span className="text-danger">*</span>
+              Read Time (min)
             </label>
             <input
               id="readTime"
               type="number"
-              min={1}
               className="form-control"
-              value={readTime}
+              value={readTime || ""} 
               onChange={(e) => setReadTime(Number(e.target.value))}
             />
           </div>
