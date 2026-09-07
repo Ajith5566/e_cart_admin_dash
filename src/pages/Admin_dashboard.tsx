@@ -483,86 +483,225 @@ function Admin_dashboard() {
 
                 {/* ── LATEST 3 ENQUIRIES + APPLICATIONS ── */}
                 <div className="mt-4">
+                  <div className="row g-4">
 
-                  {/* Latest Enquiries */}
-                  <div>
-                    <div className="card border-0 shadow-sm h-100">
-                      <div className="card-header bg-white fw-semibold d-flex justify-content-between align-items-center">
-                        <span><FontAwesomeIcon icon={faEnvelope} className="me-2 text-primary" />Latest Enquiries</span>
-                        <a href="/admin-dash/enquiry" className="btn btn-sm btn-outline-dark">View all</a>
-                      </div>
-                      <div className="card-body p-0">
-                        {loading ? (
-                          <div className="text-center py-4"><div className="spinner-border spinner-border-sm" /></div>
-                        ) : overview?.latestEnquiries.length === 0 ? (
-                          <p className="text-muted text-center py-4 mb-0">No enquiries yet</p>
-                        ) : (
-                          <ul className="list-group list-group-flush">
-                            {overview?.latestEnquiries.map((e) => (
-                              <li key={e._id} className="list-group-item px-3 py-2">
-                                <div className="d-flex justify-content-between align-items-start">
-                                  <div>
-                                    <div className="fw-semibold" style={{ fontSize: "14px" }}>{e.name}</div>
-                                    <div className="text-muted" style={{ fontSize: "12px" }}>{e.email}</div>
-                                    <div className="text-muted text-truncate" style={{ fontSize: "12px", maxWidth: "260px" }}>{e.message}</div>
-                                  </div>
-                                  <div className="text-muted text-end" style={{ fontSize: "11px", whiteSpace: "nowrap" }}>
-                                    {new Date(e.createdAt).toLocaleDateString()}
-                                  </div>
-                                </div>
-                              </li>
-                            ))}
-                          </ul>
-                        )}
+                    {/* Latest Enquiries - Row 1 */}
+                    <div className="col-12">
+                      <div className="card border-0 shadow-sm">
+
+                        <div className="card-header bg-white fw-semibold d-flex justify-content-between align-items-center">
+                          <span>
+                            <FontAwesomeIcon
+                              icon={faEnvelope}
+                              className="me-2 text-primary"
+                            />
+                            Latest Enquiries
+                          </span>
+
+                          <a
+                            href="/admin-dash/enquiry"
+                            className="btn btn-sm btn-outline-dark"
+                          >
+                            View all
+                          </a>
+                        </div>
+
+                        <div className="card-body p-0">
+                          {loading ? (
+                            <div className="text-center py-4">
+                              <div className="spinner-border spinner-border-sm" />
+                            </div>
+                          ) : (
+                            <div className="table-responsive">
+                              <table className="table table-hover align-middle mb-0">
+                                <thead>
+                                  <tr>
+                                    <th style={{ fontSize: "13px" }}>#</th>
+                                    <th style={{ fontSize: "13px" }}>Name</th>
+                                    <th style={{ fontSize: "13px" }}>Email</th>
+                                    <th style={{ fontSize: "13px" }}>Received</th>
+                                    <th style={{ fontSize: "13px" }}>View</th>
+                                  </tr>
+                                </thead>
+
+                                <tbody>
+                                  {!overview?.latestEnquiries?.length ? (
+                                    <tr>
+                                      <td
+                                        colSpan={5}
+                                        className="text-center text-muted py-3"
+                                      >
+                                        No enquiries yet
+                                      </td>
+                                    </tr>
+                                  ) : (
+                                    overview.latestEnquiries.map((e, i) => (
+                                      <tr key={e._id}>
+                                        <td style={{ fontSize: "13px" }}>
+                                          {i + 1}
+                                        </td>
+
+                                        <td style={{ fontSize: "13px" }}>
+                                          {e.name}
+                                        </td>
+
+                                        <td style={{ fontSize: "13px" }}>
+                                          {e.email}
+                                        </td>
+
+                                        <td
+                                          style={{
+                                            fontSize: "13px",
+                                            whiteSpace: "nowrap",
+                                          }}
+                                        >
+                                          {new Date(e.createdAt).toLocaleDateString(
+                                            "en-GB",
+                                            {
+                                              day: "2-digit",
+                                              month: "short",
+                                              year: "2-digit",
+                                            }
+                                          )}
+                                        </td>
+
+                                        <td>
+                                          <button
+                                            className="btn btn-sm btn-warning"
+                                            onClick={() =>
+                                              navigate(
+                                                `/admin-dash/enquiry/view/${e._id}`
+                                              )
+                                            }
+                                          >
+                                            View
+                                          </button>
+                                        </td>
+                                      </tr>
+                                    ))
+                                  )}
+                                </tbody>
+                              </table>
+                            </div>
+                          )}
+                        </div>
                       </div>
                     </div>
-                  </div>
 
-                  {/* Latest Applications */}
-                  <div className="mt-md-3">
-                    <div className="card border-0 shadow-sm h-100">
-                      <div className="card-header bg-white fw-semibold d-flex justify-content-between align-items-center">
-                        <span><FontAwesomeIcon icon={faBriefcase} className="me-2 text-success" />Latest Applications</span>
-                        <a href="/admin-dash/career" className="btn btn-sm btn-outline-dark">View all</a>
-                      </div>
-                      <div className="card-body p-0">
-                        {loading ? (
-                          <div className="text-center py-4"><div className="spinner-border spinner-border-sm" /></div>
-                        ) : overview?.latestApplications.length === 0 ? (
-                          <p className="text-muted text-center py-4 mb-0">No applications yet</p>
-                        ) : (
-                          <ul className="list-group list-group-flush">
-                            {overview?.latestApplications.map((a) => (
-                              <li key={a._id} className="list-group-item px-3 py-2">
-                                <div className="d-flex justify-content-between align-items-start">
-                                  <div>
-                                    <div className="fw-semibold" style={{ fontSize: "14px" }}>
-                                      {a.name}
-                                      {!a.isRead && <span className="badge bg-danger ms-2" style={{ fontSize: "10px" }}>New</span>}
-                                    </div>
-                                    <div className="text-muted" style={{ fontSize: "12px" }}>{a.jobTitle}</div>
-                                    <div className="text-muted" style={{ fontSize: "12px" }}>{a.email}</div>
-                                  </div>
-                                  <div className="text-end">
-                                    <span className={`badge ${a.status === "new" ? "bg-primary" :
-                                        a.status === "shortlisted" ? "bg-warning text-dark" :
-                                          a.status === "hired" ? "bg-success" : "bg-danger"
-                                      }`} style={{ fontSize: "11px" }}>
-                                      {a.status}
-                                    </span>
-                                    <div className="text-muted mt-1" style={{ fontSize: "11px" }}>
-                                      {new Date(a.createdAt).toLocaleDateString()}
-                                    </div>
-                                  </div>
-                                </div>
-                              </li>
-                            ))}
-                          </ul>
-                        )}
+
+                    {/* Latest Applications - Row 2 */}
+                    <div className="col-12">
+                      <div className="card border-0 shadow-sm">
+
+                        <div className="card-header bg-white fw-semibold d-flex justify-content-between align-items-center">
+                          <span>
+                            <FontAwesomeIcon
+                              icon={faBriefcase}
+                              className="me-2 text-success"
+                            />
+                            Latest Applications
+                          </span>
+
+                          <a
+                            href="/admin-dash/career"
+                            className="btn btn-sm btn-outline-dark"
+                          >
+                            View all
+                          </a>
+                        </div>
+
+                        <div className="card-body p-0">
+                          {loading ? (
+                            <div className="text-center py-4">
+                              <div className="spinner-border spinner-border-sm" />
+                            </div>
+                          ) : (
+                            <div className="table-responsive">
+                              <table className="table table-hover align-middle mb-0">
+                                <thead>
+                                  <tr>
+                                    <th style={{ fontSize: "13px" }}>#</th>
+                                    <th style={{ fontSize: "13px" }}>Name</th>
+                                    <th style={{ fontSize: "13px" }}>Position</th>
+                                    <th style={{ fontSize: "13px" }}>Status</th>
+                                    <th style={{ fontSize: "13px" }}>View</th>
+                                  </tr>
+                                </thead>
+
+                                <tbody>
+                                  {!overview?.latestApplications?.length ? (
+                                    <tr>
+                                      <td
+                                        colSpan={5}
+                                        className="text-center text-muted py-3"
+                                      >
+                                        No applications yet
+                                      </td>
+                                    </tr>
+                                  ) : (
+                                    overview.latestApplications.map((a, i) => (
+                                      <tr key={a._id}>
+                                        <td style={{ fontSize: "13px" }}>
+                                          {i + 1}
+                                        </td>
+
+                                        <td style={{ fontSize: "13px" }}>
+                                          {a.name}
+
+                                          {!a.isRead && (
+                                            <span
+                                              className="badge bg-danger ms-1"
+                                              style={{ fontSize: "10px" }}
+                                            >
+                                              New
+                                            </span>
+                                          )}
+                                        </td>
+
+                                        <td style={{ fontSize: "13px" }}>
+                                          {a.jobTitle}
+                                        </td>
+
+                                        <td>
+                                          <span
+                                            className={`badge ${a.status === "new"
+                                                ? "bg-primary"
+                                                : a.status === "shortlisted"
+                                                  ? "bg-warning text-dark"
+                                                  : a.status === "hired"
+                                                    ? "bg-success"
+                                                    : "bg-danger"
+                                              }`}
+                                            style={{ fontSize: "11px" }}
+                                          >
+                                            {a.status}
+                                          </span>
+                                        </td>
+
+                                        <td>
+                                          <button
+                                            className="btn btn-sm btn-warning"
+                                            onClick={() =>
+                                              navigate(
+                                                `/admin-dash/careers/view/${a._id}`
+                                              )
+                                            }
+                                          >
+                                            View
+                                          </button>
+                                        </td>
+                                      </tr>
+                                    ))
+                                  )}
+                                </tbody>
+                              </table>
+                            </div>
+                          )}
+                        </div>
                       </div>
                     </div>
-                  </div>
 
+                  </div>
                 </div>
               </>
             )}
