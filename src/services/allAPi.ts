@@ -30,6 +30,7 @@ import { BASE_URL } from "./baseURL";
 import { commonApi } from "./commonAPi";
 import type { ClientResponse } from "../types/clientTypes";
 import type { FaqResponse } from "../types/faqTypes";
+import type { DashboardOverviewResponse } from "../types/dashboardTypes";
 
 export type PagePayload = {
   title: string;
@@ -930,3 +931,11 @@ export const bulkDeleteFaqsApi = (ids: string[]) =>
   commonApi<{ success: boolean; message: string; deleted: number }>(
     "POST", `${BASE_URL}/admin/faqs/bulk-delete`, { ids }
   );
+
+  /* ============================================================
+   dash board
+============================================================ */
+
+
+export const getDashboardOverviewApi = async () =>
+  commonApi<DashboardOverviewResponse>("GET", `${BASE_URL}/admin/dashboard/overview`);

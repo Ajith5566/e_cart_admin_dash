@@ -4,6 +4,9 @@ import { useEffect, useRef, useState } from "react";
 import { adminLogoutApi, checkAdminAuthApi } from "../services/allAPi";
 import { toast } from "react-toastify";
 import "./admin_dash.css";
+import { getDashboardOverviewApi } from "../services/allAPi";
+import type { DashboardOverviewResponse } from "../types/dashboardTypes"
+import { faEnvelope, faBriefcase, } from "@fortawesome/free-solid-svg-icons";
 
 import { Outlet, useNavigate, useLocation } from "react-router";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -23,8 +26,6 @@ import {
   faUser,
   faUserGroup,
   faUsers,
-  faArrowTrendUp,
-  faArrowTrendDown,
   faQuestionCircle,
   faAddressBook,
 } from "@fortawesome/free-solid-svg-icons";
@@ -44,8 +45,8 @@ const NAV_ITEMS: NavItem[] = [
   { key: "dashboard", label: "Dashboard", icon: faTableCellsLarge, path: "/admin-dash" },
 
   { key: "user", label: "Users", icon: faUsers, path: "/admin-dash/user", section: "USER MANAGEMENT" },
-  { key: "RolePermissions", label: "Role", icon: faGear, path: "/admin-dash/role-permissions", section:"USER MANAGEMENT"  },
-  { key: "client", label: "Clients", icon: faUserGroup, path: "/admin-dash/client" ,section: "ORGANIZATION" },
+  { key: "RolePermissions", label: "Role", icon: faGear, path: "/admin-dash/role-permissions", section: "USER MANAGEMENT" },
+  { key: "client", label: "Clients", icon: faUserGroup, path: "/admin-dash/client", section: "ORGANIZATION" },
 
   {
     key: "blog-manager", label: "Blog Manager", icon: faBlog, section: "Content", children: [
@@ -67,7 +68,7 @@ const NAV_ITEMS: NavItem[] = [
   { key: "banner", label: "Banner", icon: faPenToSquare, path: "/admin-dash/banner" },
 
   { key: "pages", label: "Pages", icon: faFileLines, path: "/admin-dash/pages" },
-   { key: "faqs", label: "Faqs", icon: faFileLines, path: "/admin-dash/faq" },
+  { key: "faqs", label: "Faqs", icon: faFileLines, path: "/admin-dash/faq" },
 
   { key: "products", label: "Products", icon: faBox, path: "/admin-dash/products", section: "Store" },
 
@@ -75,7 +76,7 @@ const NAV_ITEMS: NavItem[] = [
 
   { key: "testimonials", label: "Testimonials", icon: faQuoteLeft, path: "/admin-dash/testimonials", section: "Engagement" },
 
-   {
+  {
     key: "Enquiries", label: "Enquiry Listing", icon: faQuestionCircle, section: "Engagement", children: [
       {
         key: "enquiry",
@@ -103,7 +104,7 @@ const NAV_ITEMS: NavItem[] = [
   },
   {
     key: "Case study", label: "Case study Listing", icon: faQuestionCircle, section: "Case Study", children: [
-        {
+      {
         key: "CaseStudies",
         label: "CaseStudies",
         icon: faAddressBook,
@@ -115,13 +116,13 @@ const NAV_ITEMS: NavItem[] = [
         icon: faAddressBook,
         path: "technology"
       },
-       {
+      {
         key: "Services",
         label: "Services",
         icon: faAddressBook,
         path: "service"
       },
-       {
+      {
         key: "Industries",
         label: "Industries",
         icon: faAddressBook,
@@ -133,23 +134,23 @@ const NAV_ITEMS: NavItem[] = [
         icon: faAddressBook,
         path: "solution"
       },
-     
+
     ]
   },
 
   { key: "settings", label: "Settings", icon: faGear, path: "/admin-dash/settings", section: "System" },
   { key: "profile", label: "Profile", icon: faGear, path: "/admin-dash/profile", section: "System" },
-   { key: "login history", label: "Login history", icon: faGear, path: "/admin-dash/login-history", section: "System" },
-   
+  { key: "login history", label: "Login history", icon: faGear, path: "/admin-dash/login-history", section: "System" },
+
 ];
 
 /* ─── Stat card data ─────────────────────────────────── */
-const STATS = [
+/* const STATS = [
   { label: "Total Users", value: "2,840", trend: "+12%", up: true, color: "blue", icon: faUsers },
   { label: "Products", value: "184", trend: "+5%", up: true, color: "green", icon: faBox },
   { label: "Blog Posts", value: "36", trend: "-2%", up: false, color: "orange", icon: faBlog },
   { label: "Customers", value: "1,290", trend: "+18%", up: true, color: "red", icon: faUserGroup },
-];
+]; */
 
 /* ═══════════════════════════════════════════════════════
    Component
@@ -162,28 +163,29 @@ function Admin_dashboard() {
     localStorage.getItem("adminUser") || "{}"
   );
 
- /*  console.log(currentUser); */
-  
+  /*  console.log(currentUser); */
+
 
   const [isLogin, setIsLogin] = useState(false);
   const [authChecked, setAuthChecked] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [openMenus, setOpenMenus] = useState<string[]>([]);
-
+  const [overview, setOverview] = useState<DashboardOverviewResponse | null>(null);
+  const [loading, setLoading] = useState(true);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   const activeTab = location.pathname.split("/")[2] || "dashboard";
   const isDashboard = location.pathname === "/admin-dash";
 
   const initials = currentUser?.name
-  ?.replace(/[^\w\s]/g, "")
-  .split(" ")
-  .filter(Boolean)
-  .slice(0, 2)
-  .map((word: string) => word[0])
-  .join("")
-  .toUpperCase() || "A";
+    ?.replace(/[^\w\s]/g, "")
+    .split(" ")
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((word: string) => word[0])
+    .join("")
+    .toUpperCase() || "A";
 
   /* ── Auth check ── */
   useEffect(() => {
@@ -218,7 +220,21 @@ function Admin_dashboard() {
         : [...prev, key]
     );
   };
-  
+
+
+  useEffect(() => {
+    const load = async () => {
+      try {
+        const res = await getDashboardOverviewApi();
+        setOverview(res.data);
+      } catch {
+        toast.error("Failed to load dashboard");
+      } finally {
+        setLoading(false);
+      }
+    };
+    load();
+  }, []);
 
   const filteredNavItems =
     currentUser.role === "super_admin"
@@ -226,8 +242,8 @@ function Admin_dashboard() {
       : NAV_ITEMS.filter(
         item =>
           item.key !== "user" &&
-          item.key !== "settings"&&
-          item.key !== "login history"&&
+          item.key !== "settings" &&
+          item.key !== "login history" &&
           item.key !== "RolePermissions"
       );
 
@@ -235,19 +251,19 @@ function Admin_dashboard() {
   useEffect(() => { setSidebarOpen(false); }, [location.pathname]);
 
   /* ── Logout ── */
-const logout = async () => {
-  try {
-    await adminLogoutApi();
-    toast.success("Logged out successfully");
-    localStorage.removeItem("adminUser");
-    // ✅ tell the interceptor we intentionally logged out
-    // so it skips the refresh attempt and doesn't loop
-    sessionStorage.setItem("logged_out", "true");
-    navigate("/");
-  } catch {
-    toast.error("Logout failed");
-  }
-};
+  const logout = async () => {
+    try {
+      await adminLogoutApi();
+      toast.success("Logged out successfully");
+      localStorage.removeItem("adminUser");
+      // ✅ tell the interceptor we intentionally logged out
+      // so it skips the refresh attempt and doesn't loop
+      sessionStorage.setItem("logged_out", "true");
+      navigate("/");
+    } catch {
+      toast.error("Logout failed");
+    }
+  };
 
   /* ── Navigate helper ── */
   const goTo = (path: string) => {
@@ -447,41 +463,106 @@ const logout = async () => {
                     <h1 className="page-title">Dashboard Overview</h1>
                     <p className="page-subtitle">{currentUser?.name || "Admin"}👋</p>
                   </div>
-                  <button className="btn-primary">
-                    + New Report
-                  </button>
                 </div>
 
                 {/* Stat cards */}
+                {/* Stat cards */}
+                {/* ── COUNTS ── */}
                 <div className="stats-grid">
-                  {STATS.map((s, i) => (
-                    <div
-                      key={s.label}
-                      className={`stat-card ${s.color} fade-up fade-up-${i + 1}`}
-                    >
-                      <div className={`stat-icon ${s.color}`}>
-                        <FontAwesomeIcon icon={s.icon} />
-                      </div>
-                      <div className="stat-value">{s.value}</div>
-                      <div className="stat-label">{s.label}</div>
-                      <div className={`stat-trend ${s.up ? "up" : "down"}`}>
-                        <FontAwesomeIcon icon={s.up ? faArrowTrendUp : faArrowTrendDown} size="xs" />
-                        {s.trend} this month
-                      </div>
-                    </div>
-                  ))}
+                  <div className="stat-card blue fade-up fade-up-1">
+                    <div className="stat-icon blue"><FontAwesomeIcon icon={faEnvelope} /></div>
+                    <div className="stat-value">{overview?.counts.enquiries ?? 0}</div>
+                    <div className="stat-label">Contact Enquiries</div>
+                  </div>
+                  <div className="stat-card green fade-up fade-up-2">
+                    <div className="stat-icon green"><FontAwesomeIcon icon={faBriefcase} /></div>
+                    <div className="stat-value">{overview?.counts.applications ?? 0}</div>
+                    <div className="stat-label">Career Applications</div>
+                  </div>
                 </div>
 
-                {/* Placeholder recent activity card */}
-                <div className="content-card fade-up fade-up-4">
-                  <div className="content-card-body">
-                    <h3 style={{ fontFamily: "'Syne', sans-serif", fontWeight: 700, fontSize: 15, marginBottom: 16 }}>
-                      Recent Activity
-                    </h3>
-                    <p style={{ color: "var(--text-muted)", fontSize: 13.5 }}>
-                      Activity feed will appear here once connected to your data source.
-                    </p>
+                {/* ── LATEST 3 ENQUIRIES + APPLICATIONS ── */}
+                <div className="mt-4">
+
+                  {/* Latest Enquiries */}
+                  <div>
+                    <div className="card border-0 shadow-sm h-100">
+                      <div className="card-header bg-white fw-semibold d-flex justify-content-between align-items-center">
+                        <span><FontAwesomeIcon icon={faEnvelope} className="me-2 text-primary" />Latest Enquiries</span>
+                        <a href="/admin-dash/enquiry" className="btn btn-sm btn-outline-dark">View all</a>
+                      </div>
+                      <div className="card-body p-0">
+                        {loading ? (
+                          <div className="text-center py-4"><div className="spinner-border spinner-border-sm" /></div>
+                        ) : overview?.latestEnquiries.length === 0 ? (
+                          <p className="text-muted text-center py-4 mb-0">No enquiries yet</p>
+                        ) : (
+                          <ul className="list-group list-group-flush">
+                            {overview?.latestEnquiries.map((e) => (
+                              <li key={e._id} className="list-group-item px-3 py-2">
+                                <div className="d-flex justify-content-between align-items-start">
+                                  <div>
+                                    <div className="fw-semibold" style={{ fontSize: "14px" }}>{e.name}</div>
+                                    <div className="text-muted" style={{ fontSize: "12px" }}>{e.email}</div>
+                                    <div className="text-muted text-truncate" style={{ fontSize: "12px", maxWidth: "260px" }}>{e.message}</div>
+                                  </div>
+                                  <div className="text-muted text-end" style={{ fontSize: "11px", whiteSpace: "nowrap" }}>
+                                    {new Date(e.createdAt).toLocaleDateString()}
+                                  </div>
+                                </div>
+                              </li>
+                            ))}
+                          </ul>
+                        )}
+                      </div>
+                    </div>
                   </div>
+
+                  {/* Latest Applications */}
+                  <div className="mt-md-3">
+                    <div className="card border-0 shadow-sm h-100">
+                      <div className="card-header bg-white fw-semibold d-flex justify-content-between align-items-center">
+                        <span><FontAwesomeIcon icon={faBriefcase} className="me-2 text-success" />Latest Applications</span>
+                        <a href="/admin-dash/career" className="btn btn-sm btn-outline-dark">View all</a>
+                      </div>
+                      <div className="card-body p-0">
+                        {loading ? (
+                          <div className="text-center py-4"><div className="spinner-border spinner-border-sm" /></div>
+                        ) : overview?.latestApplications.length === 0 ? (
+                          <p className="text-muted text-center py-4 mb-0">No applications yet</p>
+                        ) : (
+                          <ul className="list-group list-group-flush">
+                            {overview?.latestApplications.map((a) => (
+                              <li key={a._id} className="list-group-item px-3 py-2">
+                                <div className="d-flex justify-content-between align-items-start">
+                                  <div>
+                                    <div className="fw-semibold" style={{ fontSize: "14px" }}>
+                                      {a.name}
+                                      {!a.isRead && <span className="badge bg-danger ms-2" style={{ fontSize: "10px" }}>New</span>}
+                                    </div>
+                                    <div className="text-muted" style={{ fontSize: "12px" }}>{a.jobTitle}</div>
+                                    <div className="text-muted" style={{ fontSize: "12px" }}>{a.email}</div>
+                                  </div>
+                                  <div className="text-end">
+                                    <span className={`badge ${a.status === "new" ? "bg-primary" :
+                                        a.status === "shortlisted" ? "bg-warning text-dark" :
+                                          a.status === "hired" ? "bg-success" : "bg-danger"
+                                      }`} style={{ fontSize: "11px" }}>
+                                      {a.status}
+                                    </span>
+                                    <div className="text-muted mt-1" style={{ fontSize: "11px" }}>
+                                      {new Date(a.createdAt).toLocaleDateString()}
+                                    </div>
+                                  </div>
+                                </div>
+                              </li>
+                            ))}
+                          </ul>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
                 </div>
               </>
             )}
