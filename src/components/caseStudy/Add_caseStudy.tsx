@@ -648,6 +648,11 @@ const [existingOverview, setExistingOverview] = useState("");
           <div className="card-body">
             <div className="row">
               {/* Banner */}
+               <p className="font_small text-justify">
+              Preferred dimension is 1920px x 720px.
+              Allowed file types: jpg, jpeg, png, webp.
+              Maximum file size: 2 MB.
+            </p>
               <div className="col-md-5">
                 <h6 id="bannerImage">Banner Image <span className="text-danger">*</span></h6>
                 <input ref={bannerRef} type="file" accept="image/*" className="d-none"
