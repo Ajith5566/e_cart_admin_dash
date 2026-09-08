@@ -45,6 +45,7 @@ export type CaseStudyResponse = {
   websiteUrl: string;
   bannerImage: string;
   logo: string;
+   overviewImage:string;
   gallery: CaseStudyGalleryItem[]; // ✅ was string[]
   overview: string;
   challenge: string;

@@ -43,6 +43,7 @@ type FormErrors = {
   outcome: string;
   statistics: string;
   gallery: string; // ✅ ADD — mandatory labels for gallery images
+  overViewImage:string;
 };
 
 const emptyErrors: FormErrors = {
@@ -56,6 +57,7 @@ const emptyErrors: FormErrors = {
   outcome: "",
   statistics: "",
   gallery: "", // ✅ ADD
+  overViewImage:""
 };
 
 // strip HTML tags to check if a Quill field has real content (not just empty <p></p>)
@@ -106,6 +108,10 @@ export default function Add_caseStudy() {
   const [logoPreview, setLogoPreview] = useState("");
   const [existingLogo, setExistingLogo] = useState("");
 
+  const [overviewFile, setOverviewFile]       = useState<File | null>(null);
+const [overviewPreview, setOverviewPreview] = useState("");
+const [existingOverview, setExistingOverview] = useState("");
+
   // ✅ gallery: new files + parallel labels, existing items as CaseStudyGalleryItem[]
   const [galleryFiles, setGalleryFiles] = useState<File[]>([]);
   const [galleryPreviews, setGalleryPreviews] = useState<string[]>([]);
@@ -116,6 +122,7 @@ export default function Add_caseStudy() {
   const logoRef = useRef<HTMLInputElement | null>(null);
   const galleryRef = useRef<HTMLInputElement | null>(null);
   const thumbRef = useRef<HTMLInputElement | null>(null);
+  const overViewRef =useRef<HTMLInputElement | null>(null);
 
   // ── content sections ──────────────────────────────────────
   const [overview, setOverview] = useState("");
@@ -200,6 +207,7 @@ export default function Add_caseStudy() {
         setTimeline(cs.timeline ?? "");
         setWebsiteUrl(cs.websiteUrl ?? "");
         setExistingBanner(cs.bannerImage ?? "");
+         setExistingOverview(cs.overviewImage ?? "");
         setExistingLogo(cs.logo ?? "");
         // ✅ gallery now comes back as [{ image, label }]
         setExistingGallery(cs.gallery ?? []);
@@ -316,6 +324,12 @@ export default function Add_caseStudy() {
     }
 
     if (!bannerFile && !existingBanner) {
+      next.overViewImage = "OverView image is required";
+      ok = false;
+    }
+
+    
+    if (!overviewFile && !existingOverview) {
       next.bannerImage = "Banner image is required";
       ok = false;
     }
@@ -426,6 +440,7 @@ export default function Add_caseStudy() {
     fd.append("testimonial_video", testimonial.video);
     fd.append("removeThumbnail", String(removeThumbnail));
     if (bannerFile) fd.append("bannerImage", bannerFile);
+     if (overviewFile) fd.append("overviewImage", overviewFile);
     if (logoFile) fd.append("logo", logoFile);
     if (thumbFile) fd.append("testimonial_thumbnail", thumbFile);
     if (meta.og_image instanceof File) fd.append("og_image", meta.og_image);
@@ -633,7 +648,7 @@ export default function Add_caseStudy() {
           <div className="card-body">
             <div className="row">
               {/* Banner */}
-              <div className="col-md-6">
+              <div className="col-md-5">
                 <h6 id="bannerImage">Banner Image <span className="text-danger">*</span></h6>
                 <input ref={bannerRef} type="file" accept="image/*" className="d-none"
                   onChange={(e) => {
@@ -657,6 +672,31 @@ export default function Add_caseStudy() {
                   </div>
                 )}
                 {errors.bannerImage && <div className="text-danger mt-1">{errors.bannerImage}</div>}
+              </div>
+              <div className="col-md-5">
+                <h6 id="bannerImage">OverView Image <span className="text-danger">*</span></h6>
+                <input ref={overViewRef} type="file" accept="image/*" className="d-none"
+                  onChange={(e) => {
+                    const f = e.target.files?.[0]; if (!f) return;
+                    setOverviewFile(f); setOverviewPreview(URL.createObjectURL(f)); e.target.value = "";
+                  }} />
+                {(overviewPreview || existingOverview) ? (
+                  <div>
+                    <img src={overviewPreview || imgSrc(existingOverview)} alt="Banner"
+                      className="img-thumbnail" style={{ width: "100%", maxHeight: "180px", objectFit: "cover" }} />
+                    <div className="d-flex gap-2 mt-2">
+                      <button type="button" className="btn btn-sm btn-outline-dark" onClick={() => overViewRef.current?.click()}>Change</button>
+                      <button type="button" className="btn btn-sm btn-outline-danger"
+                        onClick={() => { setOverviewFile(null); setOverviewPreview(""); setExistingOverview(""); }}>Remove</button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className={`upload-box text-center p-5 border ${errors.overViewImage ? "border-danger" : ""}`}
+                    style={{ cursor: "pointer" }} onClick={() => overViewRef.current?.click()}>
+                    <p className="mb-1">Click to select overView image</p><h4>+</h4>
+                  </div>
+                )}
+                {errors.overViewImage && <div className="text-danger mt-1">{errors.overViewImage}</div>}
               </div>
 
               {/* Logo */}
