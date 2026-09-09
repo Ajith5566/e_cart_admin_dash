@@ -95,6 +95,7 @@ export type PageType = {
   shortDescription: string;
   description: string;
   isActive: boolean;
+  isSystem:boolean;
 };
 
 //types for adding admin

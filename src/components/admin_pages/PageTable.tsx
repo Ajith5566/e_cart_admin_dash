@@ -156,36 +156,44 @@ function PageTable({
         ),
         enableSorting: false,
       },
-      {
-        header: "Status",
-        cell: ({ row }) => (
-          <label className="toggle-switch">
-            <input
-              className="toggle-input"
-              type="checkbox"
-              disabled={!canToggle}
-              checked={!!row.original.isActive}
-              onChange={() => onToggle(row.original._id)}
-            />
-            <span className="toggle-slider"></span>
-          </label>
-        ),
-        enableSorting: false,
-      },
-      {
-        header: "Delete",
-        cell: ({ row }) => (
-          <button
-            className="btn btn-sm btn-danger"
-            onClick={() => onDelete(row.original._id)}
-            disabled={!canDelete}
-            title={!canDelete ? "You don't have permission to delete" : undefined}
-          >
-            delete
-          </button>
-        ),
-        enableSorting: false,
-      },
+     {
+  header: "Status",
+  cell: ({ row }) => (
+    row.original.isSystem ? (
+      <span className="badge bg-success" style={{ fontSize: "11px" }}>Active</span>
+    ) : (
+      <label className="toggle-switch">
+        <input
+          className="toggle-input"
+          type="checkbox"
+          disabled={!canToggle}
+          checked={!!row.original.isActive}
+          onChange={() => onToggle(row.original._id)}
+        />
+        <span className="toggle-slider"></span>
+      </label>
+    )
+  ),
+  enableSorting: false,
+},
+{
+  header: "Delete",
+  cell: ({ row }) => (
+    row.original.isSystem ? (
+      <span className="badge bg-secondary" style={{ fontSize: "10px" }}>🔒 System</span>
+    ) : (
+      <button
+        className="btn btn-sm btn-danger"
+        onClick={() => onDelete(row.original._id)}
+        disabled={!canDelete}
+        title={!canDelete ? "You don't have permission to delete" : undefined}
+      >
+        delete
+      </button>
+    )
+  ),
+  enableSorting: false,
+},
     ],
     [onEdit, onToggle, onDelete, pagination.pageIndex, pagination.pageSize, canEdit, canToggle, canDelete]
   );
