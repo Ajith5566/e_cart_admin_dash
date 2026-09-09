@@ -117,21 +117,21 @@ function PageTable({
         ),
       },
       {
-  header: "#",
-  id: "serialNumber",
-  enableSorting: false,
-  cell: ({ row, table }) => {
-    // rows as currently displayed (after sort/filter/pagination)
-    const visibleRows = table.getRowModel().rows;
-    const indexOnPage = visibleRows.findIndex((r) => r.id === row.id);
-    return (
-      table.getState().pagination.pageIndex *
-        table.getState().pagination.pageSize +
-      indexOnPage +
-      1
-    );
-  },
-},
+        header: "#",
+        id: "serialNumber",
+        enableSorting: false,
+        cell: ({ row, table }) => {
+          // rows as currently displayed (after sort/filter/pagination)
+          const visibleRows = table.getRowModel().rows;
+          const indexOnPage = visibleRows.findIndex((r) => r.id === row.id);
+          return (
+            table.getState().pagination.pageIndex *
+            table.getState().pagination.pageSize +
+            indexOnPage +
+            1
+          );
+        },
+      },
       {
         header: "Title",
         accessorKey: "title",
@@ -156,44 +156,44 @@ function PageTable({
         ),
         enableSorting: false,
       },
-     {
-  header: "Status",
-  cell: ({ row }) => (
-    row.original.isSystem ? (
-      <span className="badge bg-success" style={{ fontSize: "11px" }}>Active</span>
-    ) : (
-      <label className="toggle-switch">
-        <input
-          className="toggle-input"
-          type="checkbox"
-          disabled={!canToggle}
-          checked={!!row.original.isActive}
-          onChange={() => onToggle(row.original._id)}
-        />
-        <span className="toggle-slider"></span>
-      </label>
-    )
-  ),
-  enableSorting: false,
-},
-{
-  header: "Delete",
-  cell: ({ row }) => (
-    row.original.isSystem ? (
-      <span className="badge bg-secondary" style={{ fontSize: "10px" }}>🔒 System</span>
-    ) : (
-      <button
-        className="btn btn-sm btn-danger"
-        onClick={() => onDelete(row.original._id)}
-        disabled={!canDelete}
-        title={!canDelete ? "You don't have permission to delete" : undefined}
-      >
-        delete
-      </button>
-    )
-  ),
-  enableSorting: false,
-},
+      {
+        header: "Status",
+        cell: ({ row }) => (
+          row.original.isSystem ? (
+            <span className="badge bg-success" style={{ fontSize: "11px" }}>Active</span>
+          ) : (
+            <label className="toggle-switch">
+              <input
+                className="toggle-input"
+                type="checkbox"
+                disabled={!canToggle}
+                checked={!!row.original.isActive}
+                onChange={() => onToggle(row.original._id)}
+              />
+              <span className="toggle-slider"></span>
+            </label>
+          )
+        ),
+        enableSorting: false,
+      },
+      {
+        header: "Delete",
+        cell: ({ row }) => (
+          row.original.isSystem ? (
+            <span className="badge bg-secondary" style={{ fontSize: "10px" }}>🔒 System</span>
+          ) : (
+            <button
+              className="btn btn-sm btn-danger"
+              onClick={() => onDelete(row.original._id)}
+              disabled={!canDelete}
+              title={!canDelete ? "You don't have permission to delete" : undefined}
+            >
+              delete
+            </button>
+          )
+        ),
+        enableSorting: false,
+      },
     ],
     [onEdit, onToggle, onDelete, pagination.pageIndex, pagination.pageSize, canEdit, canToggle, canDelete]
   );
@@ -229,8 +229,13 @@ function PageTable({
     });
   }, [data]);
 
-  const selectedIds = Object.keys(rowSelection);
-  const selectedCount = selectedIds.length;
+  const selectedIds    = Object.keys(rowSelection);
+const selectedCount  = selectedIds.length;
+const nonSystemIds   = selectedIds.filter((id) => {
+  const row = data.find((d) => d._id === id);
+  return !row?.isSystem;
+});
+const nonSystemCount = nonSystemIds.length;
 
   const runBulk = async (fn: () => Promise<void> | void) => {
     try {
@@ -281,53 +286,58 @@ function PageTable({
       </div>
 
       {/* ✅ BULK ACTION BAR */}
-      {selectedCount > 0 && (
-        <div
-          className="d-flex align-items-center gap-2 px-3 py-2 mb-2 flex-wrap"
-          style={{ background: "#eef2ff", borderRadius: "10px" }}
-        >
-          <span className="fw-medium me-1" style={{ fontSize: "14px" }}>
-            {selectedCount} selected
-          </span>
-
-          {canToggle && (
-            <>
-              <button
-                className="btn btn-sm btn-outline-dark"
-                disabled={bulkBusy}
-                onClick={() => runBulk(() => onBulkToggle(selectedIds, false))}
-              >
-                Deactivate selected
-              </button>
-              <button
-                className="btn btn-sm btn-outline-success"
-                disabled={bulkBusy}
-                onClick={() => runBulk(() => onBulkToggle(selectedIds, true))}
-              >
-                Activate selected
-              </button>
-            </>
-          )}
-
-          {canDelete && (
-            <button
-              className="btn btn-sm btn-danger"
-              disabled={bulkBusy}
-              onClick={() => runBulk(() => onBulkDelete(selectedIds))}
-            >
-              Delete selected
-            </button>
-          )}
-
-          <button
-            className="btn btn-sm btn-outline-secondary ms-auto"
-            disabled={bulkBusy}
-            onClick={() => table.resetRowSelection()}
-          >
-            Clear
-          </button>
-        </div>
+     {selectedCount > 0 && (
+  <div
+    className="d-flex align-items-center gap-2 px-3 py-2 mb-2 flex-wrap"
+    style={{ background: "#eef2ff", borderRadius: "10px" }}
+  >
+    <span className="fw-medium me-1" style={{ fontSize: "14px" }}>
+      {selectedCount} selected
+      {selectedCount !== nonSystemCount && (
+        <span className="text-muted ms-1" style={{ fontSize: "12px" }}>
+          ({nonSystemCount} eligible)
+        </span>
       )}
+    </span>
+
+    {canToggle && nonSystemCount > 0 && (
+      <>
+        <button
+          className="btn btn-sm btn-outline-dark"
+          disabled={bulkBusy}
+          onClick={() => runBulk(() => onBulkToggle(nonSystemIds, false))}
+        >
+          Deactivate selected
+        </button>
+        <button
+          className="btn btn-sm btn-outline-success"
+          disabled={bulkBusy}
+          onClick={() => runBulk(() => onBulkToggle(nonSystemIds, true))}
+        >
+          Activate selected
+        </button>
+      </>
+    )}
+
+    {canDelete && nonSystemCount > 0 && (
+      <button
+        className="btn btn-sm btn-danger"
+        disabled={bulkBusy}
+        onClick={() => runBulk(() => onBulkDelete(nonSystemIds))}
+      >
+        Delete selected
+      </button>
+    )}
+
+    <button
+      className="btn btn-sm btn-outline-secondary ms-auto"
+      disabled={bulkBusy}
+      onClick={() => table.resetRowSelection()}
+    >
+      Clear
+    </button>
+  </div>
+)}
 
       <div
         className="card-body table-responsive px-0"
