@@ -292,12 +292,12 @@ function Add_testimonial() {
             <>
               <div className="row mt-3">
 
-                <div className="col-md-6">
+                <div className="col-md-12">
                   <label className="form-label">Heading<span className="text-danger">*</span></label>
                   <input id="heading" className='form-control'
                     value={heading} onChange={(e) => setHeading(e.target.value)} />
                 </div>
-                <div className="col-md-6">
+                <div className="col-md-12">
                   <label className="form-label">Message <span className="text-danger">*</span></label>
                   <textarea id="message" rows={5}
                     className={`form-control ${errors.message ? "is-invalid" : ""}`}
