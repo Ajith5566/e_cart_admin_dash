@@ -18,6 +18,7 @@ export default function Add_technology() {
   const navigate = useNavigate();
 
   const [name, setName] = useState("");
+  const [tag, setTag] = useState("");
   const [slugPreview, setSlugPreview] = useState("");
   const [status, setStatus] = useState(true);
   const [loading, setLoading] = useState(false);
@@ -29,7 +30,7 @@ export default function Add_technology() {
   const [existingLogo, setExistingLogo] = useState("");
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
-  const [errors, setErrors] = useState({ name: "", logo: "",  description: "" });
+  const [errors, setErrors] = useState({ name: "", logo: "", description: "" });
 
   // auto-preview slug from name
   useEffect(() => {
@@ -49,6 +50,7 @@ export default function Add_technology() {
         const res = await getTechnologyByIdApi(id);
         const tech = res.data.data ?? res.data;
         setName(tech.name);
+        setTag(tech.tag)
         setSlugPreview(tech.slug);
         setStatus(tech.isActive);
         setExistingLogo(tech.logo || "");
@@ -81,15 +83,15 @@ export default function Add_technology() {
   };
 
   const validateForm = () => {
-    const next = { name: "", logo: "",description:"" };
+    const next = { name: "", logo: "", description: "" };
     let ok = true;
 
     if (!name.trim()) { next.name = "Technology name is required"; ok = false; }
     if (!logoFile && !existingLogo) { next.logo = "Logo is required"; ok = false; }
     if (!description.trim()) {
-  next.description = "Description is required";
-  ok = false;
-}
+      next.description = "Description is required";
+      ok = false;
+    }
 
     setErrors(next);
     return ok;
@@ -100,6 +102,7 @@ export default function Add_technology() {
 
     const fd = new FormData();
     fd.append("name", name.trim());
+     fd.append("tag", tag.trim());
     fd.append("status", String(status));
     fd.append("description", description.trim());
     if (logoFile) fd.append("logo", logoFile);
@@ -114,7 +117,7 @@ export default function Add_technology() {
         toast.success("Technology added");
       }
       navigate("/admin-dash/technology");
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
       if (err?.response?.status === 409) {
         toast.error("A technology with this name already exists");
@@ -177,24 +180,35 @@ export default function Add_technology() {
                 Slug: <code>{slugPreview}</code>
               </p>
             )}
+             <label htmlFor="tag" className="form-label">
+              Tag 
+            </label>
+            <input
+              id="tag"
+              className='form-control'
+              value={tag}
+              onChange={(e) => setTag(e.target.value)}
+              placeholder="e.g.mobile os"
+            />
+            {errors.name && <div className="invalid-feedback">{errors.name}</div>}
             <label htmlFor="description" className="form-label mt-3">
-  Description <span className="text-danger">*</span>
-</label>
+              Description <span className="text-danger">*</span>
+            </label>
 
-<textarea
-  id="description"
-  rows={4}
-  className={`form-control ${errors.description ? "is-invalid" : ""}`}
-  value={description}
-  onChange={(e) => setDescription(e.target.value)}
-  placeholder="Enter technology description"
-/>
+            <textarea
+              id="description"
+              rows={4}
+              className={`form-control ${errors.description ? "is-invalid" : ""}`}
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              placeholder="Enter technology description"
+            />
 
-{errors.description && (
-  <div className="invalid-feedback">
-    {errors.description}
-  </div>
-)}
+            {errors.description && (
+              <div className="invalid-feedback">
+                {errors.description}
+              </div>
+            )}
 
             <label className="form-label mt-3">Status</label>
             <select

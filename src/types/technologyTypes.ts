@@ -9,6 +9,7 @@ export type TechnologyResponse = {
   adminId?: string;
   createdAt: string;
   updatedAt: string;
+  tag:string;
 
 };
  

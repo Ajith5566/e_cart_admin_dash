@@ -336,10 +336,10 @@ function Add_testimonial() {
           {/* IMAGE / THUMBNAIL */}
           <div className="mt-4">
             <h6>
-              {type === "video" ? (<>Thumbnail <span className="text-danger">*</span></>) : (<>Image <span className="text-muted" style={{ fontSize: "12px" }}>(optional)</span></>)}
+              {type === "video" ? (<>Image <span className="text-danger">*</span></>) : (<>Image <span className="text-muted" style={{ fontSize: "12px" }}>(optional)</span></>)}
             </h6>
             <p className="text-muted" style={{ fontSize: "12px" }}>
-              {type === "video" ? "Thumbnail shown before the video plays. Recommended 16:9." : "Preferred 300×300px. JPG, PNG, WebP · Max 2 MB."}
+              {type === "video" ? "Preferred 300×300px. JPG, PNG, WebP · Max 2 MB." : "Preferred 300×300px. JPG, PNG, WebP · Max 2 MB."}
             </p>
 
             <input ref={fileInputRef} type="file" accept="image/*" className="d-none" id="imageUpload"
