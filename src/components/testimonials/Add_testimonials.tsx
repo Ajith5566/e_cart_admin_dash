@@ -13,46 +13,46 @@ import {
   getAllServicesApi,
   getAllIndustriesApi,
 } from "../../services/allAPi";
-import type { TestimonialResponse} from "../../types/testimonialTypes";
+import type { TestimonialResponse } from "../../types/testimonialTypes";
 import { imgSrc } from "../../utils/imgSrc";
 
 const YOUTUBE_REGEX = /^(https?:\/\/)?(www\.)?(youtube\.com|youtu\.be)\/.+/;
-const VIMEO_REGEX   = /^(https?:\/\/)?(www\.)?vimeo\.com\/.+/;
+const VIMEO_REGEX = /^(https?:\/\/)?(www\.)?vimeo\.com\/.+/;
 const isValidVideoUrl = (url: string) => YOUTUBE_REGEX.test(url) || VIMEO_REGEX.test(url);
 
 function Add_testimonial() {
-  const [loading, setLoading]   = useState(false);
-  const fileInputRef            = useRef<HTMLInputElement | null>(null);
-  const { id }                  = useParams();
-  const isEditMode              = !!id;
-  const navigate                = useNavigate();
+  const [loading, setLoading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const { id } = useParams();
+  const isEditMode = !!id;
+  const navigate = useNavigate();
 
   // ── type ─────────────────────────────────────────────────
   const [type, setType] = useState<"text" | "video">("text");
 
   // ── common fields ─────────────────────────────────────────
-  const [name, setName]               = useState("");
+  const [name, setName] = useState("");
   const [designation, setDesignation] = useState("");
-  const [company, setCompany]         = useState("");
-  const [status, setStatus]           = useState(true);
+  const [company, setCompany] = useState("");
+  const [status, setStatus] = useState(true);
 
   // ── relations ─────────────────────────────────────────────
-  const [selectedServices, setSelectedServices]   = useState<string[]>([]);
-  const [selectedIndustry, setSelectedIndustry]   = useState("");
-  const [serviceOptions, setServiceOptions]       = useState<{ value: string; label: string; isChild: boolean }[]>([]);
-  const [industryOptions, setIndustryOptions]     = useState<{ value: string; label: string }[]>([]);
+  const [selectedServices, setSelectedServices] = useState<string[]>([]);
+  const [selectedIndustry, setSelectedIndustry] = useState("");
+  const [serviceOptions, setServiceOptions] = useState<{ value: string; label: string; isChild: boolean }[]>([]);
+  const [industryOptions, setIndustryOptions] = useState<{ value: string; label: string }[]>([]);
 
   // ── image ─────────────────────────────────────────────────
-  const [previewImage, setPreviewImage]     = useState<string | null>(null);
+  const [previewImage, setPreviewImage] = useState<string | null>(null);
   const [existingImages, setExistingImages] = useState<string[]>([]);
-  const [imageFile, setImageFile]           = useState<File | null>(null);
+  const [imageFile, setImageFile] = useState<File | null>(null);
 
   // ── text testimonial ──────────────────────────────────────
   const [message, setMessage] = useState("");
-
+  const [heading, setHeading] = useState("");
   // ── video testimonial ─────────────────────────────────────
   const [videoUrl, setVideoUrl] = useState("");
-  const [quote, setQuote]       = useState("");
+  const [quote, setQuote] = useState("");
 
   const [loadingData, setLoadingData] = useState(!!id);
   const [errors, setErrors] = useState({ name: "", message: "", url: "", videoUrl: "", image: "" });
@@ -66,8 +66,8 @@ function Add_testimonial() {
           getAllIndustriesApi(),
         ]);
         setServiceOptions((svcRes.data.data ?? []).map((s: any) => ({
-          value:   s._id,
-          label:   s.title ?? s.name,
+          value: s._id,
+          label: s.title ?? s.name,
           isChild: !!s.parentService,
         })));
         setIndustryOptions((indRes.data.data ?? []).map((i: any) => ({
@@ -91,10 +91,11 @@ function Add_testimonial() {
         setType(t.type === "video" ? "video" : "text");
         setName(t.name);
         setDesignation(t.designation || "");
-        setCompany(t.company         || "");
-        setMessage(t.message         || "");
-        setVideoUrl(t.videoUrl       || "");
-        setQuote(t.quote             || "");
+        setCompany(t.company || "");
+        setMessage(t.message || "");
+         setHeading(t.heading || "");
+        setVideoUrl(t.videoUrl || "");
+        setQuote(t.quote || "");
         setStatus(t.isActive);
         setSelectedServices((t.services ?? []).map((s: any) => s._id ?? s));
         setSelectedIndustry((t.industry as any)?._id ?? t.industry ?? "");
@@ -130,7 +131,7 @@ function Add_testimonial() {
     return ok;
   };
 
-  const removeImage    = () => { setPreviewImage(null); setImageFile(null); };
+  const removeImage = () => { setPreviewImage(null); setImageFile(null); };
   const removeExisting = () => setExistingImages([]);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -141,17 +142,18 @@ function Add_testimonial() {
       setLoading(true);
 
       const payload = new FormData();
-      payload.append("type",          type);
-      payload.append("name",          name.trim());
-      payload.append("designation",   designation);
-      payload.append("company",       company);
-      payload.append("status",        String(status));
+      payload.append("type", type);
+      payload.append("name", name.trim());
+      payload.append("designation", designation);
+      payload.append("company", company);
+      payload.append("status", String(status));
       payload.append("existingImage", existingImages[0] || "");
-      payload.append("message",       message);
-      payload.append("videoUrl",      videoUrl || "");
-      payload.append("quote",         quote    || "");
-      payload.append("services",      JSON.stringify(selectedServices));
-      payload.append("industry",      selectedIndustry || "");
+      payload.append("message", message);
+       payload.append("heading", heading);
+      payload.append("videoUrl", videoUrl || "");
+      payload.append("quote", quote || "");
+      payload.append("services", JSON.stringify(selectedServices));
+      payload.append("industry", selectedIndustry || "");
 
       if (imageFile) payload.append("image", imageFile);
 
@@ -164,7 +166,7 @@ function Add_testimonial() {
       }
 
       navigate("/admin-dash/testimonials");
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
       if (err?.response?.status === 409) toast.error("Testimonial already exists");
       else toast.error("Action failed");
@@ -264,8 +266,8 @@ function Add_testimonial() {
                 formatOptionLabel={(option: any) => (
                   <span style={{
                     paddingLeft: option.isChild ? "14px" : "0px",
-                    fontSize:    option.isChild ? "13px" : "14px",
-                    color:       option.isChild ? "#555" : "#000",
+                    fontSize: option.isChild ? "13px" : "14px",
+                    color: option.isChild ? "#555" : "#000",
                   }}>
                     {option.isChild ? "↳ " : ""}{option.label}
                   </span>
@@ -288,12 +290,22 @@ function Add_testimonial() {
           {/* ── TEXT FIELDS ── */}
           {type === "text" && (
             <>
-              <div className="mt-3">
-                <label className="form-label">Message <span className="text-danger">*</span></label>
-                <textarea id="message" rows={5}
-                  className={`form-control ${errors.message ? "is-invalid" : ""}`}
-                  value={message} onChange={(e) => setMessage(e.target.value)} />
-                {errors.message && <div className="invalid-feedback">{errors.message}</div>}
+              <div className="row mt-3">
+
+                <div className="col-md-6">
+                  <label className="form-label">Heading<span className="text-danger">*</span></label>
+                  <input id="heading" className='form-control'
+                    value={heading} onChange={(e) => setHeading(e.target.value)} />
+                </div>
+                <div className="col-md-6">
+                  <label className="form-label">Message <span className="text-danger">*</span></label>
+                  <textarea id="message" rows={5}
+                    className={`form-control ${errors.message ? "is-invalid" : ""}`}
+                    value={message} onChange={(e) => setMessage(e.target.value)} />
+                  {errors.message && <div className="invalid-feedback">{errors.message}</div>}
+
+
+                </div>
               </div>
             </>
           )}

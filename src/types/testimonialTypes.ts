@@ -11,7 +11,8 @@ export type TestimonialTypes = {
   videoUrl: string;
   quote: string;
   services: string[];          // ✅ NEW — array of service IDs
-  industry: string;            // ✅ NEW — industry ID
+  industry: string;           // ✅ NEW — industry ID
+  heading:string;
 };
  
 export type TestimonialResponse = {
@@ -24,6 +25,7 @@ export type TestimonialResponse = {
   isActive: boolean;
   image?: string;
   url?: string;
+    heading:string;
   videoUrl?: string;
   quote?: string;
   services?: { _id: string; title: string; slug: string }[];  // ✅ NEW — populated
