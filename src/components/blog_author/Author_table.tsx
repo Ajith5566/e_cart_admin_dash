@@ -124,16 +124,6 @@ function AuthorTable({
         enableSorting: true,
       },
       {
-        header: "Tagline",
-        accessorKey: "tagline",
-        enableSorting: false,
-        cell: ({ row }) => (
-          <span className="text-muted" style={{ fontSize: "13px" }}>
-            {row.original.tagline || "—"}
-          </span>
-        ),
-      },
-      {
         header: "Edit",
         enableSorting: false,
         cell: ({ row }) => (
