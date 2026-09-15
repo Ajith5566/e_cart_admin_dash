@@ -1,5 +1,6 @@
 // components/caseStudy/ServiceFaqModal.tsx
 import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import { toast } from "react-toastify";
 import { updateServiceFaqsApi } from "../../services/allAPi";
 import type { ServiceFaqItem } from "../../types/serviceTypes";
@@ -30,7 +31,7 @@ export default function ServiceFaqModal({ serviceId, serviceTitle, initialFaqs, 
     const incomplete = faqs.some((f) => {
       const hasQ = f.question.trim().length > 0;
       const hasA = f.answer.trim().length > 0;
-      return hasQ !== hasA; // half-filled row
+      return hasQ !== hasA;
     });
     if (incomplete) {
       toast.error("Every FAQ needs both a question and an answer");
@@ -53,47 +54,52 @@ export default function ServiceFaqModal({ serviceId, serviceTitle, initialFaqs, 
     }
   };
 
-  return (
+  const modalContent = (
     <div
       className="position-fixed top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center"
       style={{ background: "rgba(0,0,0,0.5)", zIndex: 1050 }}
       onClick={onClose}
     >
       <div
-        className="bg-white rounded shadow-lg p-4"
-        style={{ width: "min(700px, 92vw)", maxHeight: "85vh", overflowY: "auto" }}
+        className="bg-white rounded shadow-lg d-flex flex-column"
+        style={{ width: "min(700px, 92vw)", maxHeight: "85vh" }}
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="d-flex justify-content-between align-items-center mb-3">
+        {/* Fixed header */}
+        <div className="d-flex justify-content-between align-items-center p-4 pb-3 border-bottom">
           <h5 className="fw-bold mb-0">FAQs — {serviceTitle}</h5>
           <button className="btn-close" onClick={onClose} />
         </div>
 
-        {faqs.map((f, i) => (
-          <div key={i} className="border rounded p-3 mb-3">
-            <div className="d-flex justify-content-between align-items-center mb-2">
-              <span className="fw-semibold small text-muted">FAQ {i + 1}</span>
-              <button type="button" className="btn btn-sm btn-outline-danger" onClick={() => removeFaq(i)}>Remove</button>
+        {/* Scrollable body */}
+        <div className="p-4" style={{ overflowY: "auto", flex: 1 }}>
+          {faqs.map((f, i) => (
+            <div key={i} className="border rounded p-3 mb-3">
+              <div className="d-flex justify-content-between align-items-center mb-2">
+                <span className="fw-semibold small text-muted">FAQ {i + 1}</span>
+                <button type="button" className="btn btn-sm btn-outline-danger" onClick={() => removeFaq(i)}>Remove</button>
+              </div>
+              <input
+                className="form-control mb-2"
+                placeholder="Question"
+                value={f.question}
+                onChange={(e) => updateFaq(i, "question", e.target.value)}
+              />
+              <textarea
+                className="form-control"
+                rows={2}
+                placeholder="Answer"
+                value={f.answer}
+                onChange={(e) => updateFaq(i, "answer", e.target.value)}
+              />
             </div>
-            <input
-              className="form-control mb-2"
-              placeholder="Question"
-              value={f.question}
-              onChange={(e) => updateFaq(i, "question", e.target.value)}
-            />
-            <textarea
-              className="form-control"
-              rows={2}
-              placeholder="Answer"
-              value={f.answer}
-              onChange={(e) => updateFaq(i, "answer", e.target.value)}
-            />
-          </div>
-        ))}
+          ))}
 
-        <button type="button" className="btn btn-outline-dark btn-sm mb-3" onClick={addFaq}>+ Add FAQ</button>
+          <button type="button" className="btn btn-outline-dark btn-sm" onClick={addFaq}>+ Add FAQ</button>
+        </div>
 
-        <div className="d-flex gap-2 justify-content-end">
+        {/* Fixed footer */}
+        <div className="d-flex gap-2 justify-content-end p-4 pt-3 border-top">
           <button className="btn btn-secondary" onClick={onClose} disabled={saving}>Cancel</button>
           <button className="btn btn-primary" onClick={handleSave} disabled={saving}>
             {saving ? "Saving..." : "Save FAQs"}
@@ -102,4 +108,6 @@ export default function ServiceFaqModal({ serviceId, serviceTitle, initialFaqs, 
       </div>
     </div>
   );
+
+  return createPortal(modalContent, document.body);
 }
