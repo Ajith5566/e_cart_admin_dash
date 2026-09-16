@@ -31,6 +31,7 @@ import { commonApi } from "./commonAPi";
 import type { ClientResponse } from "../types/clientTypes";
 import type { FaqResponse } from "../types/faqTypes";
 import type { DashboardOverviewResponse } from "../types/dashboardTypes";
+import type { SettingsData } from "../types/settingsData";
 
 export type PagePayload = {
   title: string;
@@ -203,14 +204,11 @@ export const updateAdmin_user_Api = (id: string, data: AdminUserPayload) => {
 /* ============================================================
    SETTINGS
    ============================================================ */
+export const getSettingsApi = () =>
+  commonApi<{ success: boolean; data: SettingsData }>("GET", `${BASE_URL}/admin/settings`);
 
-export const getSettingsApi = () => {
-  return commonApi("GET", `${BASE_URL}/admin/settings`);
-};
-
-export const saveSettingsApi = (data: unknown) => {
-  return commonApi("POST", `${BASE_URL}/admin/settings`, data);
-};
+export const saveSettingsApi = (data: FormData | Record<string, unknown>) =>
+  commonApi("POST", `${BASE_URL}/admin/settings`, data);
 
 // forget password
 export const forgotPasswordApi = (email: string) => {
