@@ -1,9 +1,12 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable react-hooks/set-state-in-effect */
 import { useEffect, useRef, useState } from "react";
 import { toast } from "react-toastify";
 import { useNavigate, useParams } from "react-router-dom";
+import Select from "react-select";
 import {
   addClientApi,
+  getAllCaseStudiesApi,
   getClientByIdApi,
   updateClientApi,
 } from "../../services/allAPi";
@@ -18,13 +21,32 @@ export default function Add_client() {
   const [status, setStatus] = useState(true);
   const [loading, setLoading] = useState(false);
   const [loadingData, setLoadingData] = useState(!!id);
+  const [caseStudy, setcaseStudy] = useState("");
 
   const [logoFile, setLogoFile] = useState<File | null>(null);
   const [logoPreview, setLogoPreview] = useState("");
   const [existingLogo, setExistingLogo] = useState("");
   const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const [caseStudyOptions, setCaseStudyOptions] = useState<{ value: string; label: string }[]>([]);
 
   const [errors, setErrors] = useState({ name: "", logo: "" });
+
+
+  useEffect(() => {
+    const load = async () => {
+      try {
+        const [cs] = await Promise.all([
+          getAllCaseStudiesApi(),
+        ]);
+        setCaseStudyOptions((cs.data.data ?? [])
+          .filter((c: any) => c._id !== id)
+          .map((c: any) => ({ value: c._id, label: c.title })));
+      } catch {
+        toast.error("Failed to load options");
+      }
+    };
+    load();
+  }, [id]);
 
   useEffect(() => {
     if (!id) { setLoadingData(false); return; }
@@ -36,6 +58,7 @@ export default function Add_client() {
         setName(client.name);
         setStatus(client.isActive);
         setExistingLogo(client.logo || "");
+        setcaseStudy((client.caseStudy as any)?._id ?? "");
       } catch {
         toast.error("Failed to load client");
         navigate("/admin-dash/client");
@@ -80,6 +103,7 @@ export default function Add_client() {
     const fd = new FormData();
     fd.append("name", name.trim());
     fd.append("status", String(status));
+    fd.append("caseStudy",caseStudy);
     if (logoFile) fd.append("logo", logoFile);
 
     try {
@@ -92,7 +116,7 @@ export default function Add_client() {
         toast.success("Client added");
       }
       navigate("/admin-dash/client");
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
       toast.error(err?.response?.data?.message || "Action failed");
     } finally {
@@ -155,93 +179,111 @@ export default function Add_client() {
               <option value="false">Inactive</option>
             </select>
 
-            <div className="mt-4 d-flex gap-2">
+           <div id="caseStudy" tabIndex={-1} className="mt-3">
+  <Select
+    options={caseStudyOptions}
+    value={caseStudyOptions.find((o) => o.value === caseStudy) ?? null}
+    onChange={(v) => setcaseStudy(v?.value ?? "")}
+    isClearable
+    placeholder="Select case study"
+    classNamePrefix="react-select"
+    menuPortalTarget={document.body}
+    menuPosition="fixed"
+    menuPlacement="auto"
+    maxMenuHeight={250}
+    styles={{
+      menuPortal: (base) => ({ ...base, zIndex: 9999 }),
+    }}
+  />
+</div>
+
+          <div className="mt-4 d-flex gap-2">
+            <button
+              className="btn btn-primary"
+              onClick={handleSubmit}
+              disabled={loading}
+            >
+              {loading ? "Saving..." : isEditMode ? "Update Client" : "Add Client"}
+            </button>
+            {isEditMode && (
               <button
-                className="btn btn-primary"
-                onClick={handleSubmit}
+                className="btn btn-secondary"
+                type="button"
+                onClick={() => navigate("/admin-dash/client")}
                 disabled={loading}
               >
-                {loading ? "Saving..." : isEditMode ? "Update Client" : "Add Client"}
+                Cancel
               </button>
-              {isEditMode && (
-                <button
-                  className="btn btn-secondary"
-                  type="button"
-                  onClick={() => navigate("/admin-dash/client")}
-                  disabled={loading}
-                >
-                  Cancel
-                </button>
-              )}
-            </div>
-          </div>
-
-          {/* RIGHT — Logo (optional) */}
-          <div className="col-md-4">
-            <h6>Logo <span className="text-muted" style={{ fontSize: "12px" }}>(optional)</span></h6>
-            <p className="text-muted" style={{ fontSize: "12px" }}>
-              JPG, PNG, WebP or SVG · Max 1 MB<br />
-              Recommended: square, transparent background
-            </p>
-
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="image/*,.svg"
-              className="d-none"
-              onChange={(e) => { pickLogo(e.target.files?.[0]); e.target.value = ""; }}
-            />
-
-            {shownLogo ? (
-              <div>
-                <div
-                  className="border d-flex align-items-center justify-content-center"
-                  style={{ width: "120px", height: "120px", borderRadius: "10px", background: "#f8f9fa" }}
-                >
-                  <img
-                    src={shownLogo}
-                    alt="Logo preview"
-                    style={{ maxWidth: "100px", maxHeight: "100px", objectFit: "contain" }}
-                  />
-                </div>
-                <div className="d-flex gap-2 mt-2">
-                  <button
-                    type="button"
-                    className="btn btn-sm btn-outline-dark"
-                    onClick={() => fileInputRef.current?.click()}
-                  >
-                    Change
-                  </button>
-                  <button
-                    type="button"
-                    className="btn btn-sm btn-outline-danger"
-                    onClick={() => {
-                      setLogoFile(null);
-                      setLogoPreview("");
-                      setExistingLogo("");
-                    }}
-                  >
-                    Remove
-                  </button>
-                </div>
-              </div>
-            ) : (
-              <div
-                className={`upload-box text-center p-4 border ${errors.logo ? "border-danger" : ""}`}
-                style={{ cursor: "pointer", borderRadius: "10px", width: "120px", height: "120px" }}
-                onClick={() => fileInputRef.current?.click()}
-              >
-                <p className="mb-0 text-primary fw-semibold" style={{ fontSize: "12px" }}>
-                  Click to upload
-                </p>
-                <h5 className="mb-0">+</h5>
-              </div>
             )}
-            {errors.logo && <div className="text-danger mt-1" style={{ fontSize: "13px" }}>{errors.logo}</div>}
           </div>
-
         </div>
+
+        {/* RIGHT — Logo (optional) */}
+        <div className="col-md-4">
+          <h6>Logo <span className="text-muted" style={{ fontSize: "12px" }}>(optional)</span></h6>
+          <p className="text-muted" style={{ fontSize: "12px" }}>
+            JPG, PNG, WebP or SVG · Max 1 MB<br />
+            Recommended: square, transparent background
+          </p>
+
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*,.svg"
+            className="d-none"
+            onChange={(e) => { pickLogo(e.target.files?.[0]); e.target.value = ""; }}
+          />
+
+          {shownLogo ? (
+            <div>
+              <div
+                className="border d-flex align-items-center justify-content-center"
+                style={{ width: "120px", height: "120px", borderRadius: "10px", background: "#f8f9fa" }}
+              >
+                <img
+                  src={shownLogo}
+                  alt="Logo preview"
+                  style={{ maxWidth: "100px", maxHeight: "100px", objectFit: "contain" }}
+                />
+              </div>
+              <div className="d-flex gap-2 mt-2">
+                <button
+                  type="button"
+                  className="btn btn-sm btn-outline-dark"
+                  onClick={() => fileInputRef.current?.click()}
+                >
+                  Change
+                </button>
+                <button
+                  type="button"
+                  className="btn btn-sm btn-outline-danger"
+                  onClick={() => {
+                    setLogoFile(null);
+                    setLogoPreview("");
+                    setExistingLogo("");
+                  }}
+                >
+                  Remove
+                </button>
+              </div>
+            </div>
+          ) : (
+            <div
+              className={`upload-box text-center p-4 border ${errors.logo ? "border-danger" : ""}`}
+              style={{ cursor: "pointer", borderRadius: "10px", width: "120px", height: "120px" }}
+              onClick={() => fileInputRef.current?.click()}
+            >
+              <p className="mb-0 text-primary fw-semibold" style={{ fontSize: "12px" }}>
+                Click to upload
+              </p>
+              <h5 className="mb-0">+</h5>
+            </div>
+          )}
+          {errors.logo && <div className="text-danger mt-1" style={{ fontSize: "13px" }}>{errors.logo}</div>}
+        </div>
+
       </div>
     </div>
+    </div >
   );
 }

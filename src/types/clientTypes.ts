@@ -1,3 +1,5 @@
+import type { CaseStudyResponse } from "./caseStudyTypes";
+
 export type ClientResponse = {
   _id: string;
   name: string;
@@ -6,10 +8,12 @@ export type ClientResponse = {
   adminId?: string;
   createdAt: string;
   updatedAt: string;
+  caseStudy: CaseStudyResponse |  null;
 };
 
 export type ClientTypes = {
   name: string;
   logo: File | null;
   isActive: boolean;
+  caseStudy: CaseStudyResponse |  null;
 };

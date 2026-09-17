@@ -9,6 +9,7 @@ export type ServiceFaqItem = { question: string; answer: string };
 export type ServiceResponse = {
   _id: string;
   title: string;
+  subTitle:string;
   slug: string;
   parentService?: { _id: string; title: string } | null;
 

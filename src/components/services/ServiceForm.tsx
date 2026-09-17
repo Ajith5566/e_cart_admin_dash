@@ -31,6 +31,7 @@ type TechnologyError = { technology: string; description: string };
 
 type FormErrors = {
   title: string;
+  subTitle:string;
   description: string;
   shortDescription: string;
   introTitle: string;
@@ -48,7 +49,8 @@ const emptyErrors: FormErrors = {
   introDescription: "",
   process: [],
   technologies: [],
-  industry: ""
+  industry: "",
+  subTitle:""
 };
 
 const emptyMeta: MetaFields = {
@@ -79,6 +81,7 @@ export default function Add_service() {
   const navigate = useNavigate();
 
   const [title, setTitle] = useState("");
+   const [subTitle, setsubTitle] = useState("");
   const [parentService, setParentService] = useState<string | null>(null);
   const [parentOptions, setParentOptions] = useState<{ value: string; label: string }[]>([]);
 
@@ -184,6 +187,7 @@ export default function Add_service() {
         const s = res.data.data ?? (res.data as any);
 
         setTitle(s.title ?? "");
+        setsubTitle(s.subTitle ?? "");
         setParentService(s.parentService?._id ?? null);
         setDescription(s.description ?? "");
         setBullets(s.bullets ?? []);
@@ -293,6 +297,7 @@ export default function Add_service() {
     const flag = (elementId: string) => { if (!firstErrorId) firstErrorId = elementId; };
 
     if (!title.trim()) { next.title = "Service title is required"; flag("title"); }
+    if (!subTitle.trim()) { next.subTitle= "Service Subtitle is required"; flag("title"); }
    if (!isTopLevel &&industries.length === 0) {
   next.industry = "Industry is required";
   flag("industry");
@@ -382,6 +387,7 @@ export default function Add_service() {
 
     const fd = new FormData();
     fd.append("title", title.trim());
+     fd.append("subTitle", subTitle.trim());
     fd.append("parentService", parentService ?? "null");
     fd.append("featured", String(featured));
     fd.append("status", String(status));
@@ -474,7 +480,7 @@ export default function Add_service() {
 
       <div className="p-md-2 mb-4">
         <div className="row">
-          <div className="col-md-6">
+          <div className="col-md-4">
             <label htmlFor="title" className="form-label">
               Title <span className="text-danger">*</span>
             </label>
@@ -493,8 +499,21 @@ export default function Add_service() {
               </p>
             )}
           </div>
+          <div className="col-md-4">
+            <label htmlFor="sub-title" className="form-label">
+              SubTitle <span className="text-danger">*</span>
+            </label>
+            <input
+              id="sub-title"
+              className={`form-control ${errors.subTitle ? "is-invalid" : ""}`}
+              value={subTitle}
+              onChange={(e) => setsubTitle(e.target.value)}
+              placeholder="e.g. Digital Engineering"
+            />
+            {errors.subTitle && <div className="invalid-feedback">{errors.subTitle}</div>}
+          </div>
 
-          <div className="col-md-6">
+          <div className="col-md-4">
             <label className="form-label">Parent Service</label>
             <Select
               options={parentOptions}
