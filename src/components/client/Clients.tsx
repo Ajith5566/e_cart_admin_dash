@@ -17,7 +17,6 @@ import { useAuth } from "../../context/useAuth";
 import type { ClientResponse } from "../../types/clientTypes";
 import ClientTable from "./ClientTable";
 
-
 export default function Clients() {
   const navigate = useNavigate();
   const { can } = useAuth();
@@ -52,6 +51,7 @@ export default function Clients() {
 
       <ClientTable
         data={clients}
+        onDataReorder={(reordered) => setClients(reordered)}
         onEdit={(client) => navigate(`/admin-dash/client/edit/${client._id}`)}
         canEdit={can("client", "update")}
         canToggle={can("client", "status")}

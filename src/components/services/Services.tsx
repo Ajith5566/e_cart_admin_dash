@@ -19,7 +19,6 @@ import type { ServiceResponse } from "../../types/serviceTypes";
 import ServiceTable from "./ServiceTable";
 import ServiceFaqModal from "./Servicefaqmodal";
 
-
 export default function Services() {
   const navigate = useNavigate();
   const { can } = useAuth();
@@ -55,6 +54,7 @@ export default function Services() {
 
       <ServiceTable
         data={services}
+        onDataReorder={(reordered) => setServices(reordered)}
         onEdit={(service) => navigate(`/admin-dash/service/edit/${service._id}`)}
         canEdit={can("service", "update")}
         canToggle={can("service", "status")}

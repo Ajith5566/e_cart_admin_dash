@@ -714,6 +714,12 @@ export const bulkDeleteServicesApi = (ids: string[]) =>
   commonApi<{ success: boolean; message: string; deleted: number }>(
     "POST", `${BASE_URL}/admin/services/bulk-delete`, { ids }
   );
+
+  export const updateServiceOrderApi = async (
+  reqBody: { id: string; displayOrder: number }[]
+) => {
+  return await commonApi("PATCH", `${BASE_URL}/admin/services/order`, reqBody);
+};
 /* ============================================================
    INDUSTRIES
    ============================================================ */
@@ -885,6 +891,8 @@ export const bulkDeleteClientsApi = (ids: string[]) =>
     "POST", `${BASE_URL}/admin/clients/bulk-delete`, { ids }
   );
 
+  export const updateClientOrderApi = (updates: { id: string; displayOrder: number }[]) =>
+  commonApi("PATCH", `${BASE_URL}/admin/clients/order`, updates);
 
   /* ============================================================
    FAQ APIs
