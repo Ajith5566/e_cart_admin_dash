@@ -6,7 +6,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import Select from "react-select";
 import {
   addClientApi,
-  getAllCaseStudiesApi,
+  getAvailableCaseStudiesApi,
   getClientByIdApi,
   updateClientApi,
 } from "../../services/allAPi";
@@ -32,21 +32,19 @@ export default function Add_client() {
   const [errors, setErrors] = useState({ name: "", logo: "" });
 
 
-  useEffect(() => {
-    const load = async () => {
-      try {
-        const [cs] = await Promise.all([
-          getAllCaseStudiesApi(),
-        ]);
-        setCaseStudyOptions((cs.data.data ?? [])
-          .filter((c: any) => c._id !== id)
-          .map((c: any) => ({ value: c._id, label: c.title })));
-      } catch {
-        toast.error("Failed to load options");
-      }
-    };
-    load();
-  }, [id]);
+  type CaseStudyOption = { _id: string; title: string };
+
+useEffect(() => {
+  (async () => {
+    try {
+      const res = await getAvailableCaseStudiesApi(id);
+      const list = (res as { data: { data: CaseStudyOption[] } }).data.data;
+      setCaseStudyOptions(list.map((c) => ({ value: c._id, label: c.title })));
+    } catch {
+      toast.error("Failed to load case studies");
+    }
+  })();
+}, [id]);
 
   useEffect(() => {
     if (!id) { setLoadingData(false); return; }

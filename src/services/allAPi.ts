@@ -894,6 +894,14 @@ export const bulkDeleteClientsApi = (ids: string[]) =>
   export const updateClientOrderApi = (updates: { id: string; displayOrder: number }[]) =>
   commonApi("PATCH", `${BASE_URL}/admin/clients/order`, updates);
 
+
+  export const getAvailableCaseStudiesApi = async (excludeClient?: string) =>
+  await commonApi(
+    "GET",
+    `${BASE_URL}/admin/case-studies/available${excludeClient ? `?excludeClient=${excludeClient}` : ""}`,
+    ""
+  ) as { data: { success: boolean; data: { _id: string; title: string }[] } };
+
   /* ============================================================
    FAQ APIs
 ============================================================ */
