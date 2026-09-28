@@ -297,7 +297,6 @@ export default function Add_service() {
     const flag = (elementId: string) => { if (!firstErrorId) firstErrorId = elementId; };
 
     if (!title.trim()) { next.title = "Service title is required"; flag("title"); }
-    if (!subTitle.trim()) { next.subTitle= "Service Subtitle is required"; flag("title"); }
    if (!isTopLevel &&industries.length === 0) {
   next.industry = "Industry is required";
   flag("industry");
@@ -501,16 +500,15 @@ export default function Add_service() {
           </div>
           <div className="col-md-4">
             <label htmlFor="sub-title" className="form-label">
-              SubTitle <span className="text-danger">*</span>
+              SubTitle 
             </label>
             <input
               id="sub-title"
-              className={`form-control ${errors.subTitle ? "is-invalid" : ""}`}
+              className='form-control'
               value={subTitle}
               onChange={(e) => setsubTitle(e.target.value)}
               placeholder="e.g. Digital Engineering"
             />
-            {errors.subTitle && <div className="invalid-feedback">{errors.subTitle}</div>}
           </div>
 
           <div className="col-md-4">
@@ -544,23 +542,7 @@ export default function Add_service() {
             </label>
           </div>
         </div>
-
-        {isTopLevel ? (
-          <>
-            {/* ── TOP-LEVEL FIELDS ── */}
-            <label htmlFor="description" className="form-label mt-3">
-              Description <span className="text-danger">*</span>
-            </label>
-            <textarea
-              id="description"
-              className={`form-control ${errors.description ? "is-invalid" : ""}`}
-              rows={3}
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-            />
-            {errors.description && <div className="invalid-feedback d-block">{errors.description}</div>}
-
-            <div className="mt-3">
+        <div className="mt-3">
               <h6>Banner Image</h6>
               <input ref={bannerRef} type="file" accept="image/*" className="d-none"
                 onChange={(e) => { pickImage(e.target.files?.[0], setBannerFile, setBannerPreview); e.target.value = ""; }} />
@@ -581,6 +563,22 @@ export default function Add_service() {
                 </div>
               )}
             </div>
+
+        {isTopLevel ? (
+          <>
+            {/* ── TOP-LEVEL FIELDS ── */}
+            <label htmlFor="description" className="form-label mt-3">
+              Description <span className="text-danger">*</span>
+            </label>
+            <textarea
+              id="description"
+              className={`form-control ${errors.description ? "is-invalid" : ""}`}
+              rows={3}
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+            />
+            {errors.description && <div className="invalid-feedback d-block">{errors.description}</div>}
+
 
             <div className="card mt-4 border-0 shadow-sm">
               <div className="card-header fw-semibold bg-light d-flex justify-content-between align-items-center">
