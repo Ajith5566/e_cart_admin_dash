@@ -15,6 +15,7 @@ import { Highlight } from "@tiptap/extension-highlight";
 import Subscript from "@tiptap/extension-subscript";
 import Superscript from "@tiptap/extension-superscript";
 import Youtube from "@tiptap/extension-youtube";
+import { TableKit, TableRow, TableCell, TableHeader } from "@tiptap/extension-table"; // ✅ Tiptap v3: TableKit bundles Table, TableRow, TableHeader, TableCell
 import { cleanEditorHtml, sanitizePastedHtml } from "./cleanEditorHtml";
 import { ResizableImage } from "./ResizableImage";
 import { BASE_URL } from "../../services/baseURL";
@@ -113,6 +114,50 @@ const NoNbsp = Extension.create({
   },
 });
 
+// ── Table row with adjustable height (persisted as inline style on <tr>) ──
+const ResizableRow = TableRow.extend({
+  addAttributes() {
+    return {
+      ...this.parent?.(),
+      rowHeight: {
+        default: null,
+        parseHTML: (el: HTMLElement) => (el.style.height ? parseInt(el.style.height, 10) : null),
+        renderHTML: (attrs: any) => (attrs.rowHeight ? { style: `height: ${attrs.rowHeight}px` } : {}),
+      },
+    };
+  },
+});
+
+// ── Cell attributes: background color + vertical alignment ──
+// Both persist as inline styles on <td>/<th>, so they survive in the
+// saved HTML and render on the public site without extra CSS.
+const cellAttributes = {
+  backgroundColor: {
+    default: null,
+    parseHTML: (el: HTMLElement) => el.style.backgroundColor || null,
+    renderHTML: (attrs: any) =>
+      attrs.backgroundColor ? { style: `background-color: ${attrs.backgroundColor}` } : {},
+  },
+  verticalAlign: {
+    default: null,
+    parseHTML: (el: HTMLElement) => el.style.verticalAlign || null,
+    renderHTML: (attrs: any) =>
+      attrs.verticalAlign ? { style: `vertical-align: ${attrs.verticalAlign}` } : {},
+  },
+};
+
+const FlexCell = TableCell.extend({
+  addAttributes() {
+    return { ...this.parent?.(), ...cellAttributes };
+  },
+});
+
+const FlexHeader = TableHeader.extend({
+  addAttributes() {
+    return { ...this.parent?.(), ...cellAttributes };
+  },
+});
+
 const FONT_SIZES = ["10px", "12px", "14px", "16px", "18px", "20px", "24px", "28px", "32px", "36px", "48px", "60px", "72px"];
 
 const TEXT_COLOR_PRESETS = [
@@ -129,7 +174,12 @@ const HIGHLIGHT_PRESETS = [
   "#bbf7d0", "#d9f99d", "#f5f5f4", "#e2e8f0",
 ];
 
-
+const CELL_BG_PRESETS = [
+  "#ffffff", "#f8fafc", "#f1f5f9", "#e2e8f0", "#cbd5e1", "#1e293b",
+  "#fef2f2", "#fff7ed", "#fefce8", "#f0fdf4", "#ecfeff", "#eff6ff",
+  "#fecaca", "#fed7aa", "#fef08a", "#bbf7d0", "#a5f3fc", "#bfdbfe",
+  "#e9d5ff", "#fbcfe8",
+];
 
 // ── SVG icons ─────────────────────────────────────────────────
 const icons = {
@@ -150,6 +200,8 @@ const icons = {
   unlink:      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/><line x1="2" y1="2" x2="22" y2="22"/></svg>,
   image:       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>,
   youtube:     <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M22.54 6.42a2.78 2.78 0 0 0-1.95-1.95C18.88 4 12 4 12 4s-6.88 0-8.59.47A2.78 2.78 0 0 0 1.46 6.42 29 29 0 0 0 1 12a29 29 0 0 0 .46 5.58 2.78 2.78 0 0 0 1.95 1.95C5.12 20 12 20 12 20s6.88 0 8.59-.47a2.78 2.78 0 0 0 1.95-1.95A29 29 0 0 0 23 12a29 29 0 0 0-.46-5.58z"/><polygon points="9.75 15.02 15.5 12 9.75 8.98 9.75 15.02" fill="white"/></svg>,
+  table:       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="3" y1="15" x2="21" y2="15"/><line x1="9" y1="3" x2="9" y2="21"/><line x1="15" y1="3" x2="15" y2="21"/></svg>,
+  cellFill:    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="18" height="18" rx="2"/><rect x="3" y="3" width="9" height="9" fill="currentColor"/></svg>,
   code:        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>,
   codeBlock:   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="2" y="3" width="20" height="18" rx="2"/><polyline points="8 10 4 14 8 18"/><polyline points="16 10 20 14 16 18"/></svg>,
   html:        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="6 2 2 9 6 16"/><polyline points="12 2 16 9 12 16"/></svg>,
@@ -192,9 +244,51 @@ function Btn({ onClick, active, disabled, title, children }: {
   );
 }
 
+// small text button used in the contextual table toolbar
+function TextBtn({ onClick, disabled, danger, active, title, children }: {
+  onClick:   () => void;
+  disabled?: boolean;
+  danger?:   boolean;
+  active?:   boolean;
+  title?:    string;
+  children:  React.ReactNode;
+}) {
+  return (
+    <button
+      type="button"
+      title={title}
+      disabled={disabled}
+      onMouseDown={(e) => { e.preventDefault(); onClick(); }}
+      style={{
+        fontSize:     "11px",
+        padding:      "3px 8px",
+        borderRadius: "4px",
+        border:       "1px solid " + (active ? "#94a3b8" : "#e2e8f0"),
+        background:   active ? "#e2e8f0" : "#fff",
+        color:        disabled ? "#ccc" : danger ? "#dc2626" : "#475569",
+        cursor:       disabled ? "not-allowed" : "pointer",
+        whiteSpace:   "nowrap",
+      }}
+    >
+      {children}
+    </button>
+  );
+}
+
 const Sep = () => (
   <span style={{ width: "1px", height: "18px", background: "#e2e8f0", margin: "0 3px", display: "inline-block", flexShrink: 0 }} />
 );
+
+// closes a popover when clicking anywhere outside `ref`
+function useOutsideClose(ref: React.RefObject<HTMLDivElement | null>, open: boolean, close: () => void) {
+  useEffect(() => {
+    function handleClick(e: MouseEvent) {
+      if (ref.current && !ref.current.contains(e.target as Node)) close();
+    }
+    if (open) document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, [open]); // eslint-disable-line react-hooks/exhaustive-deps
+}
 
 // ── Custom color picker popover (replaces the bare native <input type="color"> swatch) ──
 function ColorPickerButton({
@@ -218,13 +312,7 @@ function ColorPickerButton({
   const [custom, setCustom] = useState(activeColor || "#000000");
   const wrapRef             = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    function handleClick(e: MouseEvent) {
-      if (wrapRef.current && !wrapRef.current.contains(e.target as Node)) setOpen(false);
-    }
-    if (open) document.addEventListener("mousedown", handleClick);
-    return () => document.removeEventListener("mousedown", handleClick);
-  }, [open]);
+  useOutsideClose(wrapRef, open, () => setOpen(false));
 
   const isValidHex = (v: string) => /^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/.test(v);
 
@@ -344,6 +432,84 @@ function ColorPickerButton({
   );
 }
 
+// ── Table insert popover: hover a grid to pick rows × columns ──
+const GRID_MAX = 10;
+
+function TableInsertButton({ onInsert }: {
+  onInsert: (rows: number, cols: number, withHeaderRow: boolean) => void;
+}) {
+  const [open, setOpen]     = useState(false);
+  const [hover, setHover]   = useState({ r: 0, c: 0 });
+  const [header, setHeader] = useState(true);
+  const wrapRef             = useRef<HTMLDivElement>(null);
+
+  useOutsideClose(wrapRef, open, () => { setOpen(false); setHover({ r: 0, c: 0 }); });
+
+  return (
+    <div ref={wrapRef} style={{ position: "relative", flexShrink: 0 }}>
+      <Btn onClick={() => setOpen((o) => !o)} active={open} title="Insert table">{icons.table}</Btn>
+
+      {open && (
+        <div
+          style={{
+            position:     "absolute",
+            top:          "32px",
+            left:         0,
+            zIndex:       30,
+            background:   "#fff",
+            border:       "1px solid #e2e8f0",
+            borderRadius: "8px",
+            boxShadow:    "0 8px 24px rgba(15, 23, 42, 0.15)",
+            padding:      "10px",
+          }}
+        >
+          <div style={{ fontSize: "11px", fontWeight: 600, color: "#64748b", marginBottom: "6px" }}>
+            {hover.r && hover.c ? `${hover.r} × ${hover.c} table` : "Insert table"}
+          </div>
+
+          <div
+            onMouseLeave={() => setHover({ r: 0, c: 0 })}
+            style={{ display: "grid", gridTemplateColumns: `repeat(${GRID_MAX}, 16px)`, gap: "3px" }}
+          >
+            {Array.from({ length: GRID_MAX * GRID_MAX }).map((_, i) => {
+              const r  = Math.floor(i / GRID_MAX) + 1;
+              const c  = (i % GRID_MAX) + 1;
+              const on = r <= hover.r && c <= hover.c;
+              return (
+                <button
+                  key={i}
+                  type="button"
+                  onMouseEnter={() => setHover({ r, c })}
+                  onMouseDown={(e) => {
+                    e.preventDefault();
+                    onInsert(r, c, header);
+                    setOpen(false);
+                    setHover({ r: 0, c: 0 });
+                  }}
+                  style={{
+                    width:        "16px",
+                    height:       "16px",
+                    padding:      0,
+                    borderRadius: "3px",
+                    border:       "1px solid " + (on ? "#3b82f6" : "#cbd5e1"),
+                    background:   on ? "#bfdbfe" : "#f8fafc",
+                    cursor:       "pointer",
+                  }}
+                />
+              );
+            })}
+          </div>
+
+          <label style={{ display: "flex", alignItems: "center", gap: "6px", marginTop: "8px", fontSize: "12px", color: "#475569", cursor: "pointer", userSelect: "none" }}>
+            <input type="checkbox" checked={header} onChange={(e) => setHeader(e.target.checked)} />
+            Header row
+          </label>
+        </div>
+      )}
+    </div>
+  );
+}
+
 type Props = {
   value:        string;
   onChange:     (html: string) => void;
@@ -379,6 +545,21 @@ export default function RichEditor({ value, onChange, placeholder = "Start typin
       Superscript,
       ResizableImage.configure({ inline: false, allowBase64: true }),
       Youtube.configure({ controls: true, nocookie: true }),
+      TableKit.configure({
+        table: {
+          resizable:               true,
+          handleWidth:             6,    // wider grab area for column resizing
+          cellMinWidth:            60,   // columns can't be squeezed to nothing
+          lastColumnResizable:     true,
+          allowTableNodeSelection: true,
+        },
+        tableRow:    false, // replaced by ResizableRow
+        tableCell:   false, // replaced by FlexCell
+        tableHeader: false, // replaced by FlexHeader
+      }),
+      ResizableRow,
+      FlexCell,
+      FlexHeader,
     ],
     content:  value || "<p></p>",
     editorProps: {
@@ -388,7 +569,7 @@ export default function RichEditor({ value, onChange, placeholder = "Start typin
     },
     onUpdate: ({ editor }) => {
       let html = cleanEditorHtml(editor.getHTML());
-       html = html.replace(new RegExp(BASE_URL.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g'), '');
+      html = html.replace(new RegExp(BASE_URL.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "g"), "");
       isInternalChange.current = true;
       onChange(html);
       if (showHtml) setHtmlValue(html);
@@ -405,18 +586,18 @@ export default function RichEditor({ value, onChange, placeholder = "Start typin
       isInternalChange.current = false;
       return;
     }
-     // ✅ prefix relative /uploads/ paths with BASE_URL for display
-  const displayed = (value || "<p></p>").replace(
-    /src="(\/uploads\/[^"]+)"/g,
-    `src="${BASE_URL}$1"`
-  );
+    // prefix relative /uploads/ paths with BASE_URL for display
+    const displayed = (value || "<p></p>").replace(
+      /src="(\/uploads\/[^"]+)"/g,
+      `src="${BASE_URL}$1"`
+    );
     if (editor.getHTML() === displayed) return;
-   editor.commands.setContent(displayed);
+    editor.commands.setContent(displayed);
   }, [value]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // toggle HTML view
   const toggleHtml = useCallback(() => {
-     if (!editor || editor.isDestroyed) return;
+    if (!editor || editor.isDestroyed) return;
     if (!showHtml) {
       setHtmlValue(editor.getHTML());
       setShowHtml(true);
@@ -430,30 +611,30 @@ export default function RichEditor({ value, onChange, placeholder = "Start typin
   }, [editor, showHtml, htmlValue, onChange]);
 
   // image upload from device
-const handleImageUpload = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
-  const file = e.target.files?.[0];
-  if (!file) return;
+  const handleImageUpload = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
 
-  try {
-    const fd = new FormData();
-    fd.append("image", file);
+    try {
+      const fd = new FormData();
+      fd.append("image", file);
 
-    const res = await fetch(`${BASE_URL}/admin/upload/editor-image`, {
-      method:  "POST",
-      credentials: "include",
-      body:    fd,
-    });
+      const res = await fetch(`${BASE_URL}/admin/upload/editor-image`, {
+        method:      "POST",
+        credentials: "include",
+        body:        fd,
+      });
 
-    const data = await res.json();
-    if (!res.ok) { alert(data.message || "Image upload failed"); return; }
-    // insert with full URL so editor displays it
-if (data.url) editor?.chain().focus().setImage({ src: imgSrc(data.url) }).run();
-  } catch {
-    alert("Image upload failed — please try again");
-  }
+      const data = await res.json();
+      if (!res.ok) { alert(data.message || "Image upload failed"); return; }
+      // insert with full URL so editor displays it
+      if (data.url) editor?.chain().focus().setImage({ src: imgSrc(data.url) }).run();
+    } catch {
+      alert("Image upload failed — please try again");
+    }
 
-  e.target.value = "";
-}, [editor]);
+    e.target.value = "";
+  }, [editor]);
 
   const addLink = useCallback(() => {
     const url = window.prompt("Enter URL:");
@@ -467,11 +648,40 @@ if (data.url) editor?.chain().focus().setImage({ src: imgSrc(data.url) }).run();
     editor?.commands.setYoutubeVideo({ src: url });
   }, [editor]);
 
+  // Clears every manual column width in the current table, so columns
+  // share the available width equally again (undo-able like any edit).
+  const equalizeColumns = useCallback(() => {
+    if (!editor) return;
+    const { state, view } = editor;
+    const { $from } = state.selection;
+    for (let d = $from.depth; d > 0; d--) {
+      const node = $from.node(d);
+      if (node.type.name !== "table") continue;
+      const start = $from.start(d);
+      const tr = state.tr;
+      node.descendants((child, pos) => {
+        if (child.type.name === "tableCell" || child.type.name === "tableHeader") {
+          if (child.attrs.colwidth) tr.setNodeMarkup(start + pos, undefined, { ...child.attrs, colwidth: null });
+          return false; // don't descend into cell content
+        }
+        return true;
+      });
+      if (tr.docChanged) view.dispatch(tr);
+      editor.commands.focus();
+      return;
+    }
+  }, [editor]);
+
   if (!editor) return null;
 
   const activeTextColor  = editor.getAttributes("textStyle").color || null;
   const activeHighlight  = editor.isActive("highlight") ? editor.getAttributes("highlight").color : null;
   const activeFontSize   = editor.getAttributes("textStyle").fontSize || "";
+
+  const inTable          = editor.isActive("table");
+  const cellAttrs        = editor.isActive("tableHeader") ? editor.getAttributes("tableHeader") : editor.getAttributes("tableCell");
+  const activeCellBg     = cellAttrs.backgroundColor || null;
+  const activeVAlign     = cellAttrs.verticalAlign || "top";
 
   return (
     <div className={className} style={{ border: "1px solid #dee2e6", borderRadius: "6px", overflow: "hidden", background: "#fff" }}>
@@ -570,7 +780,7 @@ if (data.url) editor?.chain().focus().setImage({ src: imgSrc(data.url) }).run();
 
         <Sep />
 
-        {/* Align */}
+        {/* Align (also works on text inside table cells) */}
         <Btn onClick={() => editor.chain().focus().setTextAlign("left").run()}    active={editor.isActive({ textAlign: "left" })}    title="Align left">{icons.alignLeft}</Btn>
         <Btn onClick={() => editor.chain().focus().setTextAlign("center").run()}  active={editor.isActive({ textAlign: "center" })}  title="Align center">{icons.alignCenter}</Btn>
         <Btn onClick={() => editor.chain().focus().setTextAlign("right").run()}   active={editor.isActive({ textAlign: "right" })}   title="Align right">{icons.alignRight}</Btn>
@@ -588,6 +798,13 @@ if (data.url) editor?.chain().focus().setImage({ src: imgSrc(data.url) }).run();
 
         {/* YouTube */}
         <Btn onClick={addYoutube} title="Insert YouTube video">{icons.youtube}</Btn>
+
+        {/* Table — pick size from grid */}
+        <TableInsertButton
+          onInsert={(rows, cols, withHeaderRow) =>
+            editor.chain().focus().insertTable({ rows, cols, withHeaderRow }).run()
+          }
+        />
 
         <Sep />
 
@@ -608,6 +825,63 @@ if (data.url) editor?.chain().focus().setImage({ src: imgSrc(data.url) }).run();
         <Btn onClick={toggleHtml} active={showHtml} title={showHtml ? "Apply HTML & return to editor" : "Edit raw HTML source"}>{icons.html}</Btn>
 
       </div>
+
+      {/* ── TABLE CONTROLS (only visible while the cursor is inside a table) ── */}
+      {inTable && !showHtml && (
+        <div style={{ display: "flex", flexWrap: "wrap", gap: "4px", padding: "6px 10px", background: "#f1f5f9", borderBottom: "1px solid #e2e8f0", alignItems: "center" }}>
+          <span style={{ fontSize: "11px", fontWeight: 600, color: "#64748b", marginRight: "4px" }}>Table</span>
+
+          {/* Rows */}
+          <TextBtn onClick={() => editor.chain().focus().addRowBefore().run()} disabled={!editor.can().addRowBefore()}>+ Row above</TextBtn>
+          <TextBtn onClick={() => editor.chain().focus().addRowAfter().run()}  disabled={!editor.can().addRowAfter()}>+ Row below</TextBtn>
+          <TextBtn onClick={() => editor.chain().focus().deleteRow().run()}    disabled={!editor.can().deleteRow()} danger>− Row</TextBtn>
+          <Sep />
+
+          {/* Columns */}
+          <TextBtn onClick={() => editor.chain().focus().addColumnBefore().run()} disabled={!editor.can().addColumnBefore()}>+ Col left</TextBtn>
+          <TextBtn onClick={() => editor.chain().focus().addColumnAfter().run()}  disabled={!editor.can().addColumnAfter()}>+ Col right</TextBtn>
+          <TextBtn onClick={() => editor.chain().focus().deleteColumn().run()}    disabled={!editor.can().deleteColumn()} danger>− Col</TextBtn>
+          <TextBtn onClick={equalizeColumns} title="Reset dragged column widths so all columns share the space equally">Equal widths</TextBtn>
+          <Sep />
+
+          {/* Headers / merge */}
+          <TextBtn onClick={() => editor.chain().focus().toggleHeaderRow().run()}>Header row</TextBtn>
+          <TextBtn onClick={() => editor.chain().focus().toggleHeaderColumn().run()}>Header col</TextBtn>
+          <TextBtn onClick={() => editor.chain().focus().toggleHeaderCell().run()} active={editor.isActive("tableHeader")}>Header cell</TextBtn>
+          <TextBtn onClick={() => editor.chain().focus().mergeCells().run()} disabled={!editor.can().mergeCells()} title="Drag across cells first to select them">Merge</TextBtn>
+          <TextBtn onClick={() => editor.chain().focus().splitCell().run()}  disabled={!editor.can().splitCell()}>Split</TextBtn>
+          <Sep />
+
+          {/* Cell styling */}
+          <ColorPickerButton
+            label="Cell background"
+            icon={icons.cellFill}
+            presets={CELL_BG_PRESETS}
+            activeColor={activeCellBg}
+            onSelect={(c) => editor.chain().focus().setCellAttribute("backgroundColor", c).run()}
+            onClear={() => editor.chain().focus().setCellAttribute("backgroundColor", null).run()}
+            clearLabel="Remove cell color"
+          />
+          <TextBtn onClick={() => editor.chain().focus().setCellAttribute("verticalAlign", null).run()}     active={activeVAlign === "top"}    title="Align cell content to top">Top</TextBtn>
+          <TextBtn onClick={() => editor.chain().focus().setCellAttribute("verticalAlign", "middle").run()} active={activeVAlign === "middle"} title="Align cell content to middle">Middle</TextBtn>
+          <TextBtn onClick={() => editor.chain().focus().setCellAttribute("verticalAlign", "bottom").run()} active={activeVAlign === "bottom"} title="Align cell content to bottom">Bottom</TextBtn>
+          <Sep />
+
+          {/* Row height */}
+          <TextBtn onClick={() => {
+            const h = editor.getAttributes("tableRow").rowHeight || 40;
+            editor.chain().focus().updateAttributes("tableRow", { rowHeight: h + 20 }).run();
+          }}>Row taller</TextBtn>
+          <TextBtn onClick={() => {
+            const h = editor.getAttributes("tableRow").rowHeight || 40;
+            editor.chain().focus().updateAttributes("tableRow", { rowHeight: Math.max(30, h - 20) }).run();
+          }}>Row shorter</TextBtn>
+          <TextBtn onClick={() => editor.chain().focus().updateAttributes("tableRow", { rowHeight: null }).run()}>Auto height</TextBtn>
+          <Sep />
+
+          <TextBtn onClick={() => editor.chain().focus().deleteTable().run()} danger>Delete table</TextBtn>
+        </div>
+      )}
 
       {/* ── EDITOR or HTML SOURCE ── */}
       {showHtml ? (
@@ -667,6 +941,29 @@ if (data.url) editor?.chain().focus().setImage({ src: imgSrc(data.url) }).run();
         .tiptap img { max-width: 100%; height: auto; border-radius: 4px; margin: 0.5rem 0; display: block; }
         .tiptap iframe { width: 100%; aspect-ratio: 16/9; border-radius: 6px; margin: 0.5rem 0; border: none; }
         .tiptap p.is-editor-empty:first-child::before { content: attr(data-placeholder); float: left; color: #94a3b8; pointer-events: none; height: 0; }
+
+        /* ── Tables ── */
+        /* Wrapper scrolls sideways when columns are dragged wider than the editor */
+        .tiptap .tableWrapper { overflow-x: auto; overflow-y: hidden; margin: 0.75rem 0; padding: 0 6px 6px 0; overscroll-behavior-x: contain; }
+        /* width:100% is only a floor — Tiptap sets an inline width/min-width once columns are resized, which wins */
+        .tiptap table { border-collapse: collapse; width: 100%; table-layout: fixed; margin: 0; }
+        .tiptap td, .tiptap th {
+          border: 1px solid #000000;
+          padding: 6px 8px;
+          vertical-align: top;
+          position: relative;
+          min-width: 1em;
+          box-sizing: border-box;
+          overflow-wrap: anywhere;   /* long words/URLs wrap instead of overflowing fixed-width columns */
+          word-break: break-word;
+        }
+        .tiptap th { background: #f1f5f9; font-weight: 600; text-align: left; }
+        .tiptap td p, .tiptap th p { margin: 0; }
+        .tiptap td ul, .tiptap td ol, .tiptap th ul, .tiptap th ol { margin-bottom: 0; }
+        .tiptap td img, .tiptap th img { margin: 0.25rem 0; }
+        .tiptap .selectedCell::after { content: ""; position: absolute; inset: 0; background: rgba(59,130,246,0.15); pointer-events: none; z-index: 2; }
+        .tiptap .column-resize-handle { position: absolute; right: -2px; top: 0; bottom: -2px; width: 4px; background: #3b82f6; pointer-events: none; z-index: 20; }
+        .tiptap.resize-cursor { cursor: ew-resize; cursor: col-resize; }
       `}</style>
     </div>
   );
