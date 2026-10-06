@@ -341,6 +341,14 @@ export const getAlltestimonialsApi = () => {
   return commonApi<TestimonialApiResponse>("GET", `${BASE_URL}/get/testimonials`);
 };
 
+
+  export const updatetestimonialsOrderApi = (
+  updates: { id: string; displayOrder: number }[]
+) =>
+  commonApi<{ success: boolean; message: string }>(
+    "PATCH", `${BASE_URL}/admin/testimonials/order`, updates
+  );
+
 // status toggle
 export const toggletestimonialApi = (id: string) => {
   return commonApi("PUT", `${BASE_URL}/admin/testimonial/${id}/toggle`);

@@ -55,6 +55,7 @@ export default function Testimonials() {
         canEdit={can("testimonials", "update")}
         canToggle={can("testimonials", "status")}
         canDelete={can("testimonials", "delete")}
+        onDataReorder={(reordered) => setTestimonials(reordered)} 
         onEdit={(testimonial) =>
           navigate(`/admin-dash/testimonials/edit/${testimonial._id}`)
         }
