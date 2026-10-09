@@ -289,7 +289,7 @@ function Admin_dashboard() {
 
         {/* Brand */}
        <div className="brand">
-  <img src="/public/logo.jpg" alt="Admin Panel" className="brand-logo " />
+  <img src="/logo.jpg" alt="Admin Panel" className="brand-logo " />
 </div>
 
         {/* Right zone */}
