@@ -91,6 +91,11 @@ body {
   box-shadow: 0 0 8px var(--accent-glow);
 }
 
+.brand-logo {
+  width: 100px;
+  height: 35px;
+  object-fit: contain;
+}
 .navbar-right {
   margin-left: auto;
   display: flex;

@@ -288,10 +288,9 @@ function Admin_dashboard() {
         </button>
 
         {/* Brand */}
-        <div className="brand">
-          <span className="brand-dot" />
-          Admin Panel
-        </div>
+       <div className="brand">
+  <img src="/public/logo.jpg" alt="Admin Panel" className="brand-logo " />
+</div>
 
         {/* Right zone */}
         <div className="navbar-right">
