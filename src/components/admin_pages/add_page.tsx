@@ -346,7 +346,7 @@ function Add_page() {
                 setShowSlugPrompt(false);
               }
             }}
-            baseUrl="https://test.boilerplate.pbsmokeup.in/"
+            baseUrl="https://phitany.com/"
             onManualEdit={(field) => {
               if (field === "slug") setSlugManuallyEdited(true);
               if (field === "meta_title") setMetaTitleManuallyEdited(true);

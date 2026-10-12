@@ -73,7 +73,7 @@ const emptyMeta: MetaFields = {
   change_frequency: "daily",
 };
 
-const SEO_BASE_URL = "https://mern-admin-sable.vercel.app/";
+const SEO_BASE_URL = "https://phitany.com/";
 
 export default function Add_service() {
   const { id } = useParams();
