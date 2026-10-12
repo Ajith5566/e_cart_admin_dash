@@ -73,7 +73,7 @@ const emptyMeta: MetaFields = {
   change_frequency: "daily",
 };
 
-const SEO_BASE_URL = "https://phitany.com/";
+const SEO_BASE_URL = "https://phitany.com/services";
 
 export default function Add_service() {
   const { id } = useParams();

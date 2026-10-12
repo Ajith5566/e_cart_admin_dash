@@ -723,7 +723,7 @@ export default function Add_blog() {
                 setShowSlugPrompt(false);
               }
             }}
-            baseUrl="https://phitany.com/"
+            baseUrl="https://phitany.com/insights/"
             onManualEdit={(field) => {
               if (field === "slug") setSlugManuallyEdited(true);
               if (field === "meta_title") setMetaTitleManuallyEdited(true);
