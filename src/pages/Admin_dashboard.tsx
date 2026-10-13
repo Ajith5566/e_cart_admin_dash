@@ -14,7 +14,6 @@ import {
   faBars,
   faBell,
   faBlog,
-  faBox,
   faChevronDown,
   faFileLines,
   faGear,
@@ -22,7 +21,6 @@ import {
   faQuoteLeft,
   faRightFromBracket,
   faTableCellsLarge,
-  faTags,
   faUser,
   faUserGroup,
   faUsers,
@@ -44,12 +42,26 @@ interface NavItem {
 const NAV_ITEMS: NavItem[] = [
   { key: "dashboard", label: "Dashboard", icon: faTableCellsLarge, path: "/admin-dash" },
 
-  { key: "user", label: "Users", icon: faUsers, path: "/admin-dash/user", section: "USER MANAGEMENT" },
-  { key: "RolePermissions", label: "Role", icon: faGear, path: "/admin-dash/role-permissions", section: "USER MANAGEMENT" },
-  { key: "client", label: "Clients", icon: faUserGroup, path: "/admin-dash/client", section: "ORGANIZATION" },
-
+  /* { key: "user", label: "Users", icon: faUsers, path: "/admin-dash/user", section: "USER MANAGEMENT" },
+  { key: "RolePermissions", label: "Role", icon: faGear, path: "/admin-dash/role-permissions", section: "USER MANAGEMENT" }, */
   {
-    key: "blog-manager", label: "Blog Manager", icon: faBlog, section: "Content", children: [
+    key: "user", label: "User Management", icon: faUsers, children: [
+      {
+        key: "user",
+        label: "Users",
+        icon: faUsers,
+        path: "/admin-dash/user"
+      },
+      {
+        key: "RolePermissions",
+        label: "Role",
+        icon: faGear,
+        path: "/admin-dash/role-permissions"
+      }
+    ]
+  },
+  {
+    key: "blog-manager", label: "Blog Manager", icon: faBlog, children: [
       {
         key: "blog",
         label: "Blogs",
@@ -64,20 +76,57 @@ const NAV_ITEMS: NavItem[] = [
       }
     ]
   },
+  {
+    key: "content", label: "Content", icon: faFileLines, children: [
+      {
+        key: "client",
+        label: "Clients",
+        icon: faUserGroup,
+        path: "/admin-dash/client"
+      },
+      {
+        key: "banner",
+        label: "Banner",
+        icon: faPenToSquare,
+        path: "/admin-dash/banner"
+      },
+      {
+        key: "pages",
+        label: "Pages",
+        icon: faFileLines,
+        path: "/admin-dash/pages"
+      },
+      {
+        key: "faqs",
+        label: "Faqs",
+        icon: faFileLines,
+        path: "/admin-dash/faq"
+      },
+      {
+        key: "testimonials",
+        label: "Testimonials",
+        icon: faQuoteLeft,
+        path: "/admin-dash/testimonials"
+      },
+      {
+        key: "job",
+        label: "Job Posting",
+        icon: faAddressBook,
+        path: "job"
+      }
+    ]
+  },
 
-  { key: "banner", label: "Banner", icon: faPenToSquare, path: "/admin-dash/banner" },
-
-  { key: "pages", label: "Pages", icon: faFileLines, path: "/admin-dash/pages" },
-  { key: "faqs", label: "Faqs", icon: faFileLines, path: "/admin-dash/faq" },
-
-  { key: "products", label: "Products", icon: faBox, path: "/admin-dash/products", section: "Store" },
-
-  { key: "category", label: "Category", icon: faTags, path: "/admin-dash/category" },
-
-  { key: "testimonials", label: "Testimonials", icon: faQuoteLeft, path: "/admin-dash/testimonials", section: "Engagement" },
+  /*  { key: "client", label: "Clients", icon: faUserGroup, path: "/admin-dash/client", section: "ORGANIZATION" }, */
+  /* { key: "banner", label: "Banner", icon: faPenToSquare, path: "/admin-dash/banner" }, */
+  /*  { key: "pages", label: "Pages", icon: faFileLines, path: "/admin-dash/pages" }, */
+  /*   { key: "faqs", label: "Faqs", icon: faFileLines, path: "/admin-dash/faq" },
+    { key: "products", label: "Products", icon: faBox, path: "/admin-dash/products", section: "Store" },
+    { key: "category", label: "Category", icon: faTags, path: "/admin-dash/category" }, */
+  /*  { key: "testimonials", label: "Testimonials", icon: faQuoteLeft, path: "/admin-dash/testimonials", section: "Engagement" }, */
 
   {
-    key: "Enquiries", label: "Enquiry Listing", icon: faQuestionCircle, section: "Engagement", children: [
+    key: "Enquiries", label: "Enquiry Listing", icon: faQuestionCircle, children: [
       {
         key: "enquiry",
         label: "Contact Enquiry",
@@ -93,17 +142,7 @@ const NAV_ITEMS: NavItem[] = [
     ]
   },
   {
-    key: "Careers", label: "Careers", icon: faQuestionCircle, section: "Content", children: [
-      {
-        key: "job",
-        label: "Job Posting",
-        icon: faAddressBook,
-        path: "job"
-      }
-    ]
-  },
-  {
-    key: "Case study", label: "Case study Listing", icon: faQuestionCircle, section: "Case Study", children: [
+    key: "Case study", label: "Case study", icon: faQuestionCircle, children: [
       {
         key: "CaseStudies",
         label: "CaseStudies",
@@ -137,10 +176,32 @@ const NAV_ITEMS: NavItem[] = [
 
     ]
   },
+  {
+    key: "system", label: "System", icon: faGear, children: [
+      {
+        key: "settings",
+        label: "Settings",
+        icon: faGear,
+        path: "/admin-dash/settings"
+      },
+      {
+        key: "profile",
+        label: "Profile",
+        icon: faGear,
+        path: "/admin-dash/profile",
+      },
+      {
+        key: "login history",
+        label: "Login history",
+        icon: faGear,
+        path: "/admin-dash/login-history",
+      }
+    ]
+  },
 
-  { key: "settings", label: "Settings", icon: faGear, path: "/admin-dash/settings", section: "System" },
-  { key: "profile", label: "Profile", icon: faGear, path: "/admin-dash/profile", section: "System" },
-  { key: "login history", label: "Login history", icon: faGear, path: "/admin-dash/login-history", section: "System" },
+  /*  { key: "settings", label: "Settings", icon: faGear, path: "/admin-dash/settings", section: "System" },
+   { key: "profile", label: "Profile", icon: faGear, path: "/admin-dash/profile", section: "System" },
+   { key: "login history", label: "Login history", icon: faGear, path: "/admin-dash/login-history", section: "System" }, */
 
 ];
 
@@ -170,7 +231,7 @@ function Admin_dashboard() {
   const [authChecked, setAuthChecked] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [openMenus, setOpenMenus] = useState<string[]>([]);
+  const [openMenu, setOpenMenu] = useState<string | null>(null);
   const [overview, setOverview] = useState<DashboardOverviewResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -214,13 +275,8 @@ function Admin_dashboard() {
   }, []);
 
   const toggleMenu = (key: string) => {
-    setOpenMenus(prev =>
-      prev.includes(key)
-        ? prev.filter(item => item !== key)
-        : [...prev, key]
-    );
+    setOpenMenu((prev) => (prev === key ? null : key));
   };
-
 
   useEffect(() => {
     const load = async () => {
@@ -288,9 +344,9 @@ function Admin_dashboard() {
         </button>
 
         {/* Brand */}
-       <div className="brand">
-  <img src="/logo.jpg" alt="Admin Panel" className="brand-logo " />
-</div>
+        <div className="brand">
+          <img src="/logo.jpg" alt="Admin Panel" className="brand-logo " />
+        </div>
 
         {/* Right zone */}
         <div className="navbar-right">
@@ -399,14 +455,14 @@ function Admin_dashboard() {
                             icon={faChevronDown}
                             style={{
                               marginLeft: "auto",
-                              transform: openMenus.includes(item.key)
+                              transform: openMenu === item.key
                                 ? "rotate(180deg)"
                                 : "rotate(0deg)"
                             }}
                           />
                         </button>
 
-                        {openMenus.includes(item.key) && (
+                        {openMenu === item.key && (
                           <div className="submenu">
                             {item.children.map(child => (
                               <button
@@ -664,12 +720,12 @@ function Admin_dashboard() {
                                         <td>
                                           <span
                                             className={`badge ${a.status === "new"
-                                                ? "bg-primary"
-                                                : a.status === "shortlisted"
-                                                  ? "bg-warning text-dark"
-                                                  : a.status === "hired"
-                                                    ? "bg-success"
-                                                    : "bg-danger"
+                                              ? "bg-primary"
+                                              : a.status === "shortlisted"
+                                                ? "bg-warning text-dark"
+                                                : a.status === "hired"
+                                                  ? "bg-success"
+                                                  : "bg-danger"
                                               }`}
                                             style={{ fontSize: "11px" }}
                                           >
